@@ -1,69 +1,102 @@
 <template>
     <div class="event-list-container">
-        <template for:each={events} for:item="event">
-            <div key={event.id} class="slds-card slds-p-around_medium event-listing slds-m-bottom_medium">
-                <div class="slds-grid slds-gutters">
-                    <!-- Date Section -->
-                    <div class="slds-col slds-size_12-of-12 slds-medium-size_2-of-12">
-                        <div class="event-date-container">
-                            <span class="event-day">{event.day}</span>
-                            <span class="event-month-year">{event.monthYear}</span>
-                        </div>
+        <!-- Loading State -->
+        <template if:true={isLoading}>
+            <div class="slds-text-align_center slds-p-around_medium">
+                <lightning-spinner alternative-text="Loading events..." size="medium"></lightning-spinner>
+                <p class="slds-m-top_small">Loading upcoming events...</p>
+            </div>
+        </template>
+
+        <!-- Error State -->
+        <template if:true={hasError}>
+            <div class="slds-notify slds-notify_alert slds-alert_error slds-m-bottom_medium">
+                <span class="slds-assistive-text">Error</span>
+                <h2>Unable to load events</h2>
+                <p>{errorMessage}</p>
+            </div>
+        </template>
+
+        <!-- No Events State -->
+        <template if:false={hasEvents}>
+            <template if:false={isLoading}>
+                <template if:false={hasError}>
+                    <div class="slds-text-align_center slds-p-around_large">
+                        <lightning-icon icon-name="utility:event" size="large" class="slds-m-bottom_small"></lightning-icon>
+                        <h3 class="slds-text-heading_medium slds-m-bottom_small">No Upcoming Events</h3>
+                        <p class="slds-text-body_regular">There are currently no events scheduled. Please check back later.</p>
                     </div>
-                    
-                    <!-- Event Details Section -->
-                    <div class="slds-col slds-size_12-of-12 slds-medium-size_8-of-12">
-                        <div class="event-details">
-                            <h3 class="slds-text-heading_medium slds-m-bottom_x-small event-title">
-                                {event.title}
-                            </h3>
-                            
-                            <div class="event-meta slds-grid slds-grid_align-start">
-                                <div class="slds-col slds-grid slds-grid_vertical-align-center slds-m-right_small">
-                                    <lightning-icon 
-                                        icon-name="utility:clock" 
-                                        size="x-small" 
-                                        class="clock-icon">
-                                    </lightning-icon>
-                                    <span class="slds-m-left_xx-small event-time">{event.time}</span>
-                                </div>
+                </template>
+            </template>
+        </template>
+
+        <!-- Events List -->
+        <template if:true={hasEvents}>
+            <template for:each={events} for:item="event">
+                <div key={event.id} class="slds-card slds-p-around_medium event-listing slds-m-bottom_medium">
+                    <div class="slds-grid slds-gutters">
+                        <!-- Date Section -->
+                        <div class="slds-col slds-size_12-of-12 slds-medium-size_2-of-12">
+                            <div class="event-date-container">
+                                <span class="event-day">{event.day}</span>
+                                <span class="event-month-year">{event.monthYear}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Event Details Section -->
+                        <div class="slds-col slds-size_12-of-12 slds-medium-size_8-of-12">
+                            <div class="event-details">
+                                <h3 class="slds-text-heading_medium slds-m-bottom_x-small event-title">
+                                    {event.title}
+                                </h3>
                                 
-                                <div class="slds-col slds-grid slds-grid_vertical-align-center">
-                                    <lightning-icon 
-                                        icon-name="utility:world" 
-                                        size="x-small" 
-                                        class="world-icon">
-                                    </lightning-icon>
-                                    <span class="slds-m-left_xx-small event-type">{event.type}</span>
+                                <div class="event-meta slds-grid slds-grid_align-start">
+                                    <div class="slds-col slds-grid slds-grid_vertical-align-center slds-m-right_small">
+                                        <lightning-icon 
+                                            icon-name="utility:clock" 
+                                            size="x-small" 
+                                            class="clock-icon">
+                                        </lightning-icon>
+                                        <span class="slds-m-left_xx-small event-time">{event.time}</span>
+                                    </div>
+                                    
+                                    <div class="slds-col slds-grid slds-grid_vertical-align-center">
+                                        <lightning-icon 
+                                            icon-name="utility:world" 
+                                            size="x-small" 
+                                            class="world-icon">
+                                        </lightning-icon>
+                                        <span class="slds-m-left_xx-small event-type">{event.type}</span>
+                                    </div>
                                 </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Register Button Section -->
+                        <div class="slds-col slds-size_12-of-12 slds-medium-size_2-of-12">
+                            <div class="register-container">
+                                <lightning-button 
+                                    variant="brand" 
+                                    label="Register" 
+                                    onclick={handleRegister}
+                                    data-event-id={event.id}
+                                    class="register-button">
+                                </lightning-button>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Register Button Section -->
-                    <div class="slds-col slds-size_12-of-12 slds-medium-size_2-of-12">
-                        <div class="register-container">
-                            <lightning-button 
-                                variant="brand" 
-                                label="Register" 
-                                onclick={handleRegister}
-                                data-event-id={event.id}
-                                class="register-button">
-                            </lightning-button>
+                    <!-- Description Section -->
+                    <div class="slds-grid">
+                        <div class="slds-col slds-size_1-of-1">
+                            <hr class="event-divider">
+                            <p class="slds-text-body_regular slds-m-top_x-small event-description">
+                                {event.description}
+                            </p>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Description Section -->
-                <div class="slds-grid">
-                    <div class="slds-col slds-size_1-of-1">
-                        <hr class="event-divider">
-                        <p class="slds-text-body_regular slds-m-top_x-small event-description">
-                            {event.description}
-                        </p>
-                    </div>
-                </div>
-            </div>
+            </template>
         </template>
     </div>
 </template>
