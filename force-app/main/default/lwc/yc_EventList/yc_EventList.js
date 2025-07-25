@@ -1,5 +1,5 @@
 import { LightningElement, wire, track } from 'lwc';
-import getUpcomingEvents from '@salesforce/apex/yc_EventListController.getUpcomingEvents';
+import getUpcomingEvents from '@salesforce/apex/EventController.getUpcomingEvents';
 
 export default class EventListing extends LightningElement {
     @track events = [];
@@ -31,7 +31,7 @@ export default class EventListing extends LightningElement {
                 monthYear: eventDate.monthYear,
                 title: event.Event_Title__c || 'Event Title Not Available',
                 time: event.Event_Start_Time_Web_F__c || 'Time TBD',
-                type: event.Event_Type__c || 'Event Type',
+                type: event.Event_Type__c || 'Virtual Event',
                 description: event.Event_Description__c || 'Event description not available.'
             };
         });
