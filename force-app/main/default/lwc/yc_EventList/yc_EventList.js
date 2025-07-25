@@ -1,10 +1,15 @@
 import { LightningElement, wire, track } from 'lwc';
-import getUpcomingEvents from '@salesforce/apex/EventController.getUpcomingEvents';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import getUpcomingEvents from '@salesforce/apex/yc_EventListController.getUpcomingEvents';
+import registerForEvent from '@salesforce/apex/yc_EventListController.registerForEvent';
+import getUserRegisteredEventIds from '@salesforce/apex/yc_EventListController.getUserRegisteredEventIds';
 
 export default class EventListing extends LightningElement {
     @track events = [];
     @track error;
     @track isLoading = true;
+    @track registeredEventIds = [];
+    @track registeringEventId = null;
 
     // Wire the Apex method to get events
     @wire(getUpcomingEvents)
@@ -20,6 +25,16 @@ export default class EventListing extends LightningElement {
         }
     }
 
+    // Wire method to get user's registered events
+    @wire(getUserRegisteredEventIds)
+    wiredRegisteredEvents({ error, data }) {
+        if (data) {
+            this.registeredEventIds = data;
+        } else if (error) {
+            console.error('Error loading user registrations:', error);
+        }
+    }
+
     // Transform Salesforce data to component format
     transformEventData(salesforceEvents) {
         return salesforceEvents.map(event => {
@@ -32,7 +47,10 @@ export default class EventListing extends LightningElement {
                 title: event.Event_Title__c || 'Event Title Not Available',
                 time: event.Event_Start_Time_Web_F__c || 'Time TBD',
                 type: event.Event_Type__c || 'Virtual Event',
-                description: event.Event_Description__c || 'Event description not available.'
+                description: event.Event_Description__c || 'Event description not available.',
+                buttonLabel: this.getButtonLabel(event.Id),
+                buttonVariant: this.getButtonVariant(event.Id),
+                isButtonDisabled: this.isButtonDisabled(event.Id)
             };
         });
     }
@@ -65,22 +83,88 @@ export default class EventListing extends LightningElement {
     }
 
     // Handle register button click
-    handleRegister(event) {
+    async handleRegister(event) {
         const eventId = event.target.dataset.eventId;
         const selectedEvent = this.events.find(evt => evt.id === eventId);
         
-        console.log('Registration clicked for event:', selectedEvent);
+        // Prevent multiple registrations
+        if (this.registeringEventId === eventId) {
+            return;
+        }
         
-        // Dispatch custom event for parent component to handle
-        const registerEvent = new CustomEvent('register', {
-            detail: {
-                eventId: selectedEvent.id,
-                eventTitle: selectedEvent.title,
-                eventTime: selectedEvent.time,
-                eventDate: `${selectedEvent.day} ${selectedEvent.monthYear}`
+        this.registeringEventId = eventId;
+        
+        try {
+            const result = await registerForEvent({ eventId: eventId });
+            
+            if (result === 'SUCCESS') {
+                // Show success message
+                this.dispatchEvent(new ShowToastEvent({
+                    title: 'Registration Successful',
+                    message: `You have been registered for "${selectedEvent.title}"`,
+                    variant: 'success'
+                }));
+                
+                // Add to registered events list
+                this.registeredEventIds = [...this.registeredEventIds, eventId];
+                
+            } else if (result === 'ALREADY_REGISTERED') {
+                // Show info message
+                this.dispatchEvent(new ShowToastEvent({
+                    title: 'Already Registered',
+                    message: `You are already registered for "${selectedEvent.title}"`,
+                    variant: 'info'
+                }));
             }
-        });
-        this.dispatchEvent(registerEvent);
+            
+        } catch (error) {
+            console.error('Registration error:', error);
+            
+            // Show error message
+            this.dispatchEvent(new ShowToastEvent({
+                title: 'Registration Failed',
+                message: error.body?.message || 'An error occurred during registration. Please try again.',
+                variant: 'error'
+            }));
+            
+        } finally {
+            this.registeringEventId = null;
+        }
+    }
+
+    // Check if user is registered for an event
+    isUserRegistered(eventId) {
+        return this.registeredEventIds.includes(eventId);
+    }
+
+    // Check if registration is in progress for an event
+    isRegistering(eventId) {
+        return this.registeringEventId === eventId;
+    }
+
+    // Get button label based on registration status
+    getButtonLabel(eventId) {
+        if (this.isRegistering(eventId)) {
+            return 'Registering...';
+        } else if (this.isUserRegistered(eventId)) {
+            return 'Registered';
+        } else {
+            return 'Register';
+        }
+    }
+
+    // Get button variant based on registration status
+    getButtonVariant(eventId) {
+        if (this.isUserRegistered(eventId)) {
+            return 'success';
+        } else {
+            return 'brand';
+        }
+    }
+
+    // Check if button should be disabled
+    isButtonDisabled(eventId) {
+        return this.isUserRegistered(eventId) || this.isRegistering(eventId);
     }
 
     // Getter for template conditional rendering

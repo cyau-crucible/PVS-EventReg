@@ -76,10 +76,11 @@
                         <div class="slds-col slds-size_12-of-12 slds-medium-size_2-of-12">
                             <div class="register-container">
                                 <lightning-button 
-                                    variant="brand" 
-                                    label="Register" 
+                                    variant={event.buttonVariant}
+                                    label={event.buttonLabel}
                                     onclick={handleRegister}
                                     data-event-id={event.id}
+                                    disabled={event.isButtonDisabled}
                                     class="register-button">
                                 </lightning-button>
                             </div>
