@@ -1,0 +1,139 @@
+/* Event Listing Component Styles */
+
+.event-list-container {
+    width: 100%;
+}
+
+.event-listing {
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: white;
+}
+
+/* Date Section Styles */
+.event-date-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.event-day {
+    font-size: 3rem;
+    font-weight: 800;
+    color: #8B4A9C; /* Purple color matching the screenshot */
+    line-height: 1;
+    margin-bottom: 2px;
+}
+
+.event-month-year {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #333;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+/* Event Details Styles */
+.event-details {
+    flex: 1;
+}
+
+.event-title {
+    color: #333;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.event-meta {
+    margin-bottom: 8px;
+}
+
+.event-time {
+    font-weight: 600;
+    color: #8B4A9C; /* Purple color for time */
+    font-size: 0.875rem;
+}
+
+.event-type {
+    font-size: 0.875rem;
+    color: #666;
+}
+
+/* Icon Styles */
+.clock-icon,
+.world-icon {
+    --slds-c-icon-color-foreground-default: #8B4A9C;
+}
+
+/* Register Button Styles */
+.register-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-start;
+}
+
+.register-button {
+    --slds-c-button-brand-color-background: #4ECDC4; /* Teal color from screenshot */
+    --slds-c-button-brand-color-background-hover: #45B7B8;
+    --slds-c-button-brand-color-background-active: #3A9B9C;
+    border-radius: 8px;
+    font-weight: 600;
+    min-width: 100px;
+}
+
+/* Description Section */
+.event-divider {
+    border: none;
+    border-top: 1px solid #e0e0e0;
+    margin: 16px 0 8px 0;
+}
+
+.event-description {
+    color: #666;
+    line-height: 1.5;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .event-date-container {
+        flex-direction: row;
+        align-items: baseline;
+        margin-bottom: 12px;
+    }
+    
+    .event-day {
+        font-size: 2.5rem;
+        margin-right: 8px;
+        margin-bottom: 0;
+    }
+    
+    .event-month-year {
+        font-size: 0.875rem;
+    }
+    
+    .register-container {
+        justify-content: flex-start;
+        margin-top: 12px;
+    }
+    
+    .event-meta {
+        flex-direction: column;
+        gap: 4px;
+    }
+}
+
+/* Lightning Design System Overrides */
+.slds-card {
+    border: 1px solid #e0e0e0;
+}
+
+/* Ensure proper spacing in mobile */
+@media (max-width: 47.9375rem) {
+    .event-listing .slds-gutters {
+        margin: 0;
+    }
+    
+    .event-listing .slds-gutters > .slds-col {
+        padding: 0.25rem 0;
+    }
+}
