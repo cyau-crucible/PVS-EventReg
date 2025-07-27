@@ -111,5 +111,90 @@
                 </div>
             </template>
         </template>
+
+        <!-- Inactivity Modal -->
+        <template if:true={showInactivityModal}>
+            <div class="modal-backdrop">
+                <div class="modal-container">
+                    <!-- Modal Header -->
+                    <div class="modal-header">
+                        <h2 class="modal-title">Don't Miss Out!</h2>
+                        <button class="modal-close-button" onclick={closeInactivityModal} aria-label="Close modal">
+                            <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                        </button>
+                    </div>
+                    
+                    <!-- Modal Content - Featured Event Card -->
+                    <div class="modal-content">
+                        <p class="modal-subtitle">Join our next upcoming event:</p>
+                        
+                        <template if:true={featuredEvent}>
+                            <div class="featured-event-card">
+                                <div class="slds-grid slds-gutters">
+                                    <!-- Date Section -->
+                                    <div class="slds-col slds-size_12-of-12 slds-medium-size_3-of-12">
+                                        <div class="event-date-container">
+                                            <span class="event-day">{featuredEvent.day}</span>
+                                            <span class="event-month-year">{featuredEvent.monthYear}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Event Details Section -->
+                                    <div class="slds-col slds-size_12-of-12 slds-medium-size_7-of-12">
+                                        <div class="event-details">
+                                            <h3 class="slds-text-heading_medium slds-m-bottom_x-small event-title">
+                                                {featuredEvent.title}
+                                            </h3>
+                                            
+                                            <div class="event-meta slds-grid slds-grid_align-start">
+                                                <div class="slds-col slds-grid slds-grid_vertical-align-center slds-m-right_small">
+                                                    <lightning-icon 
+                                                        icon-name="utility:clock" 
+                                                        size="x-small" 
+                                                        class="clock-icon">
+                                                    </lightning-icon>
+                                                    <span class="slds-m-left_xx-small event-time">{featuredEvent.time}</span>
+                                                </div>
+                                                
+                                                <div class="slds-col slds-grid slds-grid_vertical-align-center">
+                                                    <lightning-icon 
+                                                        icon-name="utility:world" 
+                                                        size="x-small" 
+                                                        class="world-icon">
+                                                    </lightning-icon>
+                                                    <span class="slds-m-left_xx-small event-type">{featuredEvent.type}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Register Button Section -->
+                                    <div class="slds-col slds-size_12-of-12 slds-medium-size_2-of-12">
+                                        <div class="register-container">
+                                            <lightning-button 
+                                                variant="brand"
+                                                label="Register Now"
+                                                onclick={handleModalRegister}
+                                                class="register-button modal-register-button">
+                                            </lightning-button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Description Section -->
+                                <div class="slds-grid">
+                                    <div class="slds-col slds-size_1-of-1">
+                                        <hr class="event-divider">
+                                        <p class="slds-text-body_regular slds-m-top_x-small event-description">
+                                            {featuredEvent.description}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </template>
     </div>
 </template>

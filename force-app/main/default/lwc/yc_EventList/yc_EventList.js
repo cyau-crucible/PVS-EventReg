@@ -10,6 +10,109 @@ export default class EventListing extends LightningElement {
     @track isLoading = true;
     @track registeredEventIds = [];
     @track registeringEventId = null;
+    
+    // Modal and timer properties
+    @track showInactivityModal = false;
+    @track featuredEvent = null;
+    inactivityTimer = null;
+    inactivityTimeoutMs = 60000; // 60 seconds
+
+    connectedCallback() {
+        this.startInactivityTimer();
+        this.addEventListeners();
+    }
+
+    disconnectedCallback() {
+        this.clearInactivityTimer();
+        this.removeEventListeners();
+    }
+
+    // Activity tracking methods
+    addEventListeners() {
+        // Listen for user activity on the component
+        this.template.addEventListener('click', this.resetInactivityTimer.bind(this));
+        this.template.addEventListener('scroll', this.resetInactivityTimer.bind(this));
+        this.template.addEventListener('mousemove', this.resetInactivityTimer.bind(this));
+        this.template.addEventListener('keydown', this.resetInactivityTimer.bind(this));
+        
+        // Also listen on document for broader activity detection
+        document.addEventListener('click', this.resetInactivityTimer.bind(this));
+        document.addEventListener('scroll', this.resetInactivityTimer.bind(this));
+        document.addEventListener('mousemove', this.resetInactivityTimer.bind(this));
+        document.addEventListener('keydown', this.resetInactivityTimer.bind(this));
+    }
+
+    removeEventListeners() {
+        document.removeEventListener('click', this.resetInactivityTimer.bind(this));
+        document.removeEventListener('scroll', this.resetInactivityTimer.bind(this));
+        document.removeEventListener('mousemove', this.resetInactivityTimer.bind(this));
+        document.removeEventListener('keydown', this.resetInactivityTimer.bind(this));
+    }
+
+    startInactivityTimer() {
+        this.clearInactivityTimer();
+        this.inactivityTimer = setTimeout(() => {
+            this.showInactivityPrompt();
+        }, this.inactivityTimeoutMs);
+    }
+
+    resetInactivityTimer() {
+        if (this.showInactivityModal) {
+            return; // Don't reset timer while modal is open
+        }
+        this.startInactivityTimer();
+    }
+
+    clearInactivityTimer() {
+        if (this.inactivityTimer) {
+            clearTimeout(this.inactivityTimer);
+            this.inactivityTimer = null;
+        }
+    }
+
+    showInactivityPrompt() {
+        // Find the first event that user hasn't registered for
+        const availableEvent = this.events.find(event => 
+            !this.isUserRegistered(event.id) && !this.isRegistering(event.id)
+        );
+
+        if (availableEvent) {
+            this.featuredEvent = availableEvent;
+            this.showInactivityModal = true;
+            console.log('Showing inactivity modal for event:', availableEvent.title);
+        } else {
+            console.log('No available events for inactivity modal');
+            // Restart timer if no events available
+            this.startInactivityTimer();
+        }
+    }
+
+    // Modal control methods
+    closeInactivityModal() {
+        this.showInactivityModal = false;
+        this.featuredEvent = null;
+        this.startInactivityTimer(); // Restart timer after closing modal
+    }
+
+    // Handle register from modal
+    handleModalRegister() {
+        if (this.featuredEvent) {
+            // Create a mock event with the featured event ID
+            const mockEvent = {
+                target: {
+                    dataset: {
+                        eventId: this.featuredEvent.id
+                    }
+                }
+            };
+            
+            // Close modal first
+            this.closeInactivityModal();
+            
+            // Call the existing register handler
+            this.handleRegister(mockEvent);
+        }
+    }
 
     // Wire the Apex method to get events
     @wire(getUpcomingEvents)
