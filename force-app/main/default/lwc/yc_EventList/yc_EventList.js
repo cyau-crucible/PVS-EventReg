@@ -179,7 +179,7 @@ export default class EventListing extends LightningElement {
         if (this.isRegistering(eventId)) {
             return 'Registering...';
         } else if (this.isUserRegistered(eventId)) {
-            return 'Registered';
+            return 'Already Registered';
         } else {
             return 'Register';
         }
