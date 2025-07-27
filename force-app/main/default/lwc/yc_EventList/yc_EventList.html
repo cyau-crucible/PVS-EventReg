@@ -75,14 +75,26 @@
                         <!-- Register Button Section -->
                         <div class="slds-col slds-size_12-of-12 slds-medium-size_2-of-12">
                             <div class="register-container">
-                                <lightning-button 
-                                    variant={event.buttonVariant}
-                                    label={event.buttonLabel}
-                                    onclick={handleRegister}
-                                    data-event-id={event.id}
-                                    disabled={event.isButtonDisabled}
-                                    class="register-button">
-                                </lightning-button>
+                                <template if:false={event.isRegistering}>
+                                    <lightning-button 
+                                        variant={event.buttonVariant}
+                                        label={event.buttonLabel}
+                                        onclick={handleRegister}
+                                        data-event-id={event.id}
+                                        disabled={event.isButtonDisabled}
+                                        class="register-button">
+                                    </lightning-button>
+                                </template>
+                                <template if:true={event.isRegistering}>
+                                    <div class="register-loading-container">
+                                        <lightning-spinner 
+                                            alternative-text="Registering..." 
+                                            size="small"
+                                            class="register-spinner">
+                                        </lightning-spinner>
+                                        <span class="register-loading-text">Registering...</span>
+                                    </div>
+                                </template>
                             </div>
                         </div>
                     </div>

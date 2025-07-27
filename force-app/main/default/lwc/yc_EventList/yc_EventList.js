@@ -52,7 +52,8 @@ export default class EventListing extends LightningElement {
                 description: event.Event_Description__c || 'Event description not available.',
                 buttonLabel: this.getButtonLabel(event.Id),
                 buttonVariant: this.getButtonVariant(event.Id),
-                isButtonDisabled: this.isButtonDisabled(event.Id)
+                isButtonDisabled: this.isButtonDisabled(event.Id),
+                isRegistering: this.isRegistering(event.Id)
             };
         });
     }
@@ -219,7 +220,8 @@ export default class EventListing extends LightningElement {
                 ...event,
                 buttonLabel: this.getButtonLabel(event.id),
                 buttonVariant: this.getButtonVariant(event.id),
-                isButtonDisabled: this.isButtonDisabled(event.id)
+                isButtonDisabled: this.isButtonDisabled(event.id),
+                isRegistering: this.isRegistering(event.id)
             }));
         }
     }

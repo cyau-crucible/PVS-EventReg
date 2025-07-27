@@ -97,6 +97,7 @@
     justify-content: flex-end;
     align-items: flex-start;
     padding-left: 16px;
+    min-height: 36px; /* Ensure consistent height for button/spinner */
 }
 
 .register-button button {
@@ -114,6 +115,26 @@
 .register-button button:hover {
     background-color: #45B7B8 !important;
     border-color: #45B7B8 !important;
+}
+
+/* Loading Spinner Styles */
+.register-loading-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 90px;
+    height: 36px;
+}
+
+.register-spinner {
+    margin-right: 8px;
+}
+
+.register-loading-text {
+    font-size: 0.875rem;
+    color: #4ECDC4;
+    font-weight: 600;
+    font-family: Arial, sans-serif;
 }
 
 /* Description Section */
