@@ -16,7 +16,9 @@ export default class EventListing extends LightningElement {
     wiredEvents({ error, data }) {
         this.isLoading = false;
         if (data) {
-            this.events = this.transformEventData(data);
+            this.loadRegisteredEvents().then(() => {
+                this.events = this.transformEventData(data);
+            });
             this.error = undefined;
         } else if (error) {
             this.error = error;
@@ -25,13 +27,13 @@ export default class EventListing extends LightningElement {
         }
     }
 
-    // Wire method to get user's registered events
-    @wire(getUserRegisteredEventIds)
-    wiredRegisteredEvents({ error, data }) {
-        if (data) {
-            this.registeredEventIds = data;
-        } else if (error) {
+    // Load registered events separately to avoid wire conflicts
+    async loadRegisteredEvents() {
+        try {
+            this.registeredEventIds = await getUserRegisteredEventIds();
+        } catch (error) {
             console.error('Error loading user registrations:', error);
+            this.registeredEventIds = [];
         }
     }
 
@@ -87,15 +89,29 @@ export default class EventListing extends LightningElement {
         const eventId = event.target.dataset.eventId;
         const selectedEvent = this.events.find(evt => evt.id === eventId);
         
+        console.log('Registration clicked for event ID:', eventId);
+        console.log('Selected event:', selectedEvent);
+        
         // Prevent multiple registrations
         if (this.registeringEventId === eventId) {
+            console.log('Registration already in progress for this event');
+            return;
+        }
+        
+        if (!eventId) {
+            console.error('No event ID found');
             return;
         }
         
         this.registeringEventId = eventId;
         
+        // Update button state immediately
+        this.refreshEventData();
+        
         try {
+            console.log('Calling registerForEvent with eventId:', eventId);
             const result = await registerForEvent({ eventId: eventId });
+            console.log('Registration result:', result);
             
             if (result === 'SUCCESS') {
                 // Show success message
@@ -105,8 +121,11 @@ export default class EventListing extends LightningElement {
                     variant: 'success'
                 }));
                 
-                // Add to registered events list
+                // Add to registered events list and refresh the events display
                 this.registeredEventIds = [...this.registeredEventIds, eventId];
+                
+                // Refresh the events to update button states
+                this.refreshEventData();
                 
             } else if (result === 'ALREADY_REGISTERED') {
                 // Show info message
@@ -115,20 +134,33 @@ export default class EventListing extends LightningElement {
                     message: `You are already registered for "${selectedEvent.title}"`,
                     variant: 'info'
                 }));
+                
+                // Add to registered list since they're already registered
+                this.registeredEventIds = [...this.registeredEventIds, eventId];
+                this.refreshEventData();
             }
             
         } catch (error) {
             console.error('Registration error:', error);
+            console.error('Error details:', JSON.stringify(error));
+            
+            let errorMessage = 'An error occurred during registration. Please try again.';
+            if (error.body && error.body.message) {
+                errorMessage = error.body.message;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
             
             // Show error message
             this.dispatchEvent(new ShowToastEvent({
                 title: 'Registration Failed',
-                message: error.body?.message || 'An error occurred during registration. Please try again.',
+                message: errorMessage,
                 variant: 'error'
             }));
             
         } finally {
             this.registeringEventId = null;
+            this.refreshEventData();
         }
     }
 
@@ -178,5 +210,17 @@ export default class EventListing extends LightningElement {
 
     get errorMessage() {
         return this.error?.body?.message || 'An error occurred while loading events.';
+    }
+
+    // Refresh event data to update button states
+    refreshEventData() {
+        if (this.events && this.events.length > 0) {
+            this.events = this.events.map(event => ({
+                ...event,
+                buttonLabel: this.getButtonLabel(event.id),
+                buttonVariant: this.getButtonVariant(event.id),
+                isButtonDisabled: this.isButtonDisabled(event.id)
+            }));
+        }
     }
 }
