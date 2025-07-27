@@ -1,11 +1,11 @@
-public with sharing class yc_EventListController {
+public without sharing class yc_EventListController {
     
     @AuraEnabled(cacheable=true)
     public static List<PVS_Event__c> getUpcomingEvents() {
         try {
-            // Get current user's Contact information including school lookup
+            // Get current user's Contact information including school lookup and household
             User currentUser = [
-                SELECT Id, ContactId, Contact.ycadmissions__InitialSchool__c
+                SELECT Id, ContactId, Contact.ycadmissions__InitialSchool__c, Contact.AccountId
                 FROM User 
                 WHERE Id = :UserInfo.getUserId() 
                 LIMIT 1
@@ -17,6 +17,24 @@ public with sharing class yc_EventListController {
             // Add user's associated school if it exists
             if (currentUser.ContactId != null && currentUser.Contact.ycadmissions__InitialSchool__c != null) {
                 permissibleSchoolIds.add(currentUser.Contact.ycadmissions__InitialSchool__c);
+                System.debug('Added InitialSchool: ' + currentUser.Contact.ycadmissions__InitialSchool__c);
+            }
+            
+            // Add schools from Applications related to the Contact's Household
+            if (currentUser.ContactId != null && currentUser.Contact.AccountId != null) {
+                // Query for Applications where Household matches Contact's Account (Household)
+                List<hed__Application__c> householdApplications = [
+                    SELECT Id, hed__Applying_To__c
+                    FROM hed__Application__c
+                    WHERE Household__c = :currentUser.Contact.AccountId
+                    AND hed__Applying_To__c != NULL
+                ];
+                
+                // Add all the school IDs from these applications
+                for (hed__Application__c app : householdApplications) {
+                    permissibleSchoolIds.add(app.hed__Applying_To__c);
+                    System.debug('Added Application School: ' + app.hed__Applying_To__c);
+                }
             }
             
             // Build dynamic SOQL query with school filtering
@@ -37,6 +55,7 @@ public with sharing class yc_EventListController {
             
             System.debug('Executing query: ' + query);
             System.debug('Permissible School IDs: ' + permissibleSchoolIds);
+            System.debug('Contact AccountId (Household): ' + currentUser.Contact.AccountId);
             
             return Database.query(query);
             
