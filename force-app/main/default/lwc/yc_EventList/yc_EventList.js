@@ -144,6 +144,7 @@ export default class EventListing extends LightningElement {
     transformEventData(salesforceEvents) {
         return salesforceEvents.map(event => {
             const eventDate = this.parseEventDate(event.Event_Date__c);
+            const isDisabled = this.isButtonDisabled(event.Id);
             
             return {
                 id: event.Id,
@@ -155,8 +156,9 @@ export default class EventListing extends LightningElement {
                 description: event.Event_Description__c || 'Event description not available.',
                 buttonLabel: this.getButtonLabel(event.Id),
                 buttonVariant: this.getButtonVariant(event.Id),
-                isButtonDisabled: this.isButtonDisabled(event.Id),
-                isRegistering: this.isRegistering(event.Id)
+                isButtonDisabled: isDisabled,
+                isRegistering: this.isRegistering(event.Id),
+                buttonClass: isDisabled ? 'custom-register-button custom-register-button-disabled' : 'custom-register-button'
             };
         });
     }
@@ -319,13 +321,19 @@ export default class EventListing extends LightningElement {
     // Refresh event data to update button states
     refreshEventData() {
         if (this.events && this.events.length > 0) {
-            this.events = this.events.map(event => ({
-                ...event,
-                buttonLabel: this.getButtonLabel(event.id),
-                buttonVariant: this.getButtonVariant(event.id),
-                isButtonDisabled: this.isButtonDisabled(event.id),
-                isRegistering: this.isRegistering(event.id)
-            }));
+            this.events = this.events.map(event => {
+                const isDisabled = this.isButtonDisabled(event.id);
+                return {
+                    ...event,
+                    buttonLabel: this.getButtonLabel(event.id),
+                    buttonVariant: this.getButtonVariant(event.id),
+                    isButtonDisabled: isDisabled,
+                    isRegistering: this.isRegistering(event.id),
+                    buttonClass: isDisabled ? 'custom-register-button custom-register-button-disabled' : 'custom-register-button'
+                };
+            });
         }
     }
+
+    
 }

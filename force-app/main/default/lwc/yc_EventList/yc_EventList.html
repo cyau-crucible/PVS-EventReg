@@ -69,7 +69,7 @@
                                     <div class="register-mobile">
                                         <template if:false={event.isRegistering}>
                                             <div 
-                                                class={event.isButtonDisabled ? 'custom-register-button custom-register-button-disabled' : 'custom-register-button'}
+                                                class={event.buttonClass}
                                                 onclick={handleRegister}
                                                 data-event-id={event.id}
                                                 role="button"
@@ -95,7 +95,7 @@
                             <div class="register-desktop">
                                 <template if:false={event.isRegistering}>
                                     <div 
-                                        class={event.isButtonDisabled ? 'custom-register-button custom-register-button-disabled' : 'custom-register-button'}
+                                        class={event.buttonClass}
                                         onclick={handleRegister}
                                         data-event-id={event.id}
                                         role="button"
