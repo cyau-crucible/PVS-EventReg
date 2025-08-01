@@ -9,30 +9,30 @@
 /* Event Card Styles */
 .event-card {
     background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
     border: 1px solid #e5e7eb;
     margin-bottom: 24px;
-    max-width: 56rem; /* ~896px, equivalent to max-w-4xl */
+    max-width: 64rem; /* ~1024px, increased by ~15% */
     margin-left: auto;
     margin-right: auto;
 }
 
 .event-card-content {
-    padding: 48px 40px;
+    padding: 36px 40px;
 }
 
 /* Desktop Responsive - More specific */
 @media (min-width: 769px) {
     .event-card-content {
-        padding: 48px 40px !important;
+        padding: 36px 40px !important;
     }
 }
 
 /* Mobile/Tablet Responsive */
 @media (max-width: 768px) {
     .event-card-content {
-        padding: 32px 24px !important;
+        padding: 28px 24px !important;
     }
 }
 
@@ -90,10 +90,10 @@
 }
 
 .event-title {
-    font-size: 2.25rem;
+    font-size: 2rem;
     font-weight: 300;
     color: #374151;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     line-height: 1.1;
     font-family: 'Georgia', 'Times New Roman', serif;
 }
@@ -144,7 +144,7 @@
     background-color: #7be0df;
     color: #000;
     border: 1px solid #7be0df;
-    border-radius: 8px;
+    border-radius: 12px;
     font-family: 'Salesforce Sans', Arial, sans-serif;
     font-size: 16px;
     font-weight: 400;
@@ -238,7 +238,7 @@
 .event-divider {
     border: none;
     border-top: 1px solid #d1d5db;
-    margin: 32px 0 28px 0;
+    margin: 24px 0 20px 0;
     width: 100%;
 }
 
@@ -297,7 +297,7 @@
     }
     
     .event-title {
-        font-size: 1.75rem; /* Slightly smaller on mobile */
+        font-size: 1.5rem; /* Slightly smaller on mobile */
     }
 }
 
