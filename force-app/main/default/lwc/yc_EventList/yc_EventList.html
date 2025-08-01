@@ -33,60 +33,78 @@
         <!-- Events List -->
         <template if:true={hasEvents}>
             <template for:each={events} for:item="event">
-                <div key={event.id} class="slds-card slds-p-around_medium event-listing slds-m-bottom_medium">
-                    <div class="slds-grid slds-gutters">
-                        <!-- Date Section -->
-                        <div class="slds-col slds-size_12-of-12 slds-medium-size_2-of-12">
-                            <div class="event-date-container">
-                                <span class="event-day">{event.day}</span>
-                                <span class="event-month-year">{event.monthYear}</span>
-                            </div>
-                        </div>
-                        
-                        <!-- Event Details Section -->
-                        <div class="slds-col slds-size_12-of-12 slds-medium-size_8-of-12">
-                            <div class="event-details">
-                                <h3 class="slds-text-heading_medium slds-m-bottom_x-small event-title">
-                                    {event.title}
-                                </h3>
-                                
-                                <div class="event-meta slds-grid slds-grid_align-start">
-                                    <div class="slds-col slds-grid slds-grid_vertical-align-center slds-m-right_small">
-                                        <lightning-icon 
-                                            icon-name="utility:clock" 
-                                            size="x-small" 
-                                            class="clock-icon">
-                                        </lightning-icon>
-                                        <span class="slds-m-left_xx-small event-time">{event.time}</span>
+                <div key={event.id} class="event-card">
+                    <div class="event-card-content">
+                        <div class="event-main-section">
+                            <div class="event-content-row">
+                                <!-- Date Section -->
+                                <div class="event-date-section">
+                                    <div class="event-date-container">
+                                        <span class="event-day">{event.day}</span>
+                                        <div class="event-month-year">{event.monthYear}</div>
                                     </div>
+                                </div>
+                                
+                                <!-- Content Section -->
+                                <div class="event-content-section">
+                                    <h2 class="event-title">{event.title}</h2>
                                     
-                                    <div class="slds-col slds-grid slds-grid_vertical-align-center">
+                                    <div class="event-meta">
+                                        <div class="event-time-container">
+                                            <lightning-icon 
+                                                icon-name="utility:clock" 
+                                                size="small" 
+                                                class="event-icon">
+                                            </lightning-icon>
+                                            <span class="event-time">{event.time}</span>
+                                        </div>
                                         <lightning-icon 
                                             icon-name="utility:world" 
-                                            size="x-small" 
-                                            class="world-icon">
+                                            size="small" 
+                                            class="event-icon">
                                         </lightning-icon>
-                                        <span class="slds-m-left_xx-small event-type">{event.type}</span>
+                                    </div>
+                                    
+                                    <!-- Register Button - Mobile/Tablet -->
+                                    <div class="register-mobile">
+                                        <template if:false={event.isRegistering}>
+                                            <lightning-button 
+                                                variant="base"
+                                                label={event.buttonLabel}
+                                                onclick={handleRegister}
+                                                data-event-id={event.id}
+                                                disabled={event.isButtonDisabled}
+                                                class="register-button-mobile">
+                                            </lightning-button>
+                                        </template>
+                                        <template if:true={event.isRegistering}>
+                                            <div class="register-loading-mobile">
+                                                <lightning-spinner 
+                                                    alternative-text="Registering..." 
+                                                    size="small"
+                                                    class="register-spinner">
+                                                </lightning-spinner>
+                                                <span class="register-loading-text">Registering...</span>
+                                            </div>
+                                        </template>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <!-- Register Button Section -->
-                        <div class="slds-col slds-size_12-of-12 slds-medium-size_2-of-12">
-                            <div class="register-container">
+                            
+                            <!-- Register Button - Desktop -->
+                            <div class="register-desktop">
                                 <template if:false={event.isRegistering}>
                                     <lightning-button 
-                                        variant={event.buttonVariant}
+                                        variant="base"
                                         label={event.buttonLabel}
                                         onclick={handleRegister}
                                         data-event-id={event.id}
                                         disabled={event.isButtonDisabled}
-                                        class="register-button">
+                                        class="register-button-desktop">
                                     </lightning-button>
                                 </template>
                                 <template if:true={event.isRegistering}>
-                                    <div class="register-loading-container">
+                                    <div class="register-loading-desktop">
                                         <lightning-spinner 
                                             alternative-text="Registering..." 
                                             size="small"
@@ -97,15 +115,13 @@
                                 </template>
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- Description Section -->
-                    <div class="slds-grid">
-                        <div class="slds-col slds-size_1-of-1">
-                            <hr class="event-divider">
-                            <p class="slds-text-body_regular slds-m-top_x-small event-description">
-                                {event.description}
-                            </p>
+                        
+                        <!-- Divider Line -->
+                        <hr class="event-divider">
+                        
+                        <!-- Description -->
+                        <div class="event-description-section">
+                            <p class="event-description">{event.description}</p>
                         </div>
                     </div>
                 </div>

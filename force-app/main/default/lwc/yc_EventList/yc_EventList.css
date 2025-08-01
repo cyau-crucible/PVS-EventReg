@@ -1,4 +1,4 @@
-/* Event Listing Component Styles */
+/* Event Listing Component Styles - Refined Design */
 
 .event-list-container {
     width: 100%;
@@ -6,138 +6,246 @@
     margin: 0 auto;
 }
 
-.event-listing {
-    border: 1px solid #ddd;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+/* Event Card Styles */
+.event-card {
     background-color: white;
-    margin-bottom: 16px;
-    padding: 20px !important;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+    margin-bottom: 24px;
+    max-width: 56rem; /* ~896px, equivalent to max-w-4xl */
 }
 
-/* Override SLDS card padding */
-.slds-card.event-listing {
-    padding: 20px !important;
+.event-card-content {
+    padding: 32px;
+}
+
+/* Main Layout */
+.event-main-section {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.event-content-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 32px;
+    flex: 1;
 }
 
 /* Date Section Styles */
+.event-date-section {
+    flex-shrink: 0;
+}
+
 .event-date-container {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    min-width: 80px;
+    align-items: center;
+    justify-content: center;
+    width: 135px;
+    height: 82px;
 }
 
 .event-day {
-    font-size: 2.5rem;
+    font-size: 3.5rem;
     font-weight: 800;
     color: #8B4A9C;
     line-height: 0.9;
-    margin-bottom: 0;
-    font-family: Arial, sans-serif;
+    margin-bottom: 8px;
+    font-family: 'Times New Roman', serif; /* Fallback for superclarendon */
 }
 
 .event-month-year {
     font-size: 0.75rem;
-    font-weight: 600;
-    color: #333;
+    font-weight: 700;
+    color: #000;
     text-transform: uppercase;
-    white-space: nowrap;
-    margin-top: 2px;
-    font-family: Arial, sans-serif;
+    font-family: 'Segoe UI', Arial, sans-serif; /* Fallback for open-sans */
+    margin-top: 8px;
 }
 
-/* Event Details Styles */
-.event-details {
+/* Content Section Styles */
+.event-content-section {
     flex: 1;
-    padding-left: 16px;
+    min-width: 0;
 }
 
 .event-title {
-    color: #333;
-    font-weight: 600;
-    margin-bottom: 6px !important;
-    font-size: 1.125rem;
-    line-height: 1.3;
-    font-family: Georgia, serif;
+    font-size: 2.25rem; /* text-4xl equivalent */
+    font-weight: 300; /* font-light */
+    color: #374151; /* text-gray-800 */
+    margin-bottom: 16px;
+    line-height: 1.2;
+    font-family: 'Times New Roman', serif; /* Fallback for superclarendon */
 }
 
+/* Event Meta Styles */
 .event-meta {
-    margin-bottom: 0;
+    display: flex;
     align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.event-time-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .event-time {
-    font-weight: 600;
-    color: #8B4A9C;
-    font-size: 0.875rem;
-    font-family: Arial, sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #000;
+    font-family: 'Segoe UI', Arial, sans-serif;
 }
 
-.event-type {
-    font-size: 0.875rem;
-    color: #666;
-    font-family: Arial, sans-serif;
-}
-
-/* Icon Styles */
-.clock-icon lightning-primitive-icon,
-.world-icon lightning-primitive-icon {
-    fill: #8B4A9C !important;
-}
-
-.clock-icon svg,
-.world-icon svg {
-    fill: #8B4A9C !important;
+.event-icon {
+    --slds-c-icon-color-foreground-default: #8B4A9C;
 }
 
 /* Register Button Styles */
-.register-container {
-    display: flex;
-    justify-content: flex-end;
-    align-items: flex-start;
-    padding-left: 16px;
-    min-height: 36px; /* Ensure consistent height for button/spinner */
+.register-mobile {
+    display: block;
+    margin-bottom: 16px;
 }
 
-.register-button button {
-    background-color: #4ECDC4 !important;
-    border-color: #4ECDC4 !important;
-    color: white !important;
+.register-desktop {
+    display: none;
+    margin-left: 32px;
+    flex-shrink: 0;
+}
+
+.register-button-mobile button,
+.register-button-desktop button {
+    background-color: #7be0df !important;
+    border-color: #7be0df !important;
+    color: #000 !important;
+    font-weight: 400 !important;
+    font-size: 1.125rem !important;
+    padding: 24px 32px !important;
     border-radius: 8px !important;
-    font-weight: 600 !important;
-    font-size: 0.875rem !important;
-    padding: 8px 16px !important;
-    min-width: 90px;
-    font-family: Arial, sans-serif;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    min-width: auto !important;
 }
 
-.register-button button:hover {
-    background-color: #45B7B8 !important;
-    border-color: #45B7B8 !important;
+.register-button-mobile button:hover,
+.register-button-desktop button:hover {
+    background-color: #6dd3d2 !important;
+    border-color: #6dd3d2 !important;
 }
 
-/* Loading Spinner Styles */
-.register-loading-container {
+.register-button-mobile button {
+    width: 100%;
+}
+
+/* Loading States */
+.register-loading-mobile,
+.register-loading-desktop {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    min-width: 90px;
-    height: 36px;
+    justify-content: center;
+    padding: 24px 32px;
+    background-color: #f3f4f6;
+    border-radius: 8px;
 }
 
-.register-spinner {
-    margin-right: 8px;
+.register-loading-mobile {
+    width: 100%;
 }
 
 .register-loading-text {
-    font-size: 0.875rem;
-    color: #4ECDC4;
+    margin-left: 8px;
+    font-size: 1.125rem;
+    color: #7be0df;
     font-weight: 600;
-    font-family: Arial, sans-serif;
+    font-family: 'Segoe UI', Arial, sans-serif;
 }
 
-/* Modal Styles */
+/* Divider */
+.event-divider {
+    border: none;
+    border-top: 1px solid #d1d5db;
+    margin-bottom: 24px;
+    width: 100%;
+}
+
+/* Description Section */
+.event-description-section {
+    margin-left: 0;
+}
+
+.event-description {
+    font-size: 1rem;
+    font-weight: 400;
+    color: #6b7280;
+    line-height: 1.6;
+    font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+/* Desktop Responsive */
+@media (min-width: 1024px) {
+    .register-mobile {
+        display: none;
+    }
+    
+    .register-desktop {
+        display: block;
+    }
+    
+    .event-description-section {
+        margin-left: 128px; /* ml-32 equivalent */
+    }
+}
+
+/* Tablet and Mobile Responsive */
+@media (max-width: 1023px) {
+    .event-content-row {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .event-date-container {
+        flex-direction: row;
+        align-items: baseline;
+        justify-content: flex-start;
+        width: auto;
+        height: auto;
+    }
+    
+    .event-day {
+        font-size: 2.5rem;
+        margin-right: 12px;
+        margin-bottom: 0;
+    }
+    
+    .event-month-year {
+        margin-top: 0;
+    }
+    
+    .event-title {
+        font-size: 1.875rem; /* Slightly smaller on mobile */
+    }
+}
+
+@media (max-width: 768px) {
+    .event-card-content {
+        padding: 24px;
+    }
+    
+    .event-content-row {
+        gap: 12px;
+    }
+    
+    .event-title {
+        font-size: 1.5rem;
+    }
+}
+
+/* Modal Styles - Updated for new design */
 .modal-backdrop {
     position: fixed;
     top: 0;
@@ -206,28 +314,28 @@
 }
 
 .featured-event-card {
-    border: 1px solid #ddd;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     background-color: white;
-    padding: 20px;
+    padding: 32px;
 }
 
 .modal-register-button button {
-    background-color: #4ECDC4 !important;
-    border-color: #4ECDC4 !important;
-    color: white !important;
+    background-color: #7be0df !important;
+    border-color: #7be0df !important;
+    color: #000 !important;
     border-radius: 8px !important;
-    font-weight: 600 !important;
-    font-size: 0.875rem !important;
-    padding: 10px 20px !important;
-    min-width: 120px;
-    font-family: Arial, sans-serif;
+    font-weight: 400 !important;
+    font-size: 1.125rem !important;
+    padding: 20px 32px !important;
+    min-width: 140px;
+    font-family: 'Segoe UI', Arial, sans-serif;
 }
 
 .modal-register-button button:hover {
-    background-color: #45B7B8 !important;
-    border-color: #45B7B8 !important;
+    background-color: #6dd3d2 !important;
+    border-color: #6dd3d2 !important;
 }
 
 /* Responsive Modal */
@@ -258,110 +366,4 @@
         padding-left: 0;
         margin-top: 12px;
     }
-}
-
-/* Description Section */
-.event-divider {
-    border: none;
-    border-top: 1px solid #ddd;
-    margin: 12px 0 8px 0;
-    width: 100%;
-}
-
-.event-description {
-    color: #666;
-    line-height: 1.4;
-    font-size: 0.875rem;
-    margin-top: 8px !important;
-    font-family: Arial, sans-serif;
-}
-
-/* Grid Layout Fixes */
-.slds-grid.slds-gutters {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-}
-
-.slds-grid.slds-gutters > .slds-col {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .event-listing {
-        padding: 16px !important;
-    }
-    
-    .event-date-container {
-        flex-direction: row;
-        align-items: baseline;
-        margin-bottom: 12px;
-        min-width: auto;
-    }
-    
-    .event-day {
-        font-size: 2rem;
-        margin-right: 8px;
-        margin-bottom: 0;
-    }
-    
-    .event-month-year {
-        font-size: 0.75rem;
-    }
-    
-    .event-details {
-        padding-left: 0;
-        margin-bottom: 12px;
-    }
-    
-    .register-container {
-        justify-content: flex-start;
-        padding-left: 0;
-        margin-top: 8px;
-    }
-    
-    .event-meta {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-    }
-    
-    .event-meta .slds-col {
-        margin-right: 0 !important;
-        margin-bottom: 4px;
-    }
-}
-
-/* Ensure proper spacing in mobile */
-@media (max-width: 47.9375rem) {
-    .event-listing .slds-gutters {
-        margin: 0 !important;
-    }
-    
-    .event-listing .slds-gutters > .slds-col {
-        padding: 0 !important;
-    }
-}
-
-/* Icon container alignment */
-.slds-grid.slds-grid_vertical-align-center {
-    align-items: center;
-}
-
-/* Override any SLDS spacing that's too large */
-.slds-m-bottom_x-small {
-    margin-bottom: 6px !important;
-}
-
-.slds-m-top_x-small {
-    margin-top: 8px !important;
-}
-
-.slds-m-left_xx-small {
-    margin-left: 4px !important;
-}
-
-.slds-m-right_small {
-    margin-right: 12px !important;
 }
