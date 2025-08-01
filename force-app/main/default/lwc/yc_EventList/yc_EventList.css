@@ -1,4 +1,4 @@
-/* Event Listing Component Styles - Refined Design */
+/* Event Listing Component Styles - Custom Button Design */
 
 .event-list-container {
     width: 100%;
@@ -121,7 +121,7 @@
     --slds-c-icon-color-foreground-default: #8B4A9C;
 }
 
-/* Register Button Styles */
+/* Register Button Container */
 .register-mobile {
     display: block;
     margin-bottom: 16px;
@@ -133,103 +133,77 @@
     flex-shrink: 0;
 }
 
-/* Lightning Button Brand Variant Override */
-.register-button-mobile {
-    --slds-c-button-brand-color-background: #7be0df;
-    --slds-c-button-brand-color-background-hover: #6dd3d2;
-    --slds-c-button-brand-color-background-active: #6dd3d2;
-    --slds-c-button-brand-color-background-focus: #7be0df;
-    --slds-c-button-brand-color-border: #7be0df;
-    --slds-c-button-brand-color-border-hover: #6dd3d2;
-    --slds-c-button-brand-color-border-active: #6dd3d2;
-    --slds-c-button-brand-color-border-focus: #7be0df;
-    --slds-c-button-brand-text-color: #000;
-    --slds-c-button-brand-text-color-hover: #000;
-    --slds-c-button-brand-text-color-active: #000;
-    --slds-c-button-brand-text-color-focus: #000;
-    --slds-c-button-width: 100% !important;
-    --slds-c-button-font-size: 16px !important;
+/* Custom Button Styles */
+.custom-register-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    background-color: #7be0df;
+    color: #000;
+    border: 1px solid #7be0df;
+    border-radius: 8px;
+    font-family: 'Salesforce Sans', Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.875rem;
+    min-width: 120px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    box-shadow: none;
+    text-align: center;
+    white-space: nowrap;
+    position: relative;
+    overflow: hidden;
 }
 
-.register-button-desktop {
-    --slds-c-button-brand-color-background: #7be0df;
-    --slds-c-button-brand-color-background-hover: #6dd3d2;
-    --slds-c-button-brand-color-background-active: #6dd3d2;
-    --slds-c-button-brand-color-background-focus: #7be0df;
-    --slds-c-button-brand-color-border: #7be0df;
-    --slds-c-button-brand-color-border-hover: #6dd3d2;
-    --slds-c-button-brand-color-border-active: #6dd3d2;
-    --slds-c-button-brand-color-border-focus: #7be0df;
-    --slds-c-button-brand-text-color: #000;
-    --slds-c-button-brand-text-color-hover: #000;
-    --slds-c-button-brand-text-color-active: #000;
-    --slds-c-button-brand-text-color-focus: #000;
-
-    /* Font-specific fixes */
-    --slds-c-button-font-family: 'Salesforce Sans', Arial, sans-serif !important;
-    --slds-c-button-font-size: 14px !important;  /* Reduced from 20px */
-    --slds-c-button-font-weight: 400 !important;
-    --slds-c-button-line-height: 1.875rem !important;  /* Add line-height */
-
-    /* Adjust padding to match SLDS standards */
-    --slds-c-button-brand-padding-top: 8px !important;  /* Reduced from 12px */
-    --slds-c-button-brand-padding-bottom: 8px !important;  /* Reduced from 12px */
-    --slds-c-button-brand-padding-left: 16px !important;
-    --slds-c-button-brand-padding-right: 16px !important;
-
-    /* Additional button styling */
-    --slds-c-button-text-transform: none !important;  /* Ensure no text transformation */
-    --slds-c-button-letter-spacing: normal !important;  /* Reset letter spacing */
-
-    --slds-c-button-spacing-blockstart: 16px !important;
-    --slds-c-button-spacing-blockend: 16px !important;
-    --slds-c-button-brand-spacing-inlinestart: 16px !important;
-    --slds-c-button-brand-spacing-inlineend: 16px !important;
-    --slds-c-button-border-radius: 8px !important;
-    --slds-c-button-min-width: 120px !important;
-}
-
-.register-button-mobile .slds-button,
-.register-button-desktop .slds-button,
-.register-button-mobile button,
-.register-button-desktop button {
-    background-color: #7be0df !important;
-    border-color: #7be0df !important;
-    color: #000 !important;
-    font-weight: 400 !important;
-    font-size: 1.125rem !important;
-    border-radius: 8px !important;
-    font-family: 'Segoe UI', Arial, sans-serif !important;
-    min-width: 120px !important;
-    border: 1px solid #7be0df !important;
-    box-shadow: none !important;
-}
-
-.register-button-mobile .slds-button:hover,
-.register-button-desktop .slds-button:hover,
-.register-button-mobile button:hover,
-.register-button-desktop button:hover {
-    background-color: #6dd3d2 !important;
-    border-color: #6dd3d2 !important;
-    color: #000 !important;
-    box-shadow: none !important;
-}
-
-.register-button-mobile .slds-button:focus,
-.register-button-desktop .slds-button:focus,
-.register-button-mobile button:focus,
-.register-button-desktop button:focus {
-    background-color: #7be0df !important;
-    border-color: #7be0df !important;
-    color: #000 !important;
-    box-shadow: 0 0 0 2px rgba(123, 224, 223, 0.3) !important;
-}
-
-/*
-.register-button-mobile .slds-button {
+/* Mobile button full width */
+.register-mobile .custom-register-button {
     width: 100%;
+    font-size: 16px;
+    padding: 12px 20px;
 }
-*/
+
+/* Hover state */
+.custom-register-button:hover:not(.custom-register-button-disabled) {
+    background-color: #6dd3d2;
+    border-color: #6dd3d2;
+    color: #000;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Active/pressed state */
+.custom-register-button:active:not(.custom-register-button-disabled) {
+    background-color: #52bfbe;
+    border-color: #52bfbe;
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* Focus state */
+.custom-register-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(123, 224, 223, 0.5);
+}
+
+/* Disabled state */
+.custom-register-button-disabled {
+    background-color: #e5e5e5;
+    border-color: #e5e5e5;
+    color: #999;
+    cursor: not-allowed;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.custom-register-button-disabled:hover {
+    background-color: #e5e5e5;
+    border-color: #e5e5e5;
+    transform: none;
+    box-shadow: none;
+}
 
 /* Loading States */
 .register-loading-mobile,
@@ -237,18 +211,23 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 24px 32px;
+    padding: 12px 20px;
     background-color: #f3f4f6;
     border-radius: 8px;
+    min-height: 44px;
 }
 
 .register-loading-mobile {
     width: 100%;
 }
 
+.register-loading-desktop {
+    min-width: 120px;
+}
+
 .register-loading-text {
     margin-left: 8px;
-    font-size: 1.125rem;
+    font-size: 14px;
     color: #7be0df;
     font-weight: 600;
     font-family: 'Segoe UI', Arial, sans-serif;
@@ -397,21 +376,11 @@
     padding: 32px;
 }
 
-.modal-register-button button {
-    background-color: #7be0df !important;
-    border-color: #7be0df !important;
-    color: #000 !important;
-    border-radius: 8px !important;
-    font-weight: 400 !important;
-    font-size: 1.125rem !important;
-    padding: 20px 32px !important;
+/* Modal register button */
+.modal-register-button {
+    padding: 16px 32px;
+    font-size: 16px;
     min-width: 140px;
-    font-family: 'Segoe UI', Arial, sans-serif;
-}
-
-.modal-register-button button:hover {
-    background-color: #6dd3d2 !important;
-    border-color: #6dd3d2 !important;
 }
 
 /* Responsive Modal */
@@ -435,11 +404,5 @@
     
     .featured-event-card {
         padding: 16px;
-    }
-    
-    .featured-event-card .register-container {
-        justify-content: flex-start;
-        padding-left: 0;
-        margin-top: 12px;
     }
 }

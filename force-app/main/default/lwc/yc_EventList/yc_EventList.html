@@ -68,14 +68,14 @@
                                     <!-- Register Button - Mobile/Tablet -->
                                     <div class="register-mobile">
                                         <template if:false={event.isRegistering}>
-                                            <lightning-button 
-                                                variant="brand"
-                                                label={event.buttonLabel}
+                                            <div 
+                                                class={event.isButtonDisabled ? 'custom-register-button custom-register-button-disabled' : 'custom-register-button'}
                                                 onclick={handleRegister}
                                                 data-event-id={event.id}
-                                                disabled={event.isButtonDisabled}
-                                                class="register-button-mobile">
-                                            </lightning-button>
+                                                role="button"
+                                                tabindex="0">
+                                                {event.buttonLabel}
+                                            </div>
                                         </template>
                                         <template if:true={event.isRegistering}>
                                             <div class="register-loading-mobile">
@@ -94,14 +94,14 @@
                             <!-- Register Button - Desktop -->
                             <div class="register-desktop">
                                 <template if:false={event.isRegistering}>
-                                    <lightning-button 
-                                        variant="brand"
-                                        label={event.buttonLabel}
+                                    <div 
+                                        class={event.isButtonDisabled ? 'custom-register-button custom-register-button-disabled' : 'custom-register-button'}
                                         onclick={handleRegister}
                                         data-event-id={event.id}
-                                        disabled={event.isButtonDisabled}
-                                        class="register-button-desktop">
-                                    </lightning-button>
+                                        role="button"
+                                        tabindex="0">
+                                        {event.buttonLabel}
+                                    </div>
                                 </template>
                                 <template if:true={event.isRegistering}>
                                     <div class="register-loading-desktop">
@@ -187,12 +187,13 @@
                                     <!-- Register Button Section -->
                                     <div class="slds-col slds-size_12-of-12 slds-medium-size_2-of-12">
                                         <div class="register-container">
-                                            <lightning-button 
-                                                variant="brand"
-                                                label="Register Now"
+                                            <div 
+                                                class="custom-register-button modal-register-button" 
                                                 onclick={handleModalRegister}
-                                                class="register-button modal-register-button">
-                                            </lightning-button>
+                                                role="button"
+                                                tabindex="0">
+                                                Register Now
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
