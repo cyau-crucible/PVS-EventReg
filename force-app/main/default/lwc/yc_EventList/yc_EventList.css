@@ -64,9 +64,9 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 100px;
+    width: 80px;
     height: 82px;
-    margin-right: 20px;
+    margin-right: 40px;
 }
 
 .event-day {
