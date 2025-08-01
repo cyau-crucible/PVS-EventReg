@@ -119,6 +119,25 @@
     flex-shrink: 0;
 }
 
+/* Lightning Button Brand Variant Override */
+.register-button-mobile,
+.register-button-desktop {
+    --slds-c-button-brand-color-background: #7be0df;
+    --slds-c-button-brand-color-background-hover: #6dd3d2;
+    --slds-c-button-brand-color-background-active: #6dd3d2;
+    --slds-c-button-brand-color-background-focus: #7be0df;
+    --slds-c-button-brand-color-border: #7be0df;
+    --slds-c-button-brand-color-border-hover: #6dd3d2;
+    --slds-c-button-brand-color-border-active: #6dd3d2;
+    --slds-c-button-brand-color-border-focus: #7be0df;
+    --slds-c-button-brand-text-color: #000;
+    --slds-c-button-brand-text-color-hover: #000;
+    --slds-c-button-brand-text-color-active: #000;
+    --slds-c-button-brand-text-color-focus: #000;
+}
+
+.register-button-mobile .slds-button,
+.register-button-desktop .slds-button,
 .register-button-mobile button,
 .register-button-desktop button {
     background-color: #7be0df !important;
@@ -126,19 +145,35 @@
     color: #000 !important;
     font-weight: 400 !important;
     font-size: 1.125rem !important;
-    padding: 24px 32px !important;
+    padding: 16px 24px !important;
     border-radius: 8px !important;
-    font-family: 'Segoe UI', Arial, sans-serif;
-    min-width: auto !important;
+    font-family: 'Segoe UI', Arial, sans-serif !important;
+    min-width: 120px !important;
+    border: 1px solid #7be0df !important;
+    box-shadow: none !important;
 }
 
+.register-button-mobile .slds-button:hover,
+.register-button-desktop .slds-button:hover,
 .register-button-mobile button:hover,
 .register-button-desktop button:hover {
     background-color: #6dd3d2 !important;
     border-color: #6dd3d2 !important;
+    color: #000 !important;
+    box-shadow: none !important;
 }
 
-.register-button-mobile button {
+.register-button-mobile .slds-button:focus,
+.register-button-desktop .slds-button:focus,
+.register-button-mobile button:focus,
+.register-button-desktop button:focus {
+    background-color: #7be0df !important;
+    border-color: #7be0df !important;
+    color: #000 !important;
+    box-shadow: 0 0 0 2px rgba(123, 224, 223, 0.3) !important;
+}
+
+.register-button-mobile .slds-button {
     width: 100%;
 }
 
