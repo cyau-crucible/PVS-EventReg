@@ -1,56 +1,38 @@
-/* TEST - This should make everything red if CSS is loading */
+/* Event Listing Component Styles - Refined Design */
+
 .event-list-container {
-    background-color: red !important;
-    width: 100% !important;
-    max-width: 1200px !important;
-    margin: 0 auto !important;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
-/* Force styles using LWC-specific selectors */
-[lwc-2frjiv160am].event-card,
-div[lwc-2frjiv160am].event-card {
-    background-color: white !important;
-    border-radius: 8px !important;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
-    border: 1px solid #e5e7eb !important;
-    margin-bottom: 24px !important;
-    max-width: 56rem !important;
+/* Event Card Styles */
+.event-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+    margin-bottom: 24px;
+    max-width: 56rem; /* ~896px, equivalent to max-w-4xl */
 }
 
-[lwc-2frjiv160am].event-card-content,
-div[lwc-2frjiv160am].event-card-content {
-    padding: 48px 40px !important;
+.event-card-content {
+    padding: 48px 40px;
 }
 
-/* Try targeting with host selectors */
-:host .event-card-content {
-    padding: 48px 40px !important;
+/* Main Layout */
+.event-main-section {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 24px;
 }
 
-:host .event-title {
-    font-size: 2.5rem !important;
-    font-weight: 300 !important;
-    color: #374151 !important;
-    margin-bottom: 20px !important;
-    line-height: 1.1 !important;
-    font-family: 'Georgia', 'Times New Roman', serif !important;
-}
-
-/* Main Layout - More Specific */
-.event-card .event-main-section,
-div.event-main-section {
-    display: flex !important;
-    align-items: flex-start !important;
-    justify-content: space-between !important;
-    margin-bottom: 24px !important;
-}
-
-.event-card .event-content-row,
-div.event-content-row {
-    display: flex !important;
-    align-items: flex-start !important;
-    gap: 32px !important;
-    flex: 1 !important;
+.event-content-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 32px;
+    flex: 1;
 }
 
 /* Date Section Styles */
@@ -73,7 +55,7 @@ div.event-content-row {
     color: #8B4A9C;
     line-height: 0.9;
     margin-bottom: 8px;
-    font-family: 'Times New Roman', serif; /* Fallback for superclarendon */
+    font-family: 'Times New Roman', serif;
 }
 
 .event-month-year {
@@ -81,7 +63,7 @@ div.event-content-row {
     font-weight: 700;
     color: #000;
     text-transform: uppercase;
-    font-family: 'Segoe UI', Arial, sans-serif; /* Fallback for open-sans */
+    font-family: 'Segoe UI', Arial, sans-serif;
     margin-top: 8px;
 }
 
@@ -91,15 +73,13 @@ div.event-content-row {
     min-width: 0;
 }
 
-.event-card .event-title,
-div.event-title,
-h2.event-title {
-    font-size: 2.5rem !important; /* Increased from 2.25rem */
-    font-weight: 300 !important; /* font-light */
-    color: #374151 !important; /* text-gray-800 */
-    margin-bottom: 20px !important; /* Increased margin */
-    line-height: 1.1 !important; /* Tighter line height */
-    font-family: 'Georgia', 'Times New Roman', serif !important; /* Better serif font */
+.event-title {
+    font-size: 2.5rem;
+    font-weight: 300;
+    color: #374151;
+    margin-bottom: 20px;
+    line-height: 1.1;
+    font-family: 'Georgia', 'Times New Roman', serif;
 }
 
 /* Event Meta Styles */
@@ -224,7 +204,7 @@ h2.event-title {
 .event-divider {
     border: none;
     border-top: 1px solid #d1d5db;
-    margin: 32px 0 28px 0; /* Increased margins around divider */
+    margin: 32px 0 28px 0;
     width: 100%;
 }
 
@@ -234,12 +214,12 @@ h2.event-title {
 }
 
 .event-description {
-    font-size: 1.1rem; /* Slightly larger */
+    font-size: 1.1rem;
     font-weight: 400;
     color: #6b7280;
     line-height: 1.6;
-    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; /* Better font stack */
-    margin-top: 4px; /* Reduced top margin */
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    margin-top: 4px;
 }
 
 /* Desktop Responsive */
@@ -289,7 +269,7 @@ h2.event-title {
 
 @media (max-width: 768px) {
     .event-card-content {
-        padding: 32px 24px; /* More generous mobile padding */
+        padding: 32px 24px;
     }
     
     .event-content-row {
@@ -297,7 +277,7 @@ h2.event-title {
     }
     
     .event-title {
-        font-size: 2rem; /* Larger mobile title */
+        font-size: 2rem;
     }
 }
 
