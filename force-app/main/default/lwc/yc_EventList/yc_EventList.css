@@ -14,6 +14,8 @@
     border: 1px solid #e5e7eb;
     margin-bottom: 24px;
     max-width: 56rem; /* ~896px, equivalent to max-w-4xl */
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .event-card-content {
@@ -88,7 +90,7 @@
 }
 
 .event-title {
-    font-size: 2.5rem;
+    font-size: 2.25rem;
     font-weight: 300;
     color: #374151;
     margin-bottom: 20px;
@@ -138,16 +140,16 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 8px 16px;
+    padding: 10px 20px;
     background-color: #7be0df;
     color: #000;
     border: 1px solid #7be0df;
     border-radius: 8px;
     font-family: 'Salesforce Sans', Arial, sans-serif;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 400;
-    line-height: 1.875rem;
-    min-width: 120px;
+    line-height: 1.5;
+    min-width: 100px;
     cursor: pointer;
     text-decoration: none;
     transition: all 0.2s ease;
@@ -161,8 +163,8 @@
 /* Mobile button full width */
 .register-mobile .custom-register-button {
     width: 100%;
-    font-size: 16px;
-    padding: 12px 20px;
+    font-size: 18px;
+    padding: 12px 24px;
 }
 
 /* Hover state */
@@ -195,7 +197,6 @@
     color: #999;
     cursor: not-allowed;
     opacity: 0.6;
-    pointer-events: none;
 }
 
 .custom-register-button-disabled:hover {
@@ -296,7 +297,7 @@
     }
     
     .event-title {
-        font-size: 1.875rem; /* Slightly smaller on mobile */
+        font-size: 1.75rem; /* Slightly smaller on mobile */
     }
 }
 
