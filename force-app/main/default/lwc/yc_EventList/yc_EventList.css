@@ -1,38 +1,56 @@
-/* Event Listing Component Styles - Refined Design */
-
+/* TEST - This should make everything red if CSS is loading */
 .event-list-container {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
+    background-color: red !important;
+    width: 100% !important;
+    max-width: 1200px !important;
+    margin: 0 auto !important;
 }
 
-/* Event Card Styles */
-.event-card {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e5e7eb;
-    margin-bottom: 24px;
-    max-width: 56rem; /* ~896px, equivalent to max-w-4xl */
+/* Force styles using LWC-specific selectors */
+[lwc-2frjiv160am].event-card,
+div[lwc-2frjiv160am].event-card {
+    background-color: white !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid #e5e7eb !important;
+    margin-bottom: 24px !important;
+    max-width: 56rem !important;
 }
 
-.event-card-content {
-    padding: 48px 40px; /* Increased padding significantly */
+[lwc-2frjiv160am].event-card-content,
+div[lwc-2frjiv160am].event-card-content {
+    padding: 48px 40px !important;
 }
 
-/* Main Layout */
-.event-main-section {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 24px;
+/* Try targeting with host selectors */
+:host .event-card-content {
+    padding: 48px 40px !important;
 }
 
-.event-content-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 32px;
-    flex: 1;
+:host .event-title {
+    font-size: 2.5rem !important;
+    font-weight: 300 !important;
+    color: #374151 !important;
+    margin-bottom: 20px !important;
+    line-height: 1.1 !important;
+    font-family: 'Georgia', 'Times New Roman', serif !important;
+}
+
+/* Main Layout - More Specific */
+.event-card .event-main-section,
+div.event-main-section {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    margin-bottom: 24px !important;
+}
+
+.event-card .event-content-row,
+div.event-content-row {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 32px !important;
+    flex: 1 !important;
 }
 
 /* Date Section Styles */
@@ -73,13 +91,15 @@
     min-width: 0;
 }
 
-.event-title {
-    font-size: 2.5rem; /* Increased from 2.25rem */
-    font-weight: 300; /* font-light */
-    color: #374151; /* text-gray-800 */
-    margin-bottom: 20px; /* Increased margin */
-    line-height: 1.1; /* Tighter line height */
-    font-family: 'Georgia', 'Times New Roman', serif; /* Better serif font */
+.event-card .event-title,
+div.event-title,
+h2.event-title {
+    font-size: 2.5rem !important; /* Increased from 2.25rem */
+    font-weight: 300 !important; /* font-light */
+    color: #374151 !important; /* text-gray-800 */
+    margin-bottom: 20px !important; /* Increased margin */
+    line-height: 1.1 !important; /* Tighter line height */
+    font-family: 'Georgia', 'Times New Roman', serif !important; /* Better serif font */
 }
 
 /* Event Meta Styles */
