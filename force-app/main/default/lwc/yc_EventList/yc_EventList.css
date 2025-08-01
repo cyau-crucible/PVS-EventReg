@@ -1,5 +1,8 @@
 /* Event Listing Component Styles - Custom Button Design */
 
+/* Import Taviraj font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Taviraj:wght@300;400&display=swap');
+
 .event-list-container {
     width: 100%;
     max-width: 1200px;
@@ -19,13 +22,13 @@
 }
 
 .event-card-content {
-    padding: 36px 40px;
+    padding: 36px 48px;
 }
 
 /* Desktop Responsive - More specific */
 @media (min-width: 769px) {
     .event-card-content {
-        padding: 36px 40px !important;
+        padding: 36px 48px !important;
     }
 }
 
@@ -61,8 +64,9 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 135px;
+    width: 100px;
     height: 82px;
+    margin-right: 20px;
 }
 
 .event-day {
@@ -95,7 +99,7 @@
     color: #374151;
     margin-bottom: 16px;
     line-height: 1.1;
-    font-family: 'Georgia', 'Times New Roman', serif;
+    font-family: 'Taviraj', Georgia, 'Times New Roman', Times, serif;
 }
 
 /* Event Meta Styles */
@@ -132,6 +136,7 @@
 .register-desktop {
     display: none;
     margin-left: 32px;
+    margin-right: 0;
     flex-shrink: 0;
 }
 
@@ -339,7 +344,7 @@
     font-weight: 700;
     color: #333;
     margin: 0;
-    font-family: Georgia, serif;
+    font-family: 'Taviraj', Georgia, 'Times New Roman', Times, serif;
 }
 
 .modal-close-button {
