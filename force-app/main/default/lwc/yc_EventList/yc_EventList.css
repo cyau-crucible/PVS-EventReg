@@ -17,7 +17,7 @@
 }
 
 .event-card-content {
-    padding: 32px;
+    padding: 48px 40px; /* Increased padding significantly */
 }
 
 /* Main Layout */
@@ -74,12 +74,12 @@
 }
 
 .event-title {
-    font-size: 2.25rem; /* text-4xl equivalent */
+    font-size: 2.5rem; /* Increased from 2.25rem */
     font-weight: 300; /* font-light */
     color: #374151; /* text-gray-800 */
-    margin-bottom: 16px;
-    line-height: 1.2;
-    font-family: 'Times New Roman', serif; /* Fallback for superclarendon */
+    margin-bottom: 20px; /* Increased margin */
+    line-height: 1.1; /* Tighter line height */
+    font-family: 'Georgia', 'Times New Roman', serif; /* Better serif font */
 }
 
 /* Event Meta Styles */
@@ -204,7 +204,7 @@
 .event-divider {
     border: none;
     border-top: 1px solid #d1d5db;
-    margin-bottom: 24px;
+    margin: 32px 0 28px 0; /* Increased margins around divider */
     width: 100%;
 }
 
@@ -214,11 +214,12 @@
 }
 
 .event-description {
-    font-size: 1rem;
+    font-size: 1.1rem; /* Slightly larger */
     font-weight: 400;
     color: #6b7280;
     line-height: 1.6;
-    font-family: 'Segoe UI', Arial, sans-serif;
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; /* Better font stack */
+    margin-top: 4px; /* Reduced top margin */
 }
 
 /* Desktop Responsive */
@@ -268,7 +269,7 @@
 
 @media (max-width: 768px) {
     .event-card-content {
-        padding: 24px;
+        padding: 32px 24px; /* More generous mobile padding */
     }
     
     .event-content-row {
@@ -276,7 +277,7 @@
     }
     
     .event-title {
-        font-size: 1.5rem;
+        font-size: 2rem; /* Larger mobile title */
     }
 }
 
