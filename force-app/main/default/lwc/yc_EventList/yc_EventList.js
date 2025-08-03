@@ -307,6 +307,10 @@ export default class EventListing extends LightningElement {
 
     // Getter for template conditional rendering
     get hasEvents() {
+        // During loading, we don't know if we have events yet, so return true to hide "no events" message
+        if (this.isLoading) {
+            return true;
+        }
         return this.events && this.events.length > 0;
     }
 
