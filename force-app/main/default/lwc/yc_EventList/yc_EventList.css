@@ -169,6 +169,7 @@
 
 /* Mobile button - full width */
 .register-mobile .custom-register-button {
+    display: block;
     width: 100%;
     font-size: 18px;
     padding: 12px 24px;
