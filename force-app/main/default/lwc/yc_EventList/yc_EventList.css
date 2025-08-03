@@ -167,13 +167,11 @@
     overflow: hidden;
 }
 
-/* Mobile button - same as desktop but centered */
+/* Mobile button - full width */
 .register-mobile .custom-register-button {
+    width: 100%;
     font-size: 18px;
     padding: 12px 24px;
-    margin: 0 auto;
-    display: block;
-    width: fit-content;
 }
 
 /* Hover state */
