@@ -1,8 +1,5 @@
 /* Event Listing Component Styles - Custom Button Design */
 
-/* Import Taviraj font from Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Taviraj:wght@300;400&display=swap');
-
 .event-list-container {
     width: 100%;
     max-width: 1200px;
