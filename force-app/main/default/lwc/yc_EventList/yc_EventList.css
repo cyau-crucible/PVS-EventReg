@@ -1,8 +1,5 @@
 /* Event Listing Component Styles - Custom Button Design */
 
-/* Import Taviraj font from Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Taviraj:wght@300;400&display=swap');
-
 .event-list-container {
     width: 100%;
     max-width: 1200px;
@@ -22,13 +19,13 @@
 }
 
 .event-card-content {
-    padding: 36px 48px;
+    padding: 36px 64px;
 }
 
 /* Desktop Responsive - More specific */
 @media (min-width: 769px) {
     .event-card-content {
-        padding: 36px 48px !important;
+        padding: 36px 64px !important;
     }
 }
 
@@ -136,7 +133,7 @@
 .register-desktop {
     display: none;
     margin-left: 32px;
-    margin-right: 0;
+    margin-right: 32px;
     flex-shrink: 0;
 }
 
