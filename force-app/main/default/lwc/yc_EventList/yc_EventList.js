@@ -117,15 +117,16 @@ export default class EventListing extends LightningElement {
     // Wire the Apex method to get events
     @wire(getUpcomingEvents)
     wiredEvents({ error, data }) {
-        this.isLoading = false;
         if (data) {
             this.loadRegisteredEvents().then(() => {
                 this.events = this.transformEventData(data);
+                this.isLoading = false; // Set to false after data is processed
             });
             this.error = undefined;
         } else if (error) {
             this.error = error;
             this.events = [];
+            this.isLoading = false; // Set to false after error is handled
             console.error('Error loading events:', error);
         }
     }
