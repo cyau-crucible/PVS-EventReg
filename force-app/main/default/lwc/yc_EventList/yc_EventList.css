@@ -19,13 +19,13 @@
 }
 
 .event-card-content {
-    padding: 40px 32px;
+    padding: 36px 32px;
 }
 
 /* Desktop Responsive - More specific */
 @media (min-width: 769px) {
     .event-card-content {
-        padding: 40px 32px !important;
+        padding: 36px 32px !important;
     }
 }
 
@@ -68,18 +68,18 @@
 
 .event-day {
     font-size: 3.5rem;
-    font-weight: 800;
+    font-weight: 400;
     color: #8B4A9C;
     line-height: 0.9;
     margin-bottom: 8px;
-    font-family: 'Times New Roman', serif;
+    font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
 }
 
 .event-month-year {
-    font-size: 0.75rem;
-    font-weight: 700;
+    font-size: 0.875rem;
+    font-weight: 400;
     color: #000;
-    text-transform: uppercase;
+    text-transform: none;
     font-family: 'Segoe UI', Arial, sans-serif;
     margin-top: 8px;
 }
