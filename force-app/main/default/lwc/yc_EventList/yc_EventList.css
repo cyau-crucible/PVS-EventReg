@@ -169,10 +169,13 @@
 
 /* Mobile button - full width */
 .register-mobile .custom-register-button {
-    display: block;
-    width: 100%;
+    display: block !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    text-align: center !important;
     font-size: 18px;
     padding: 12px 24px;
+    box-sizing: border-box;
 }
 
 /* Hover state */
