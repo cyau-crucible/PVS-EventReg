@@ -14,6 +14,7 @@ export default class EventListing extends LightningElement {
     // Modal and timer properties
     @track showInactivityModal = false;
     @track featuredEvent = null;
+    @track modalPermanentlyDismissed = false;
     inactivityTimer = null;
     inactivityTimeoutMs = 60000; // 60 seconds
 
@@ -71,6 +72,11 @@ export default class EventListing extends LightningElement {
     }
 
     showInactivityPrompt() {
+        // Don't show modal if permanently dismissed
+        if (this.modalPermanentlyDismissed) {
+            return;
+        }
+        
         // Find the first event that user hasn't registered for
         const availableEvent = this.events.find(event => 
             !this.isUserRegistered(event.id) && !this.isRegistering(event.id)
@@ -91,7 +97,8 @@ export default class EventListing extends LightningElement {
     closeInactivityModal() {
         this.showInactivityModal = false;
         this.featuredEvent = null;
-        this.startInactivityTimer(); // Restart timer after closing modal
+        this.modalPermanentlyDismissed = true; // Permanently disable modal
+        // Modal will not appear again for this session
     }
 
     // Handle register from modal
@@ -106,8 +113,10 @@ export default class EventListing extends LightningElement {
                 }
             };
             
-            // Close modal first
-            this.closeInactivityModal();
+            // Close modal and permanently disable
+            this.showInactivityModal = false;
+            this.featuredEvent = null;
+            this.modalPermanentlyDismissed = true;
             
             // Call the existing register handler
             this.handleRegister(mockEvent);
@@ -117,16 +126,15 @@ export default class EventListing extends LightningElement {
     // Wire the Apex method to get events
     @wire(getUpcomingEvents)
     wiredEvents({ error, data }) {
+        this.isLoading = false;
         if (data) {
             this.loadRegisteredEvents().then(() => {
                 this.events = this.transformEventData(data);
-                this.isLoading = false; // Set to false after data is processed
             });
             this.error = undefined;
         } else if (error) {
             this.error = error;
             this.events = [];
-            this.isLoading = false; // Set to false after error is handled
             console.error('Error loading events:', error);
         }
     }
