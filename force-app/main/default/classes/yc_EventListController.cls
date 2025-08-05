@@ -122,7 +122,7 @@ public without sharing class yc_EventListController {
             regEvent.WhoId = currentUser.ContactId;
             regEvent.Stage__c = currentUser.Contact.Caretaker_Status__c;
             regEvent.Zoom_Event_ID__c = selectedEvent.Zoom_Event_ID__c;
-            regEvent.Zoom_Ticket_ID__c = selectedEvent.Zoom_Ticket_ID__c;
+            // regEvent.Zoom_Ticket_ID__c = selectedEvent.Zoom_Ticket_ID__c;
             insert regEvent;
             
             System.debug('Successfully registered user for event: ' + selectedEvent.Event_Title__c);
@@ -154,13 +154,13 @@ public without sharing class yc_EventListController {
                 WHERE Email__c = :currentUser.Contact.Email
             ];
             
-            Set<String> registeredEventIds = new List<String>();
+            Set<String> registeredEventIds = new Set<String>();
             for (PVS_Event_Registration__c reg : registrations) {
                 registeredEventIds.add(reg.PVS_Event__c);
             }
 
             // Also query for existing Events
-            for (Event registeredEvent : [SELECT Id, PVS_Event__c, WhoId FROM Event WHERE WhoId -: currentUser.ContactId]) {
+            for (Event registeredEvent : [SELECT Id, PVS_Event__c, WhoId FROM Event WHERE WhoId =: currentUser.ContactId]) {
                 registeredEventIds.add(registeredEvent.PVS_Event__c);
             }  // end registered Event query
 
