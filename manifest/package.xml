@@ -5,8 +5,17 @@
         <name>ApexClass</name>
     </types>
     <types>
+        <members>Activity.Stage__c</members>
+        <members>PVS_Event__c.Event_Duration_F__c</members>
+        <name>CustomField</name>
+    </types>
+    <types>
         <members>yc_EventList</members>
         <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>Admin</members>
+        <name>Profile</name>
     </types>
     <version>64.0</version>
 </Package>
