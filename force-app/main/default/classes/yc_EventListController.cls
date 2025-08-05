@@ -36,10 +36,11 @@ public without sharing class yc_EventListController {
                     System.debug('Added Application School: ' + app.hed__Applying_To__c);
                 }
             }
-            
+
             // Build dynamic SOQL query with school filtering
             String query = 'SELECT Id, Event_Title__c, Event_Date__c, Event_Start_Time_Web_F__c, ' +
-                          'Event_Type__c, Event_Description__c, School_Abbreviation__c, School__c ' +
+                          'Event_Type__c, Event_Description__c, School_Abbreviation__c, School__c, ' + 
+                          'Zoom_Event_ID__c, Zoom_Ticket_ID__c ' + 
                           'FROM PVS_Event__c ' +
                           'WHERE Event_Start_DateTime_F__c >= TODAY ';
             
@@ -102,7 +103,8 @@ public without sharing class yc_EventListController {
                 return 'ALREADY_REGISTERED';
             }
             
-            // Create the registration record
+            /*
+            // Create the registration record (Event)
             PVS_Event_Registration__c registration = new PVS_Event_Registration__c(
                 Email__c = currentUser.Contact.Email,
                 First_Name__c = currentUser.Contact.FirstName,
@@ -112,8 +114,16 @@ public without sharing class yc_EventListController {
                 School_Abbreviation__c = selectedEvent.School_Abbreviation__c,
                 Stage__c = 'Prospect'
             );
-            
             insert registration;
+            */
+
+            Event regEvent = new Event();
+            regEvent.PVS_Event__c = selectedEvent.Id;
+            regEvent.WhoId = currentUser.ContactId;
+            regEvent.Stage__c = currentUser.Contact.Caretaker_Status__c;
+            regEvent.Zoom_Event_ID__c = selectedEvent.Zoom_Event_ID__c;
+            regEvent.Zoom_Ticket_ID__c = selectedEvent.Zoom_Ticket_ID__c;
+            insert regEvent;
             
             System.debug('Successfully registered user for event: ' + selectedEvent.Event_Title__c);
             return 'SUCCESS';
@@ -128,7 +138,7 @@ public without sharing class yc_EventListController {
     public static List<String> getUserRegisteredEventIds() {
         try {
             User currentUser = [
-                SELECT Id, ContactId, Contact.Email
+                SELECT Id, ContactId, Contact.Email, Contact.Caretaker_Status__c 
                 FROM User 
                 WHERE Id = :UserInfo.getUserId() 
                 LIMIT 1
