@@ -40,10 +40,11 @@ public without sharing class yc_EventListController {
             // Build dynamic SOQL query with school filtering
             String query = 'SELECT Id, Event_Title__c, Event_Date__c, Event_Start_Time_Web_F__c, ' +
                           'Event_Type__c, Event_Description__c, School_Abbreviation__c, School__c, ' + 
-                          'Zoom_Event_ID__c, Zoom_Ticket_ID__c ' + 
+                          'Zoom_Event_ID__c ' + 
                           'FROM PVS_Event__c ' +
                           'WHERE Event_Start_DateTime_F__c >= TODAY ';
-            
+            // @TODO: Review Zoom_Ticket_ID__c field
+
             // Add school filtering
             if (!permissibleSchoolIds.isEmpty()) {
                 query += 'AND (School__c = NULL OR School__c IN :permissibleSchoolIds) ';
@@ -71,7 +72,7 @@ public without sharing class yc_EventListController {
         try {
             // Get current user's Contact information
             User currentUser = [
-                SELECT Id, ContactId, Contact.Email, Contact.FirstName, 
+                SELECT Id, ContactId, Contact.Email, Contact.FirstName, Contact.Caretaker_Status__c, 
                        Contact.LastName, Contact.Phone
                 FROM User 
                 WHERE Id = :UserInfo.getUserId() 
@@ -84,7 +85,7 @@ public without sharing class yc_EventListController {
             
             // Get the event details for School_Abbreviation__c
             PVS_Event__c selectedEvent = [
-                SELECT Id, School_Abbreviation__c, Event_Title__c
+                SELECT Id, School_Abbreviation__c, Event_Title__c, Event_Duration_F__c, Event_Start_DateTime_F__c, Zoom_Event_ID__c 
                 FROM PVS_Event__c 
                 WHERE Id = :eventId 
                 LIMIT 1
@@ -102,7 +103,20 @@ public without sharing class yc_EventListController {
             if (!existingRegistrations.isEmpty()) {
                 return 'ALREADY_REGISTERED';
             }
+
+            // Additional check of Event sObjects
+            List<Event> existingEventRegistrations = [
+                SELECT Id 
+                FROM Event 
+                WHERE PVS_Event__c = :eventId 
+                AND WhoId = :currentUser.ContactId 
+                LIMIT 1
+            ];
             
+            if (!existingEventRegistrations.isEmpty()) {
+                return 'ALREADY_REGISTERED';
+            }
+
             /*
             // Create the registration record (Event)
             PVS_Event_Registration__c registration = new PVS_Event_Registration__c(
@@ -122,6 +136,8 @@ public without sharing class yc_EventListController {
             regEvent.WhoId = currentUser.ContactId;
             regEvent.Stage__c = currentUser.Contact.Caretaker_Status__c;
             regEvent.Zoom_Event_ID__c = selectedEvent.Zoom_Event_ID__c;
+            regEvent.DurationInMinutes = Integer.valueOf(selectedEvent.Event_Duration_F__c);
+            regEvent.ActivityDateTime = selectedEvent.Event_Start_DateTime_F__c;
             // regEvent.Zoom_Ticket_ID__c = selectedEvent.Zoom_Ticket_ID__c;
             insert regEvent;
             
