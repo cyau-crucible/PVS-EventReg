@@ -1,6 +1,6 @@
 // Get the object and record ID you want to clone
 String objectName = 'PVS_Event__c';  // Change this to your object
-String recordId = 'a1hWE000001UphFYAS';  // Change this to your record ID
+String recordId = 'a1dEa000007gUfBIAU';  // Change this to your record ID
 
 // Get object type
 Schema.SObjectType objectType = Schema.getGlobalDescribe().get(objectName);
