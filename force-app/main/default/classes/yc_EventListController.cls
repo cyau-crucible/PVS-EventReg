@@ -154,12 +154,19 @@ public without sharing class yc_EventListController {
                 WHERE Email__c = :currentUser.Contact.Email
             ];
             
-            List<String> registeredEventIds = new List<String>();
+            Set<String> registeredEventIds = new List<String>();
             for (PVS_Event_Registration__c reg : registrations) {
                 registeredEventIds.add(reg.PVS_Event__c);
             }
-            
-            return registeredEventIds;
+
+            // Also query for existing Events
+            for (Event registeredEvent : [SELECT Id, PVS_Event__c, WhoId FROM Event WHERE WhoId -: currentUser.ContactId]) {
+                registeredEventIds.add(registeredEvent.PVS_Event__c);
+            }  // end registered Event query
+
+            List<String> filteredEventIds = new List<String>();
+            filteredEventIds.addAll(registeredEventIds);
+            return filteredEventIds;
             
         } catch (Exception e) {
             System.debug('Error getting user registrations: ' + e.getMessage());
