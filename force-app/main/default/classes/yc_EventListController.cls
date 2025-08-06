@@ -47,7 +47,7 @@ public without sharing class yc_EventListController {
 
             // Add school filtering
             if (!permissibleSchoolIds.isEmpty()) {
-                query += 'AND (School__c = NULL OR School__c IN :permissibleSchoolIds) ';
+                query += 'AND (School__c = NULL OR School__c IN :permissibleSchoolIds OR School__r.Name = \'Enrollment Event\') ';
             } else {
                 // If no permissible schools, only show events with NULL school
                 query += 'AND School__c = NULL ';
@@ -85,7 +85,7 @@ public without sharing class yc_EventListController {
             
             // Get the event details for School_Abbreviation__c
             PVS_Event__c selectedEvent = [
-                SELECT Id, School_Abbreviation__c, Event_Title__c, Event_Duration_F__c, Event_Start_DateTime_F__c, Zoom_Event_ID__c 
+                SELECT Id, School_Abbreviation__c, Event_Title__c, Event_Duration_F__c, Event_Start_DateTime_F__c, Zoom_Event_ID__c, Zoom_Ticket_Type_ID__c
                 FROM PVS_Event__c 
                 WHERE Id = :eventId 
                 LIMIT 1
@@ -138,7 +138,7 @@ public without sharing class yc_EventListController {
             regEvent.Zoom_Event_ID__c = selectedEvent.Zoom_Event_ID__c;
             regEvent.DurationInMinutes = Integer.valueOf(selectedEvent.Event_Duration_F__c);
             regEvent.ActivityDateTime = selectedEvent.Event_Start_DateTime_F__c;
-            // regEvent.Zoom_Ticket_ID__c = selectedEvent.Zoom_Ticket_ID__c;
+            regEvent.Zoom_Ticket_Type_ID__c = selectedEvent.Zoom_Ticket_Type_ID__c;
             insert regEvent;
             
             System.debug('Successfully registered user for event: ' + selectedEvent.Event_Title__c);
