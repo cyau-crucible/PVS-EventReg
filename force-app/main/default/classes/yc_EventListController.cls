@@ -38,11 +38,12 @@ public without sharing class yc_EventListController {
             }
 
             // Build dynamic SOQL query with school filtering
+            DateTime currentDateTime = System.now();
             String query = 'SELECT Id, Event_Title__c, Event_Date__c, Event_Start_Time_Web_F__c, ' +
                           'Event_Type__c, Event_Description__c, School_Abbreviation__c, School__c, ' + 
                           'Zoom_Event_ID__c ' + 
                           'FROM PVS_Event__c ' +
-                          'WHERE Event_Start_DateTime_F__c >= TODAY ';
+                          'WHERE Event_Start_DateTime_F__c >= :currentDateTime ';
             // @TODO: Review Zoom_Ticket_ID__c field
 
             // Add school filtering

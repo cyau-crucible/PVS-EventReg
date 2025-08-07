@@ -180,20 +180,19 @@ export default class EventListing extends LightningElement {
         }
 
         try {
-            // Parse the date string (format: YYYY-MM-DD)
-            const eventDate = new Date(eventDateString);
+            // Split the date string to avoid timezone issues
+            const [year, month, day] = eventDateString.split('-').map(num => parseInt(num));
             
             // Format day
-            const day = eventDate.getDate().toString();
+            const dayStr = day.toString();
             
-            // Format month and year
+            // Format month and year  
             const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            const month = monthNames[eventDate.getMonth()];
-            const year = eventDate.getFullYear();
-            const monthYear = `${month} ${year}`;
+                            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const monthStr = monthNames[month - 1]; // month is 1-indexed in the string
+            const monthYear = `${monthStr} ${year}`;
 
-            return { day, monthYear };
+            return { day: dayStr, monthYear };
         } catch (error) {
             console.error('Error parsing date:', eventDateString, error);
             return { day: '??', monthYear: 'Date Error' };
