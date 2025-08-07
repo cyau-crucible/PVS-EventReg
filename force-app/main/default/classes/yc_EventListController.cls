@@ -43,7 +43,7 @@ public without sharing class yc_EventListController {
                           'Event_Type__c, Event_Description__c, School_Abbreviation__c, School__c, ' + 
                           'Zoom_Event_ID__c ' + 
                           'FROM PVS_Event__c ' +
-                          'WHERE Event_Start_DateTime_F__c >= :currentDateTime ';
+                          'WHERE Event_Start_DateTime_F__c >= :currentDateTime AND Event_Status__c = \'Active\'';
             // @TODO: Review Zoom_Ticket_ID__c field
 
             // Add school filtering
@@ -86,7 +86,7 @@ public without sharing class yc_EventListController {
             
             // Get the event details for School_Abbreviation__c
             PVS_Event__c selectedEvent = [
-                SELECT Id, School_Abbreviation__c, Event_Title__c, Event_Duration_F__c, Event_Start_DateTime_F__c, Zoom_Event_ID__c, Zoom_Ticket_Type_ID__c
+                SELECT Id,Name, School_Abbreviation__c, Event_Title__c, Event_Duration_F__c, Event_Start_DateTime_F__c, Zoom_Event_ID__c, Zoom_Ticket_Type_ID__c
                 FROM PVS_Event__c 
                 WHERE Id = :eventId 
                 LIMIT 1
@@ -106,9 +106,9 @@ public without sharing class yc_EventListController {
             }
 
             // Additional check of Event sObjects
-            List<Event> existingEventRegistrations = [
+            List<Task > existingEventRegistrations = [
                 SELECT Id 
-                FROM Event 
+                FROM Task  
                 WHERE PVS_Event__c = :eventId 
                 AND WhoId = :currentUser.ContactId 
                 LIMIT 1
@@ -132,13 +132,23 @@ public without sharing class yc_EventListController {
             insert registration;
             */
 
-            Event regEvent = new Event();
+            Task regEvent = new Task();
             regEvent.PVS_Event__c = selectedEvent.Id;
+            regEvent.Event_ID__c = selectedEvent.Name;
             regEvent.WhoId = currentUser.ContactId;
+            regEvent.WhatId = selectedEvent.Id;
             regEvent.Stage__c = currentUser.Contact.Caretaker_Status__c;
             regEvent.Zoom_Event_ID__c = selectedEvent.Zoom_Event_ID__c;
-            regEvent.DurationInMinutes = Integer.valueOf(selectedEvent.Event_Duration_F__c);
-            regEvent.ActivityDateTime = selectedEvent.Event_Start_DateTime_F__c;
+            regEvent.Subject = selectedEvent.Event_Title__c;
+            regEvent.Email__c = currentUser.Contact.Email;
+            regEvent.First_Name__c = currentUser.Contact.firstName;
+            regEvent.Last_Name__c = currentUser.Contact.lastName;
+            regEvent.Phone__c = currentUser.Contact.Phone;
+            
+
+            //regEvent.DurationInMinutes = Integer.valueOf(selectedEvent.Event_Duration_F__c);
+            //regEvent.ActivityDateTime = selectedEvent.Event_Start_DateTime_F__c;
+            regEvent.ActivityDate = system.today();
             regEvent.Zoom_Ticket_Type_ID__c = selectedEvent.Zoom_Ticket_Type_ID__c;
             insert regEvent;
             
