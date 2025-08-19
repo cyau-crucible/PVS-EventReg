@@ -224,16 +224,14 @@ public class yc_EventListControllerTest {
                 First_Name__c = testContact.FirstName,
                 Last_Name__c = testContact.LastName,
                 Phone__c = testContact.Phone,
-                PVS_Event__c = events[0].Id, // Test Event 1
-                Stage__c = 'Prospect'
+                PVS_Event__c = events[0].Id // Test Event 1
             );
             insert setupExistingReg;
             
             // Create existing Task record for testing duplicate prevention
             Task setupExistingTask = new Task(
                 WhatId = events[1].Id, // Test Event 2
-                WhoId = testContact.Id,
-                Stage__c = 'Verified'
+                WhoId = testContact.Id
             );
             insert setupExistingTask;
         }  // end runAs
@@ -355,7 +353,7 @@ public class yc_EventListControllerTest {
             
             // Verify Task record was created
             List<Task> tasks = [
-                SELECT Id, WhatId, WhoId, Stage__c 
+                SELECT Id, WhatId, WhoId  
                 FROM Task 
                 WHERE WhatId = :testEvent.Id 
                 AND WhoId = :testUser.ContactId

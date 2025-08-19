@@ -51,7 +51,7 @@ public without sharing class yc_EventListController {
                 query += 'AND (School__c = NULL OR School__c IN :permissibleSchoolIds OR School__r.Name = \'Enrollment Event\') ';
             } else {
                 // If no permissible schools, only show events with NULL school
-                query += 'AND School__c = NULL ';
+                query += 'AND (School__c = NULL OR School__r.Name = \'Enrollment Event\')';
             }
             
             query += 'ORDER BY Event_Start_DateTime_F__c ASC LIMIT 50';
@@ -132,18 +132,24 @@ public without sharing class yc_EventListController {
             insert registration;
             */
 
+            // Find the Task Record Type
+            List<RecordType> taskRT = [SELECT Id FROM RecordType WHERE DeveloperName='Form_Submission'];
+
             Task regEvent = new Task();
             regEvent.PVS_Event__c = selectedEvent.Id;
             regEvent.Event_ID__c = selectedEvent.Name;
             regEvent.WhoId = currentUser.ContactId;
             regEvent.WhatId = selectedEvent.Id;
-            regEvent.Stage__c = currentUser.Contact.Caretaker_Status__c;
+            // regEvent.Stage__c = currentUser.Contact.Caretaker_Status__c;
             regEvent.Zoom_Event_ID__c = selectedEvent.Zoom_Event_ID__c;
             regEvent.Subject = selectedEvent.Event_Title__c;
             regEvent.Email__c = currentUser.Contact.Email;
             regEvent.First_Name__c = currentUser.Contact.firstName;
             regEvent.Last_Name__c = currentUser.Contact.lastName;
             regEvent.Phone__c = currentUser.Contact.Phone;
+            regEvent.UTM_Campaign__c = 'enrollmentportal';
+            regEvent.Event_Registration_from_EP__c = true;
+            if (taskRT.size() > 0) { regEvent.RecordTypeId = taskRT[0].Id; }
             
 
             //regEvent.DurationInMinutes = Integer.valueOf(selectedEvent.Event_Duration_F__c);
