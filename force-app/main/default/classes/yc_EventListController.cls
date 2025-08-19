@@ -27,7 +27,8 @@ public without sharing class yc_EventListController {
                     SELECT Id, hed__Applying_To__c
                     FROM hed__Application__c
                     WHERE Household__c = :currentUser.Contact.AccountId
-                    AND hed__Applying_To__c != NULL
+                    AND hed__Applying_To__c != NULL AND hed__Application_Status__c != 'Archived'
+                    AND RECORDTYPE.DeveloperName != 'Intent_to_Return'
                 ];
                 
                 // Add all the school IDs from these applications
@@ -48,10 +49,10 @@ public without sharing class yc_EventListController {
 
             // Add school filtering
             if (!permissibleSchoolIds.isEmpty()) {
-                query += 'AND (School__c = NULL OR School__c IN :permissibleSchoolIds OR School__r.Name = \'Enrollment Event\') ';
+                query += 'AND (School__c = NULL OR School__c IN :permissibleSchoolIds OR School__r.Name = \'National Event Hosts\') ';
             } else {
                 // If no permissible schools, only show events with NULL school
-                query += 'AND (School__c = NULL OR School__r.Name = \'Enrollment Event\')';
+                query += 'AND (School__c = NULL OR School__r.Name = \'National Event Hosts\')';
             }
             
             query += 'ORDER BY Event_Start_DateTime_F__c ASC LIMIT 50';
@@ -148,7 +149,9 @@ public without sharing class yc_EventListController {
             regEvent.Last_Name__c = currentUser.Contact.lastName;
             regEvent.Phone__c = currentUser.Contact.Phone;
             regEvent.UTM_Campaign__c = 'enrollmentportal';
+            regEvent.Event_Attendance_Status__c = 'Registered';
             regEvent.Event_Registration_from_EP__c = true;
+            regEvent.Zoom_Ticket_Type_ID__c = selectedEvent.Zoom_Ticket_Type_ID__c;
             if (taskRT.size() > 0) { regEvent.RecordTypeId = taskRT[0].Id; }
             
 
