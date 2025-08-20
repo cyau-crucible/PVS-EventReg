@@ -126,13 +126,20 @@ export default class EventListing extends LightningElement {
     // Wire the Apex method to get events
     @wire(getUpcomingEvents)
     wiredEvents({ error, data }) {
+        console.log('=== wiredEvents FIRED ===');
+        
         if (data) {
+            console.log('Raw data from Apex:', JSON.stringify(data, null, 2));
+            
             this.loadRegisteredEvents().then(() => {
+                console.log('About to transform event data...');
                 this.events = this.transformEventData(data);
+                console.log('Final events array:', JSON.stringify(this.events, null, 2));
                 this.isLoading = false; // Set to false after data is processed
             });
             this.error = undefined;
         } else if (error) {
+            console.error('Error from Apex:', error);
             this.error = error;
             this.events = [];
             this.isLoading = false; // Set to false after error is handled
@@ -152,22 +159,32 @@ export default class EventListing extends LightningElement {
 
     // Convert 24-hour time to 12-hour format with AM/PM
     formatTo12Hour(timeString) {
+        console.log('=== formatTo12Hour DEBUG ===');
+        console.log('Input timeString:', timeString);
+        console.log('Type of timeString:', typeof timeString);
+        
         if (!timeString) {
+            console.log('No timeString provided, returning Time TBD');
             return 'Time TBD';
         }
 
         try {
             // Remove any timezone info (EST, PST, etc.) and trim whitespace
             const cleanTime = timeString.trim().replace(/\s+[A-Z]{2,4}$/, '');
+            console.log('Cleaned time (timezone removed):', cleanTime);
             
             // If already in 12-hour format (contains AM/PM), return as-is
             if (cleanTime.toLowerCase().includes('am') || cleanTime.toLowerCase().includes('pm')) {
+                console.log('Already in 12-hour format, returning as-is');
                 return timeString;
             }
 
             // Parse time assuming 24-hour format (HH:MM or HH:MM:SS)
             const timeParts = cleanTime.split(':');
+            console.log('Time parts after split:', timeParts);
+            
             if (timeParts.length < 2) {
+                console.log('Not enough time parts, returning original');
                 return timeString; // Return original if format unexpected
             }
 
@@ -175,14 +192,19 @@ export default class EventListing extends LightningElement {
             // Get minutes and remove any non-numeric characters
             const minutesStr = timeParts[1].substring(0, 2);
             const minutes = minutesStr.padStart(2, '0');
+            
+            console.log('Parsed hours:', hours);
+            console.log('Parsed minutes:', minutes);
 
             // Validate parsed values
             if (isNaN(hours) || hours < 0 || hours > 23) {
+                console.log('Invalid hours, returning original');
                 return timeString; // Return original if invalid
             }
 
             // Determine AM/PM
             const period = hours >= 12 ? 'PM' : 'AM';
+            console.log('Determined period:', period);
 
             // Convert to 12-hour format
             if (hours === 0) {
@@ -190,32 +212,51 @@ export default class EventListing extends LightningElement {
             } else if (hours > 12) {
                 hours = hours - 12;
             }
+            console.log('Converted hours to 12-hour format:', hours);
 
             // Check if original had timezone and preserve it
             const timezoneMatch = timeString.match(/\s+([A-Z]{2,4})$/);
             const timezone = timezoneMatch ? ' ' + timezoneMatch[1] : '';
+            console.log('Timezone found:', timezone);
 
             // Format the output
-            return `${hours}:${minutes} ${period}${timezone}`;
+            const formattedTime = `${hours}:${minutes} ${period}${timezone}`;
+            console.log('Final formatted time:', formattedTime);
+            console.log('=== END formatTo12Hour DEBUG ===');
+            
+            return formattedTime;
 
         } catch (error) {
-            console.error('Error formatting time:', timeString, error);
+            console.error('Error in formatTo12Hour:', error);
+            console.error('Stack trace:', error.stack);
             return timeString; // Return original on error
         }
     }
 
     // Transform Salesforce data to component format
     transformEventData(salesforceEvents) {
-        return salesforceEvents.map(event => {
+        console.log('=== transformEventData START ===');
+        console.log('Number of events:', salesforceEvents.length);
+        
+        return salesforceEvents.map((event, index) => {
+            console.log(`\n--- Processing Event ${index + 1} ---`);
+            console.log('Raw event data:', JSON.stringify(event, null, 2));
+            console.log('Event_Start_Time_Web_F__c value:', event.Event_Start_Time_Web_F__c);
+            
             const eventDate = this.parseEventDate(event.Event_Date__c);
             const isDisabled = this.isButtonDisabled(event.Id);
             
-            return {
+            // Debug the time formatting
+            const originalTime = event.Event_Start_Time_Web_F__c;
+            const formattedTime = this.formatTo12Hour(originalTime);
+            console.log(`Time transformation: "${originalTime}" => "${formattedTime}"`);
+            
+            const transformedEvent = {
                 id: event.Id,
                 day: eventDate.day,
                 monthYear: eventDate.monthYear,
                 title: event.Event_Title__c || 'Event Title Not Available',
-                time: this.formatTo12Hour(event.Event_Start_Time_Web_F__c) || 'Time TBD',
+                time: formattedTime || 'Time TBD',
                 type: event.Event_Type__c || 'Virtual Event',
                 description: event.Event_Description__c || 'Event description not available.',
                 buttonLabel: this.getButtonLabel(event.Id),
@@ -224,6 +265,11 @@ export default class EventListing extends LightningElement {
                 isRegistering: this.isRegistering(event.Id),
                 buttonClass: isDisabled ? 'custom-register-button custom-register-button-disabled' : 'custom-register-button'
             };
+            
+            console.log('Transformed event:', JSON.stringify(transformedEvent, null, 2));
+            console.log(`--- End Event ${index + 1} ---\n`);
+            
+            return transformedEvent;
         });
     }
 
