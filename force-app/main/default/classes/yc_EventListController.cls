@@ -3,40 +3,40 @@ public without sharing class yc_EventListController {
     @AuraEnabled(cacheable=true)
     public static List<PVS_Event__c> getUpcomingEvents() {
         try {
-            // Get current user's Contact information including school lookup and household
-            User currentUser = [
-                SELECT Id, ContactId, Contact.ycadmissions__InitialSchool__c, Contact.AccountId
-                FROM User 
-                WHERE Id = :UserInfo.getUserId() 
-                LIMIT 1
-            ];
-            
             // Build the list of permissible school IDs
             Set<Id> permissibleSchoolIds = new Set<Id>();
-            
-            // Add user's associated school if it exists
-            if (currentUser.ContactId != null && currentUser.Contact.ycadmissions__InitialSchool__c != null) {
-                permissibleSchoolIds.add(currentUser.Contact.ycadmissions__InitialSchool__c);
-                System.debug('Added InitialSchool: ' + currentUser.Contact.ycadmissions__InitialSchool__c);
-            }
-            
-            // Add schools from Applications related to the Contact's Household
-            if (currentUser.ContactId != null && currentUser.Contact.AccountId != null) {
-                // Query for Applications where Household matches Contact's Account (Household)
-                List<hed__Application__c> householdApplications = [
-                    SELECT Id, hed__Applying_To__c
-                    FROM hed__Application__c
-                    WHERE Household__c = :currentUser.Contact.AccountId
-                    AND hed__Applying_To__c != NULL AND hed__Application_Status__c != 'Archived'
-                    AND RECORDTYPE.DeveloperName != 'Intent_to_Return'
-                ];
+            User currentUser;
+
+            // Get current user's Contact information including school lookup and household
+            List<User> currentUserQuery = [ SELECT Id, ContactId, Contact.ycadmissions__InitialSchool__c, Contact.AccountId
+                                            FROM User WHERE Id = :UserInfo.getUserId() ];
+            if (currentUserQuery.size() > 0) {
+                currentUser = currentUserQuery[0];
                 
-                // Add all the school IDs from these applications
-                for (hed__Application__c app : householdApplications) {
-                    permissibleSchoolIds.add(app.hed__Applying_To__c);
-                    System.debug('Added Application School: ' + app.hed__Applying_To__c);
+                // Add user's associated school if it exists
+                if (currentUser.ContactId != null && currentUser.Contact.ycadmissions__InitialSchool__c != null) {
+                    permissibleSchoolIds.add(currentUser.Contact.ycadmissions__InitialSchool__c);
+                    System.debug('Added InitialSchool: ' + currentUser.Contact.ycadmissions__InitialSchool__c);
                 }
-            }
+                
+                // Add schools from Applications related to the Contact's Household
+                if (currentUser.ContactId != null && currentUser.Contact.AccountId != null) {
+                    // Query for Applications where Household matches Contact's Account (Household)
+                    List<hed__Application__c> householdApplications = [
+                        SELECT Id, hed__Applying_To__c
+                        FROM hed__Application__c
+                        WHERE Household__c = :currentUser.Contact.AccountId
+                        AND hed__Applying_To__c != NULL AND hed__Application_Status__c != 'Archived'
+                        AND RECORDTYPE.DeveloperName != 'Intent_to_Return'
+                    ];
+                    
+                    // Add all the school IDs from these applications
+                    for (hed__Application__c app : householdApplications) {
+                        permissibleSchoolIds.add(app.hed__Applying_To__c);
+                        System.debug('Added Application School: ' + app.hed__Applying_To__c);
+                    }
+                }
+            }  // end currentUserQuery
 
             // Build dynamic SOQL query with school filtering
             DateTime currentDateTime = System.now();
@@ -45,7 +45,6 @@ public without sharing class yc_EventListController {
                           'Zoom_Event_ID__c, Channel_Type__c ' + 
                           'FROM PVS_Event__c ' +
                           'WHERE Event_Start_DateTime_F__c >= :currentDateTime AND Event_Status__c = \'Active\'';
-            // @TODO: Review Zoom_Ticket_ID__c field
 
             // Add school filtering
             if (!permissibleSchoolIds.isEmpty()) {
@@ -59,7 +58,7 @@ public without sharing class yc_EventListController {
             
             System.debug('Executing query: ' + query);
             System.debug('Permissible School IDs: ' + permissibleSchoolIds);
-            System.debug('Contact AccountId (Household): ' + currentUser.Contact.AccountId);
+            if (currentUser != NULL) { System.debug('Contact AccountId (Household): ' + currentUser.Contact.AccountId); }
             
             return Database.query(query);
             
