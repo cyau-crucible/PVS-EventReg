@@ -1,6 +1,6 @@
 <template>
     <div class="event-list-container">
-       <!-- Inactivity Modal -->
+        <!-- Inactivity Modal -->
         <template if:true={showInactivityModal}>
             <div class="modal-backdrop">
                 <div class="modal-container">
@@ -84,6 +84,154 @@
                                 </div>
                             </div>
                         </template>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- Lead Registration Modal -->
+        <template if:true={showLeadRegistrationModal}>
+            <div class="modal-backdrop">
+                <div class="modal-container lead-registration-container">
+                    <!-- Modal Header -->
+                    <div class="modal-header">
+                        <h2 class="modal-title">Register for Event</h2>
+                        <button class="modal-close-button" onclick={closeLeadRegistrationModal} aria-label="Close modal">
+                            <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                        </button>
+                    </div>
+                    
+                    <!-- Lead Registration Form -->
+                    <div class="modal-content lead-form-content">
+                        <p class="lead-form-intro">Please provide the following information below to register for this event.</p>
+                        <p class="required-indicator">* Indicates Required</p>
+                        
+                        <div class="lead-form">
+                            <!-- First Name -->
+                            <div class="form-field">
+                                <label for="firstName" class="form-label">
+                                    First Name<span class="required">*</span>
+                                </label>
+                                <lightning-input
+                                    type="text"
+                                    name="firstName"
+                                    value={leadFormData.firstName}
+                                    onchange={handleLeadFormChange}
+                                    required
+                                    variant="standard">
+                                </lightning-input>
+                            </div>
+                            
+                            <!-- Last Name -->
+                            <div class="form-field">
+                                <label for="lastName" class="form-label">
+                                    Last Name<span class="required">*</span>
+                                </label>
+                                <lightning-input
+                                    type="text"
+                                    name="lastName"
+                                    value={leadFormData.lastName}
+                                    onchange={handleLeadFormChange}
+                                    required
+                                    variant="standard">
+                                </lightning-input>
+                            </div>
+                            
+                            <!-- Email -->
+                            <div class="form-field">
+                                <label for="email" class="form-label">
+                                    Email address<span class="required">*</span>
+                                </label>
+                                <lightning-input
+                                    type="email"
+                                    name="email"
+                                    value={leadFormData.email}
+                                    onchange={handleLeadFormChange}
+                                    required
+                                    variant="standard">
+                                </lightning-input>
+                            </div>
+                            
+                            <!-- Phone -->
+                            <div class="form-field">
+                                <label for="phone" class="form-label">
+                                    Phone number<span class="required">*</span>
+                                </label>
+                                <lightning-input
+                                    type="tel"
+                                    name="phone"
+                                    value={leadFormData.phone}
+                                    onchange={handleLeadFormChange}
+                                    required
+                                    variant="standard">
+                                </lightning-input>
+                            </div>
+                            
+                            <!-- State -->
+                            <div class="form-field">
+                                <label for="state" class="form-label">
+                                    State<span class="required">*</span>
+                                </label>
+                                <lightning-combobox
+                                    name="state"
+                                    value={leadFormData.state}
+                                    options={stateOptions}
+                                    onchange={handleLeadFormChange}
+                                    required
+                                    variant="standard">
+                                </lightning-combobox>
+                            </div>
+                            
+                            <!-- ZIP Code -->
+                            <div class="form-field">
+                                <label for="zipCode" class="form-label">
+                                    ZIP Code<span class="required">*</span>
+                                </label>
+                                <lightning-input
+                                    type="text"
+                                    name="zipCode"
+                                    value={leadFormData.zipCode}
+                                    onchange={handleLeadFormChange}
+                                    pattern="[0-9]{5}"
+                                    message-when-pattern-mismatch="Please enter a valid 5-digit ZIP code"
+                                    required
+                                    variant="standard">
+                                </lightning-input>
+                            </div>
+                            
+                            <!-- SMS Opt-in Checkbox -->
+                            <div class="form-field checkbox-field">
+                                <lightning-input
+                                    type="checkbox"
+                                    name="smsOptIn"
+                                    label="Text me about webinar reminders, enrollment updates, and other offers. Text message and data rates may apply. Message frequency varies. Reply STOP to opt-out."
+                                    value={leadFormData.smsOptIn}
+                                    onchange={handleLeadFormChange}
+                                    variant="standard">
+                                </lightning-input>
+                            </div>
+                            
+                            <!-- Submit Button -->
+                            <div class="form-actions">
+                                <lightning-button
+                                    variant="brand"
+                                    label="Submit"
+                                    onclick={handleLeadFormSubmit}
+                                    disabled={isSubmittingLead}
+                                    class="submit-button">
+                                </lightning-button>
+                            </div>
+                            
+                            <!-- Terms and Privacy -->
+                            <div class="form-disclaimer">
+                                <p>By submitting this form, you consent to receive emails, autodialed marketing calls, and text messages 
+                                from Connections Academy and other educational opportunities at the email address and phone number 
+                                you provided and agree to our <a href="#" onclick={handleTermsClick}>Terms of Use</a>, 
+                                <a href="#" onclick={handlePrivacyClick}>Privacy Policy</a> and acknowledge that you are at least 18 
+                                years of age. You may opt out of receiving these communications any time. If you do not consent, 
+                                <a href="#" onclick={handleContactClick}>contact us</a> for more details.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -3,6 +3,9 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getUpcomingEvents from '@salesforce/apex/yc_EventListController.getUpcomingEvents';
 import registerForEvent from '@salesforce/apex/yc_EventListController.registerForEvent';
 import getUserRegisteredEventIds from '@salesforce/apex/yc_EventListController.getUserRegisteredEventIds';
+// Add these imports when you implement the backend
+// import isGuest from '@salesforce/user/isGuest';
+// import createLeadAndRegister from '@salesforce/apex/yc_EventListController.createLeadAndRegister';
 
 export default class EventListing extends LightningElement {
     @track events = [];
@@ -18,14 +21,100 @@ export default class EventListing extends LightningElement {
     inactivityTimer = null;
     inactivityTimeoutMs = 60000; // 60 seconds
 
+    // Lead Registration Modal properties
+    @track showLeadRegistrationModal = false;
+    @track isSubmittingLead = false;
+    @track pendingEventForRegistration = null;
+    @track leadFormData = {
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        state: '',
+        zipCode: '',
+        smsOptIn: false
+    };
+
+    // State options for dropdown
+    stateOptions = [
+        { label: 'Select a State', value: '' },
+        { label: 'Alabama', value: 'AL' },
+        { label: 'Alaska', value: 'AK' },
+        { label: 'Arizona', value: 'AZ' },
+        { label: 'Arkansas', value: 'AR' },
+        { label: 'California', value: 'CA' },
+        { label: 'Colorado', value: 'CO' },
+        { label: 'Connecticut', value: 'CT' },
+        { label: 'Delaware', value: 'DE' },
+        { label: 'Florida', value: 'FL' },
+        { label: 'Georgia', value: 'GA' },
+        { label: 'Hawaii', value: 'HI' },
+        { label: 'Idaho', value: 'ID' },
+        { label: 'Illinois', value: 'IL' },
+        { label: 'Indiana', value: 'IN' },
+        { label: 'Iowa', value: 'IA' },
+        { label: 'Kansas', value: 'KS' },
+        { label: 'Kentucky', value: 'KY' },
+        { label: 'Louisiana', value: 'LA' },
+        { label: 'Maine', value: 'ME' },
+        { label: 'Maryland', value: 'MD' },
+        { label: 'Massachusetts', value: 'MA' },
+        { label: 'Michigan', value: 'MI' },
+        { label: 'Minnesota', value: 'MN' },
+        { label: 'Mississippi', value: 'MS' },
+        { label: 'Missouri', value: 'MO' },
+        { label: 'Montana', value: 'MT' },
+        { label: 'Nebraska', value: 'NE' },
+        { label: 'Nevada', value: 'NV' },
+        { label: 'New Hampshire', value: 'NH' },
+        { label: 'New Jersey', value: 'NJ' },
+        { label: 'New Mexico', value: 'NM' },
+        { label: 'New York', value: 'NY' },
+        { label: 'North Carolina', value: 'NC' },
+        { label: 'North Dakota', value: 'ND' },
+        { label: 'Ohio', value: 'OH' },
+        { label: 'Oklahoma', value: 'OK' },
+        { label: 'Oregon', value: 'OR' },
+        { label: 'Pennsylvania', value: 'PA' },
+        { label: 'Rhode Island', value: 'RI' },
+        { label: 'South Carolina', value: 'SC' },
+        { label: 'South Dakota', value: 'SD' },
+        { label: 'Tennessee', value: 'TN' },
+        { label: 'Texas', value: 'TX' },
+        { label: 'Utah', value: 'UT' },
+        { label: 'Vermont', value: 'VT' },
+        { label: 'Virginia', value: 'VA' },
+        { label: 'Washington', value: 'WA' },
+        { label: 'West Virginia', value: 'WV' },
+        { label: 'Wisconsin', value: 'WI' },
+        { label: 'Wyoming', value: 'WY' }
+    ];
+
     connectedCallback() {
         this.startInactivityTimer();
         this.addEventListeners();
+        this.checkForRegistrationParams();
     }
 
     disconnectedCallback() {
         this.clearInactivityTimer();
         this.removeEventListeners();
+    }
+
+    // Check URL parameters to prevent modal if user just registered
+    checkForRegistrationParams() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('fromEvent') === '1') {
+            this.modalPermanentlyDismissed = true;
+            console.log('User just registered, modal disabled');
+        }
+    }
+
+    // Check if user is a guest (stub for now - uncomment when import is available)
+    get isGuestUser() {
+        // return isGuest === true;
+        // For testing, you can toggle this
+        return true; // Set to true to test guest user flow
     }
 
     // Activity tracking methods
@@ -58,7 +147,7 @@ export default class EventListing extends LightningElement {
     }
 
     resetInactivityTimer() {
-        if (this.showInactivityModal) {
+        if (this.showInactivityModal || this.showLeadRegistrationModal) {
             return; // Don't reset timer while modal is open
         }
         this.startInactivityTimer();
@@ -72,7 +161,7 @@ export default class EventListing extends LightningElement {
     }
 
     showInactivityPrompt() {
-        // Don't show modal if permanently dismissed
+        // Don't show modal if permanently dismissed or if fromEvent=1 parameter exists
         if (this.modalPermanentlyDismissed) {
             return;
         }
@@ -104,23 +193,163 @@ export default class EventListing extends LightningElement {
     // Handle register from modal
     handleModalRegister() {
         if (this.featuredEvent) {
-            // Create a mock event with the featured event ID
-            const mockEvent = {
-                target: {
-                    dataset: {
-                        eventId: this.featuredEvent.id
-                    }
-                }
-            };
+            // Store the event for registration
+            this.pendingEventForRegistration = this.featuredEvent;
             
-            // Close modal and permanently disable
+            // Close inactivity modal
             this.showInactivityModal = false;
-            this.featuredEvent = null;
             this.modalPermanentlyDismissed = true;
             
-            // Call the existing register handler
-            this.handleRegister(mockEvent);
+            // Check if user is guest
+            if (this.isGuestUser) {
+                // Show lead registration form for guest users
+                this.showLeadRegistrationModal = true;
+            } else {
+                // For authenticated users, proceed with normal registration
+                const mockEvent = {
+                    target: {
+                        dataset: {
+                            eventId: this.pendingEventForRegistration.id
+                        }
+                    }
+                };
+                this.handleRegister(mockEvent);
+            }
         }
+    }
+
+    // Lead Registration Form Handlers
+    handleLeadFormChange(event) {
+        const field = event.target.name;
+        const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
+        this.leadFormData = { ...this.leadFormData, [field]: value };
+    }
+
+    closeLeadRegistrationModal() {
+        this.showLeadRegistrationModal = false;
+        this.resetLeadForm();
+        this.pendingEventForRegistration = null;
+    }
+
+    resetLeadForm() {
+        this.leadFormData = {
+            firstName: '',
+            lastName: '',
+            email: '',
+            phone: '',
+            state: '',
+            zipCode: '',
+            smsOptIn: false
+        };
+    }
+
+    validateLeadForm() {
+        const required = ['firstName', 'lastName', 'email', 'phone', 'state', 'zipCode'];
+        for (let field of required) {
+            if (!this.leadFormData[field] || this.leadFormData[field].trim() === '') {
+                return false;
+            }
+        }
+        
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(this.leadFormData.email)) {
+            return false;
+        }
+        
+        // Validate ZIP code (5 digits)
+        const zipRegex = /^\d{5}$/;
+        if (!zipRegex.test(this.leadFormData.zipCode)) {
+            return false;
+        }
+        
+        return true;
+    }
+
+    async handleLeadFormSubmit() {
+        // Validate form
+        if (!this.validateLeadForm()) {
+            this.dispatchEvent(new ShowToastEvent({
+                title: 'Missing Information',
+                message: 'Please fill in all required fields correctly.',
+                variant: 'error'
+            }));
+            return;
+        }
+
+        this.isSubmittingLead = true;
+
+        try {
+            // TODO: Call Apex method to create lead and register for event
+            // const result = await createLeadAndRegister({
+            //     leadData: this.leadFormData,
+            //     eventId: this.pendingEventForRegistration.id
+            // });
+
+            // For now, simulate success
+            console.log('Lead form data:', this.leadFormData);
+            console.log('Event ID:', this.pendingEventForRegistration.id);
+
+            // Show success message
+            this.dispatchEvent(new ShowToastEvent({
+                title: 'Registration Successful',
+                message: `Thank you for registering for "${this.pendingEventForRegistration.title}". You will receive a confirmation email shortly.`,
+                variant: 'success'
+            }));
+
+            // Close modal and reset
+            this.closeLeadRegistrationModal();
+
+            // Build redirect URL with parameters
+            const currentUrl = new URL(window.location.href);
+            const params = new URLSearchParams(currentUrl.search);
+            
+            // Add registration parameters
+            params.set('fn', this.leadFormData.firstName);
+            params.set('ln', this.leadFormData.lastName);
+            params.set('email', this.leadFormData.email);
+            params.set('state', this.leadFormData.state);
+            params.set('zipcode', this.leadFormData.zipCode);
+            params.set('fromEvent', '1');
+            
+            // Redirect to the same page with parameters
+            window.location.href = `${currentUrl.pathname}?${params.toString()}`;
+
+        } catch (error) {
+            console.error('Lead registration error:', error);
+            
+            let errorMessage = 'An error occurred during registration. Please try again.';
+            if (error.body && error.body.message) {
+                errorMessage = error.body.message;
+            }
+            
+            this.dispatchEvent(new ShowToastEvent({
+                title: 'Registration Failed',
+                message: errorMessage,
+                variant: 'error'
+            }));
+        } finally {
+            this.isSubmittingLead = false;
+        }
+    }
+
+    // Link handlers for terms, privacy, and contact
+    handleTermsClick(event) {
+        event.preventDefault();
+        // Navigate to terms page or open in new window
+        window.open('/terms-of-use', '_blank');
+    }
+
+    handlePrivacyClick(event) {
+        event.preventDefault();
+        // Navigate to privacy policy page or open in new window
+        window.open('/privacy-policy', '_blank');
+    }
+
+    handleContactClick(event) {
+        event.preventDefault();
+        // Navigate to contact page or open in new window
+        window.open('/contact-us', '_blank');
     }
 
     // Wire the Apex method to get events
@@ -348,6 +577,4 @@ export default class EventListing extends LightningElement {
             });
         }
     }
-
-    
 }
