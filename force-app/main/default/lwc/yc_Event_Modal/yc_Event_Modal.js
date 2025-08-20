@@ -192,11 +192,8 @@ export default class YcEventModal extends LightningElement {
         
         // Check if events are loaded
         if (this.events.length === 0) {
-            console.log('No events loaded yet. Events array is empty.');
-            console.log('isLoading status:', this.isLoading);
-            // Restart timer to try again
-            console.log('Restarting timer to check again in', this.inactivityTimeoutMs, 'ms');
-            this.startInactivityTimer();
+            console.log('No events available. Giving up.');
+            // Don't restart timer - just give up
             return;
         }
         
@@ -213,11 +210,10 @@ export default class YcEventModal extends LightningElement {
             console.log('Showing inactivity modal for event:', availableEvent.title);
             console.log('Modal state:', this.showInactivityModal);
         } else {
-            console.log('No available events for inactivity modal');
+            console.log('No available events for inactivity modal - user registered for all');
             console.log('All events:', this.events);
             console.log('Registered IDs:', this.registeredEventIds);
-            // Restart timer if no events available
-            this.startInactivityTimer();
+            // Don't restart timer - no point
         }
     }
 
