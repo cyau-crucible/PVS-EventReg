@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>Registration_Additional_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Registration Additional Message</shortDescription>
+        <value>Instructions on how to attend have been sent to your email.</value>
+    </labels>
+</CustomLabels>

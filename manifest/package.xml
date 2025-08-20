@@ -11,7 +11,12 @@
         <name>CustomField</name>
     </types>
     <types>
+        <members>Registration_Additional_Message</members>
+        <name>CustomLabel</name>
+    </types>
+    <types>
         <members>yc_EventList</members>
+        <members>yc_Event_Modal</members>
         <name>LightningComponentBundle</name>
     </types>
     <version>64.0</version>

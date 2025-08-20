@@ -1,0 +1,92 @@
+<template>
+    <div class="event-list-container">
+       <!-- Inactivity Modal -->
+        <template if:true={showInactivityModal}>
+            <div class="modal-backdrop">
+                <div class="modal-container">
+                    <!-- Modal Header -->
+                    <div class="modal-header">
+                        <h2 class="modal-title">Don't Miss Out!</h2>
+                        <button class="modal-close-button" onclick={closeInactivityModal} aria-label="Close modal">
+                            <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                        </button>
+                    </div>
+                    
+                    <!-- Modal Content - Featured Event Card -->
+                    <div class="modal-content">
+                        <p class="modal-subtitle">Join our next upcoming event:</p>
+                        
+                        <template if:true={featuredEvent}>
+                            <div class="featured-event-card">
+                                <div class="event-card-content">
+                                    <div class="event-main-section">
+                                        <div class="event-content-row">
+                                            <!-- Date Section -->
+                                            <div class="event-date-section">
+                                                <div class="event-date-container">
+                                                    <span class="event-day">{featuredEvent.day}</span>
+                                                    <div class="event-month-year">{featuredEvent.monthYear}</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Content Section -->
+                                            <div class="event-content-section">
+                                                <h2 class="event-title">{featuredEvent.title}</h2>
+                                                
+                                                <div class="event-meta">
+                                                    <div class="event-time-container">
+                                                        <lightning-icon 
+                                                            icon-name="utility:clock" 
+                                                            size="small" 
+                                                            class="event-icon">
+                                                        </lightning-icon>
+                                                        <span class="event-time">{featuredEvent.time}</span>
+                                                    </div>
+                                                    <lightning-icon 
+                                                        icon-name="utility:world" 
+                                                        size="small" 
+                                                        class="event-icon">
+                                                    </lightning-icon>
+                                                </div>
+                                                
+                                                <!-- Register Button - Mobile/Tablet -->
+                                                <div class="register-mobile">
+                                                    <div 
+                                                        class="custom-register-button"
+                                                        onclick={handleModalRegister}
+                                                        role="button"
+                                                        tabindex="0">
+                                                        Register Now
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Register Button - Desktop -->
+                                        <div class="register-desktop">
+                                            <div 
+                                                class="custom-register-button"
+                                                onclick={handleModalRegister}
+                                                role="button"
+                                                tabindex="0">
+                                                Register Now
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Divider Line -->
+                                    <hr class="event-divider">
+                                    
+                                    <!-- Description -->
+                                    <div class="event-description-section">
+                                        <p class="event-description">{featuredEvent.description}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+</template>

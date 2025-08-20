@@ -1,0 +1,402 @@
+/* Event Listing Component Styles - Custom Button Design */
+
+.event-list-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Event Card Styles */
+.event-card {
+    background-color: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    border: 1px solid #e5e7eb;
+    margin-bottom: 24px;
+    max-width: 64rem; /* ~1024px, increased by ~15% */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.event-card-content {
+    padding: 36px 32px;
+}
+
+/* Desktop Responsive - More specific */
+@media (min-width: 769px) {
+    .event-card-content {
+        padding: 36px 32px !important;
+    }
+}
+
+/* Mobile/Tablet Responsive */
+@media (max-width: 768px) {
+    .event-card-content {
+        padding: 28px 24px !important;
+    }
+}
+
+/* Main Layout */
+.event-main-section {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.event-content-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 32px;
+    flex: 1;
+}
+
+/* Date Section Styles */
+.event-date-section {
+    flex-shrink: 0;
+}
+
+.event-date-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 82px;
+    margin-right: 40px;
+}
+
+.event-day {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: #8B4A9C;
+    line-height: 0.9;
+    margin-bottom: 8px;
+    font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+}
+
+.event-month-year {
+    font-size: 1.05rem;
+    font-weight: 400;
+    color: #000;
+    text-transform: none;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    margin-top: 8px;
+}
+
+/* Content Section Styles */
+.event-content-section {
+    flex: 1;
+    min-width: 0;
+}
+
+.event-title {
+    font-size: 2rem;
+    font-weight: 300;
+    color: #374151;
+    margin-bottom: 16px;
+    line-height: 1.1;
+    font-family: 'Taviraj', Georgia, 'Times New Roman', Times, serif;
+}
+
+/* Event Meta Styles */
+.event-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.event-time-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.event-time {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #000;
+    font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.event-icon {
+    --slds-c-icon-color-foreground-default: #8B4A9C;
+}
+
+/* Make the Lightning icons appear more like the original */
+.event-icon svg {
+    stroke-width: 1.5;
+}
+
+/* Register Button Container */
+.register-mobile {
+    display: block;
+    margin-bottom: 16px;
+}
+
+.register-desktop {
+    display: none;
+    margin-left: 32px;
+    margin-right: 32px;
+    flex-shrink: 0;
+}
+
+/* Custom Button Styles */
+.custom-register-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    background-color: #7be0df;
+    color: #000;
+    border: 1px solid #7be0df;
+    border-radius: 12px;
+    font-family: 'Salesforce Sans', Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.5;
+    min-width: 100px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    box-shadow: none;
+    text-align: center;
+    white-space: nowrap;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Mobile button - full width */
+.register-mobile .custom-register-button {
+    display: block !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    text-align: center !important;
+    font-size: 18px;
+    padding: 12px 24px;
+    box-sizing: border-box;
+}
+
+/* Hover state */
+.custom-register-button:hover:not(.custom-register-button-disabled) {
+    background-color: #6dd3d2;
+    border-color: #6dd3d2;
+    color: #000;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Active/pressed state */
+.custom-register-button:active:not(.custom-register-button-disabled) {
+    background-color: #52bfbe;
+    border-color: #52bfbe;
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* Focus state */
+.custom-register-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(123, 224, 223, 0.5);
+}
+
+/* Disabled state */
+.custom-register-button-disabled {
+    background-color: #e5e5e5;
+    border-color: #e5e5e5;
+    color: #999;
+    cursor: not-allowed;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.custom-register-button-disabled:hover {
+    background-color: #e5e5e5;
+    border-color: #e5e5e5;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Loading States */
+.register-loading-mobile,
+.register-loading-desktop {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 20px;
+    background-color: #f3f4f6;
+    border-radius: 8px;
+    min-height: 44px;
+}
+
+.register-loading-mobile {
+    width: 100%;
+}
+
+.register-loading-desktop {
+    min-width: 120px;
+}
+
+.register-loading-text {
+    margin-left: 8px;
+    font-size: 14px;
+    color: #7be0df;
+    font-weight: 600;
+    font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+/* Divider */
+.event-divider {
+    border: none;
+    border-top: 1px solid #d1d5db;
+    margin: 24px 0 20px 0;
+    width: 100%;
+}
+
+/* Description Section */
+.event-description-section {
+    margin-left: 0;
+}
+
+.event-description {
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: #6b7280;
+    line-height: 1.6;
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    margin-top: 4px;
+}
+
+/* Desktop Responsive */
+@media (min-width: 1024px) {
+    .register-mobile {
+        display: none;
+    }
+    
+    .register-desktop {
+        display: block;
+    }
+    
+    .event-description-section {
+        margin-left: 128px; /* ml-32 equivalent */
+    }
+}
+
+/* Tablet and Mobile Responsive */
+@media (max-width: 1023px) {
+    .event-content-row {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .event-date-container {
+        flex-direction: row;
+        align-items: baseline;
+        justify-content: flex-start;
+        width: auto;
+        height: auto;
+    }
+    
+    .event-day {
+        font-size: 2.5rem;
+        margin-right: 12px;
+        margin-bottom: 0;
+    }
+    
+    .event-month-year {
+        margin-top: 0;
+    }
+    
+    .event-title {
+        font-size: 1.5rem; /* Slightly smaller on mobile */
+    }
+}
+
+/* Modal Styles - Only what's needed for the modal wrapper */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.modal-container {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    max-width: 800px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 24px 16px 24px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0;
+    font-family: 'Taviraj', Georgia, 'Times New Roman', Times, serif;
+}
+
+.modal-close-button {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close-button:hover {
+    background-color: #f3f3f3;
+}
+
+.modal-content {
+    padding: 24px;
+}
+
+.modal-subtitle {
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 20px;
+    text-align: center;
+    font-family: Arial, sans-serif;
+}
+
+/* Responsive Modal */
+@media (max-width: 768px) {
+    .modal-container {
+        width: 95%;
+        margin: 10px;
+    }
+    
+    .modal-header {
+        padding: 16px;
+    }
+    
+    .modal-content {
+        padding: 16px;
+    }
+    
+    .modal-title {
+        font-size: 1.25rem;
+    }
+}
