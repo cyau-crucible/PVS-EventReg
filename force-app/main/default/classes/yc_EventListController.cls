@@ -42,7 +42,7 @@ public without sharing class yc_EventListController {
             DateTime currentDateTime = System.now();
             String query = 'SELECT Id, Event_Title__c, Event_Date__c, Event_Start_Time_Web_F__c, ' +
                           'Event_Type__c, Event_Description__c, School_Abbreviation__c, School__c, ' + 
-                          'Zoom_Event_ID__c ' + 
+                          'Zoom_Event_ID__c, Channel_Type__c ' + 
                           'FROM PVS_Event__c ' +
                           'WHERE Event_Start_DateTime_F__c >= :currentDateTime AND Event_Status__c = \'Active\'';
             // @TODO: Review Zoom_Ticket_ID__c field
@@ -87,7 +87,7 @@ public without sharing class yc_EventListController {
             
             // Get the event details for School_Abbreviation__c
             PVS_Event__c selectedEvent = [
-                SELECT Id,Name, School_Abbreviation__c, Event_Title__c, Event_Duration_F__c, Event_Start_DateTime_F__c, Zoom_Event_ID__c, Zoom_Ticket_Type_ID__c
+                SELECT Id,Name, School_Abbreviation__c, Event_Title__c, Event_Duration_F__c, Event_Start_DateTime_F__c, Zoom_Event_ID__c, Zoom_Ticket_Type_ID__c, Channel_Type__c 
                 FROM PVS_Event__c 
                 WHERE Id = :eventId 
                 LIMIT 1
@@ -152,6 +152,7 @@ public without sharing class yc_EventListController {
             regEvent.Event_Attendance_Status__c = 'Registered';
             regEvent.Event_Registration_from_EP__c = true;
             regEvent.Zoom_Ticket_Type_ID__c = selectedEvent.Zoom_Ticket_Type_ID__c;
+            regEvent.Channel_Type__c = selectedEvent.Channel_Type__c;
             if (taskRT.size() > 0) { regEvent.RecordTypeId = taskRT[0].Id; }
             
 

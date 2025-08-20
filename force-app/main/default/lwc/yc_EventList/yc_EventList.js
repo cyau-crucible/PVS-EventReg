@@ -150,6 +150,54 @@ export default class EventListing extends LightningElement {
         }
     }
 
+    // Convert 24-hour time to 12-hour format with AM/PM
+    formatTo12Hour(timeString) {
+        if (!timeString) {
+            return 'Time TBD';
+        }
+
+        try {
+            // Handle various input formats
+            // Expected formats: "14:00", "14:00:00", "2:00 PM", etc.
+            
+            // If already in 12-hour format (contains AM/PM), return as-is
+            if (timeString.toLowerCase().includes('am') || timeString.toLowerCase().includes('pm')) {
+                return timeString;
+            }
+
+            // Parse time assuming 24-hour format (HH:MM or HH:MM:SS)
+            const timeParts = timeString.split(':');
+            if (timeParts.length < 2) {
+                return timeString; // Return original if format unexpected
+            }
+
+            let hours = parseInt(timeParts[0], 10);
+            const minutes = timeParts[1].padStart(2, '0');
+
+            // Validate parsed values
+            if (isNaN(hours) || hours < 0 || hours > 23) {
+                return timeString; // Return original if invalid
+            }
+
+            // Determine AM/PM
+            const period = hours >= 12 ? 'PM' : 'AM';
+
+            // Convert to 12-hour format
+            if (hours === 0) {
+                hours = 12; // Midnight
+            } else if (hours > 12) {
+                hours = hours - 12;
+            }
+
+            // Format the output
+            return `${hours}:${minutes} ${period}`;
+
+        } catch (error) {
+            console.error('Error formatting time:', timeString, error);
+            return timeString; // Return original on error
+        }
+    }
+
     // Transform Salesforce data to component format
     transformEventData(salesforceEvents) {
         return salesforceEvents.map(event => {
@@ -161,7 +209,7 @@ export default class EventListing extends LightningElement {
                 day: eventDate.day,
                 monthYear: eventDate.monthYear,
                 title: event.Event_Title__c || 'Event Title Not Available',
-                time: event.Event_Start_Time_Web_F__c || 'Time TBD',
+                time: this.formatTo12Hour(event.Event_Start_Time_Web_F__c) || 'Time TBD',
                 type: event.Event_Type__c || 'Virtual Event',
                 description: event.Event_Description__c || 'Event description not available.',
                 buttonLabel: this.getButtonLabel(event.Id),

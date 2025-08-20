@@ -147,7 +147,8 @@ public class yc_EventListControllerTest {
                     No_Cancellation_Email__c = false,
                     No_24hrs_Reminder_Email__c = false,
                     Check_Recording_Views__c = false,
-                    Update_Event_Host_List__c = false
+                    Update_Event_Host_List__c = false, 
+                    Channel_Type__c = 'WebinarEvent'
                 ),
                 // Event with different school (user should NOT see this)
                 new PVS_Event__c(
@@ -353,13 +354,15 @@ public class yc_EventListControllerTest {
             
             // Verify Task record was created
             List<Task> tasks = [
-                SELECT Id, WhatId, WhoId  
+                SELECT Id, WhatId, WhoId, Channel_Type__c 
                 FROM Task 
                 WHERE WhatId = :testEvent.Id 
                 AND WhoId = :testUser.ContactId
             ];
             
             System.assertEquals(1, tasks.size(), 'Should create one Task record');
+            // Ensure Channel Type was written
+            System.assertEquals('WebinarEvent', tasks[0].Channel_Type__c);
         }
         Test.stopTest();
     }
