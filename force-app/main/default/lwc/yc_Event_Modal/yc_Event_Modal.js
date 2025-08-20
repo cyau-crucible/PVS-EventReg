@@ -184,12 +184,12 @@ export default class YcEventModal extends LightningElement {
             isLoading: this.isLoading
         });
         
-        // Don't show modal if permanently dismissed or if fromEvent=1 parameter exists
+        // Don't show modal if permanently dismissed
         if (this.modalPermanentlyDismissed) {
             console.log('Modal permanently dismissed - not showing');
             return;
         }
-        
+
         // Check if events are loaded
         if (this.events.length === 0) {
             console.log('No events available. Giving up.');
@@ -210,10 +210,12 @@ export default class YcEventModal extends LightningElement {
             console.log('Showing inactivity modal for event:', availableEvent.title);
             console.log('Modal state:', this.showInactivityModal);
         } else {
-            console.log('No available events for inactivity modal - user registered for all');
+            console.log('No available events for inactivity modal');
             console.log('All events:', this.events);
             console.log('Registered IDs:', this.registeredEventIds);
-            // Don't restart timer - no point
+            // Restart timer if no events available - matching EventList.js behavior
+            console.log('Restarting timer to check again...');
+            this.startInactivityTimer();
         }
     }
 
