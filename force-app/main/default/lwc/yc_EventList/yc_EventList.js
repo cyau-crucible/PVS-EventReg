@@ -157,22 +157,24 @@ export default class EventListing extends LightningElement {
         }
 
         try {
-            // Handle various input formats
-            // Expected formats: "14:00", "14:00:00", "2:00 PM", etc.
+            // Remove any timezone info (EST, PST, etc.) and trim whitespace
+            const cleanTime = timeString.trim().replace(/\s+[A-Z]{2,4}$/, '');
             
             // If already in 12-hour format (contains AM/PM), return as-is
-            if (timeString.toLowerCase().includes('am') || timeString.toLowerCase().includes('pm')) {
+            if (cleanTime.toLowerCase().includes('am') || cleanTime.toLowerCase().includes('pm')) {
                 return timeString;
             }
 
             // Parse time assuming 24-hour format (HH:MM or HH:MM:SS)
-            const timeParts = timeString.split(':');
+            const timeParts = cleanTime.split(':');
             if (timeParts.length < 2) {
                 return timeString; // Return original if format unexpected
             }
 
             let hours = parseInt(timeParts[0], 10);
-            const minutes = timeParts[1].padStart(2, '0');
+            // Get minutes and remove any non-numeric characters
+            const minutesStr = timeParts[1].substring(0, 2);
+            const minutes = minutesStr.padStart(2, '0');
 
             // Validate parsed values
             if (isNaN(hours) || hours < 0 || hours > 23) {
@@ -189,8 +191,12 @@ export default class EventListing extends LightningElement {
                 hours = hours - 12;
             }
 
+            // Check if original had timezone and preserve it
+            const timezoneMatch = timeString.match(/\s+([A-Z]{2,4})$/);
+            const timezone = timezoneMatch ? ' ' + timezoneMatch[1] : '';
+
             // Format the output
-            return `${hours}:${minutes} ${period}`;
+            return `${hours}:${minutes} ${period}${timezone}`;
 
         } catch (error) {
             console.error('Error formatting time:', timeString, error);
