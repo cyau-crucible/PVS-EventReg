@@ -19,8 +19,7 @@ export default class EventListing extends LightningElement {
     @track featuredEvent = null;
     @track modalPermanentlyDismissed = false;
     inactivityTimer = null;
-    //inactivityTimeoutMs = 60000; // 60 seconds
-    inactivityTimeoutMs = 5000; // 5 seconds
+    inactivityTimeoutMs = 10000; // 10 seconds for testing - change back to 60000 for production
 
     // Lead Registration Modal properties
     @track showLeadRegistrationModal = false;
@@ -92,9 +91,19 @@ export default class EventListing extends LightningElement {
     ];
 
     connectedCallback() {
+        console.log('🚀 Component connected - starting inactivity timer');
         this.startInactivityTimer();
         this.addEventListeners();
         this.checkForRegistrationParams();
+        
+        // Debug: Log current state
+        console.log('📊 Initial state:', {
+            modalPermanentlyDismissed: this.modalPermanentlyDismissed,
+            inactivityTimeoutMs: this.inactivityTimeoutMs,
+            eventsCount: this.events.length,
+            events: this.events,
+            isGuestUser: this.isGuestUser
+        });
     }
 
     disconnectedCallback() {
@@ -142,15 +151,19 @@ export default class EventListing extends LightningElement {
 
     startInactivityTimer() {
         this.clearInactivityTimer();
+        console.log('⏱️ Starting inactivity timer for', this.inactivityTimeoutMs, 'ms');
         this.inactivityTimer = setTimeout(() => {
+            console.log('⏰ Timer expired! Calling showInactivityPrompt()');
             this.showInactivityPrompt();
         }, this.inactivityTimeoutMs);
     }
 
     resetInactivityTimer() {
         if (this.showInactivityModal || this.showLeadRegistrationModal) {
+            console.log('🚫 Not resetting timer - modal is open');
             return; // Don't reset timer while modal is open
         }
+        console.log('🔄 Activity detected - resetting timer');
         this.startInactivityTimer();
     }
 
@@ -162,8 +175,28 @@ export default class EventListing extends LightningElement {
     }
 
     showInactivityPrompt() {
+        console.log('🎯 showInactivityPrompt called!');
+        console.log('Current state:', {
+            modalPermanentlyDismissed: this.modalPermanentlyDismissed,
+            eventsLength: this.events.length,
+            events: this.events,
+            registeredEventIds: this.registeredEventIds,
+            isLoading: this.isLoading
+        });
+        
         // Don't show modal if permanently dismissed or if fromEvent=1 parameter exists
         if (this.modalPermanentlyDismissed) {
+            console.log('❌ Modal permanently dismissed - not showing');
+            return;
+        }
+        
+        // Check if events are loaded
+        if (this.events.length === 0) {
+            console.log('⚠️ No events loaded yet. Events array is empty.');
+            console.log('isLoading status:', this.isLoading);
+            // Restart timer to try again
+            console.log('🔄 Restarting timer to check again in', this.inactivityTimeoutMs, 'ms');
+            this.startInactivityTimer();
             return;
         }
         
@@ -172,12 +205,17 @@ export default class EventListing extends LightningElement {
             !this.isUserRegistered(event.id) && !this.isRegistering(event.id)
         );
 
+        console.log('🔍 Available event found:', availableEvent);
+
         if (availableEvent) {
             this.featuredEvent = availableEvent;
             this.showInactivityModal = true;
-            console.log('Showing inactivity modal for event:', availableEvent.title);
+            console.log('✅ Showing inactivity modal for event:', availableEvent.title);
+            console.log('Modal state:', this.showInactivityModal);
         } else {
-            console.log('No available events for inactivity modal');
+            console.log('❌ No available events for inactivity modal');
+            console.log('All events:', this.events);
+            console.log('Registered IDs:', this.registeredEventIds);
             // Restart timer if no events available
             this.startInactivityTimer();
         }
@@ -356,17 +394,20 @@ export default class EventListing extends LightningElement {
     // Wire the Apex method to get events
     @wire(getUpcomingEvents)
     wiredEvents({ error, data }) {
+        console.log('📡 Wire method called with:', { hasData: !!data, hasError: !!error });
         if (data) {
+            console.log('📦 Events data received:', data);
             this.loadRegisteredEvents().then(() => {
                 this.events = this.transformEventData(data);
                 this.isLoading = false; // Set to false after data is processed
+                console.log('✅ Events loaded and transformed:', this.events);
             });
             this.error = undefined;
         } else if (error) {
             this.error = error;
             this.events = [];
             this.isLoading = false; // Set to false after error is handled
-            console.error('Error loading events:', error);
+            console.error('❌ Error loading events:', error);
         }
     }
 
