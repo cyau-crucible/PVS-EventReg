@@ -238,6 +238,9 @@ export default class EventListing extends LightningElement {
         console.log('=== transformEventData START ===');
         console.log('Number of events:', salesforceEvents.length);
         
+        // Add visible debug indicator
+        window.DEBUG_TIME_FORMAT = true;
+        
         return salesforceEvents.map((event, index) => {
             console.log(`\n--- Processing Event ${index + 1} ---`);
             console.log('Raw event data:', JSON.stringify(event, null, 2));
@@ -251,11 +254,14 @@ export default class EventListing extends LightningElement {
             const formattedTime = this.formatTo12Hour(originalTime);
             console.log(`Time transformation: "${originalTime}" => "${formattedTime}"`);
             
+            // ADD DEBUG TO TITLE TO VERIFY CODE IS RUNNING
+            const debugTitle = `[DEBUG: ${formattedTime}] ${event.Event_Title__c || 'Event Title Not Available'}`;
+            
             const transformedEvent = {
                 id: event.Id,
                 day: eventDate.day,
                 monthYear: eventDate.monthYear,
-                title: event.Event_Title__c || 'Event Title Not Available',
+                title: debugTitle,  // Using debug title temporarily
                 time: formattedTime || 'Time TBD',
                 type: event.Event_Type__c || 'Virtual Event',
                 description: event.Event_Description__c || 'Event description not available.',
