@@ -240,11 +240,13 @@ export default class YcEventModal extends LightningElement {
             this.showInactivityModal = false;
             this.modalPermanentlyDismissed = true;
             
-            // Check if user is guest
+            // @TODO: Check if user is guest
+            /*
             if (this.isGuestUser) {
                 // Show lead registration form for guest users
                 this.showLeadRegistrationModal = true;
             } else {
+            */
                 // For authenticated users, proceed with normal registration
                 const mockEvent = {
                     target: {
@@ -254,7 +256,7 @@ export default class YcEventModal extends LightningElement {
                     }
                 };
                 this.handleRegister(mockEvent);
-            }
+            // }
         }
     }
 
