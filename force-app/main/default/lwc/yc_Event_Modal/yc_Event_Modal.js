@@ -127,7 +127,8 @@ export default class YcEventModal extends LightningElement {
     get isGuestUser() {
         // return isGuest === true;
         // For testing, you can toggle this
-        return true; // Set to true to test guest user flow
+       // return true; // Set to true to test guest user flow
+       return false;
     }
 
     // Activity tracking methods

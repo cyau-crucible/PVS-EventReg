@@ -62,7 +62,7 @@ export default class EventListing extends LightningElement {
         if (this.showInactivityModal) {
             return; // Don't reset timer while modal is open
         }
-        this.startInactivityTimer();
+        //this.startInactivityTimer();
     }
 
     clearInactivityTimer() {
@@ -85,7 +85,7 @@ export default class EventListing extends LightningElement {
 
         if (availableEvent) {
             this.featuredEvent = availableEvent;
-            this.showInactivityModal = true;
+            //this.showInactivityModal = true;
             console.log('Showing inactivity modal for event:', availableEvent.title);
         } else {
             console.log('No available events for inactivity modal');
