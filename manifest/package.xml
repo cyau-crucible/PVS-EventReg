@@ -5,6 +5,10 @@
         <name>ApexClass</name>
     </types>
     <types>
+        <members>Exp_Self_Registration</members>
+        <name>AuraDefinitionBundle</name>
+    </types>
+    <types>
         <members>Activity.Stage__c</members>
         <members>PVS_Event__c.Event_Duration_F__c</members>
         <members>PVS_Event__c.Event_Type__c</members>

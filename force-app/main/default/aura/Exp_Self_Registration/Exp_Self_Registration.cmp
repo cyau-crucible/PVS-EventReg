@@ -1,0 +1,547 @@
+<aura:component extends="forceCommunity:navigationMenuBase" controller="Exp_Self_Registration_Controller"
+                implements="forceCommunity:availableForAllPageTypes" access="global">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+    <!-- PUBLIC ATTRIBUTES -->
+    <aura:attribute name="schoolId" type="String"/>
+    <aura:attribute name="backgroundImageUrl" type="String"/>
+    <aura:attribute name="language" type="String"/>
+    <aura:attribute name="validLabels" type="Object"/>
+    <aura:attribute name="value" type="string"/>
+    <aura:attribute name="confirmValue" type="string"/>
+    <aura:attribute name="validCategories" type="Object"/>
+    <aura:attribute name="challenge" type="Boolean"/>
+    <aura:attribute name="emailPopulated" type="Boolean"/>
+    <aura:attribute name="allowCellPhone" type="Boolean" default="false" />
+    <aura:attribute name="showGrades" type="Boolean" default="false"/>
+    <aura:attribute name="stateOptions" type="List" default="[]"/>
+    <aura:attribute name="gradeOptions" type="List" default="[]"/>
+    <aura:attribute name="suffixOptions" type="List" default="[]"/>
+    
+    <aura:attribute name="existingRegistrant" type="Object"/>
+<!-- <ltng:require scripts="{!$Resource.wvo}"/> -->
+
+    <!-- PRIVATE ATTRIBUTES -->
+    <aura:attribute name="schoolName" type="String" access="private"/>
+    <aura:attribute name="headerStyle" type="String" access="private"/>
+    <aura:attribute name="bodyStyle" type="String" access="private"/>
+    <aura:attribute name="colorStyle" type="String" access="private"/>
+    <aura:attribute name="logo" type="String" default="" access="private"/>
+    <aura:attribute name="logoStyle" type="String" default="" access="private"/>
+    <aura:attribute name="form" type="Object" access="private"/> <!-- Stores form input -->
+    <aura:attribute name="labels" type="Object" access="private"/> <!-- Stores all text that requires translation -->
+    <aura:attribute name="noEmail" type="Boolean" default="false" access="private"/>
+    <aura:attribute name="isSpinning" type="Boolean" default="true" access="private"/>
+    <aura:attribute name="userExists" type="Boolean" default="false" access="private"/>
+    <aura:attribute name="showUserVerifyModal" type="Boolean" default="false" access="private"/>
+    <aura:attribute name="verificationDestination" type="Object" access="private"/>
+    <aura:attribute name="pwReset" type="Boolean" default="false" access="private"/>
+    <aura:attribute name="fontFamilies" type="String" access="private"/>
+    <aura:attribute name="errorMessage" type="String" access="private"/>
+    <aura:attribute name="emailsDontMatch" type="Boolean" access="private" default="true"/>
+    <aura:attribute name="emailsDontMatchText" type="String" access="private"/>
+    <aura:attribute name="addressSuggestionTimeoutId" type="Integer" access="private"/>
+    <aura:attribute name="addressSuggestions" type="List" access="private"/>
+    <aura:attribute name="disableHarFirstName" type="Boolean" default="false"/>
+    <aura:attribute name="disableHarLastName" type="Boolean" default="false"/>
+    <aura:attribute name="disableHarEmails" type="Boolean" default="false"/>
+    <aura:attribute name="disableHarPhone" type="Boolean" default="false"/>
+
+
+    <lightning:navigation aura:id="navService"/>
+    <aura:attribute name="pageReference" type="Object" access="private"/>
+    <aura:attribute name="loginUrl" type="String" access="private"/>
+    <aura:attribute name="backgroundImageStyle" type="String" access="private" default=""/>
+    <aura:attribute name="userLoggedIn" type="Boolean" access="private" default="false"/>
+    <aura:attribute name="allLabels" type="Object" access="private"/>
+    <aura:attribute name="spinnerLanguage" type="String" access="private"
+                    description="Set to blank for English, 'spanish' for Spanish"/>
+    <aura:attribute name="zipCodeValid" type="Boolean" access="private" default="true"/>
+    <aura:attribute name="zipIsShowOnCommunity" type="Boolean" access="private" default="true"/>
+    <aura:attribute name="schlZipUrl" type="String" access="private"/>
+    <aura:attribute name="interactionHistory" type="String[]" default="[]" />
+    <aura:attribute name="utmData" type="Object" />
+    <aura:attribute name="disableAbandonBeacon" type="Boolean" default="false"/>
+
+
+
+    <aura:attribute name="utmCampaign" type="String"/>
+    <aura:attribute name="utmContent" type="String"/>
+    <aura:attribute name="utmSource" type="String"/>
+    <aura:attribute name="utmTerm" type="String"/>
+    <aura:attribute name="utmMedium" type="String"/>
+    <aura:attribute name="utmClickId" type="String"/>
+    <aura:attribute name="utmClientId" type="String"/>
+    <aura:attribute name="utmDevice" type="String"/>
+    <aura:attribute name="utmDeviceType" type="String"/>
+    <aura:attribute name="harId" type="String"/>
+    <aura:attribute name="leadSource" type="String"/>
+    <aura:attribute name="referringPage" type="String"/>
+    
+    <aura:attribute name="vwo_variation_name" type="String"/>
+    <aura:attribute name="vwo_variation_id" type="String"/>
+    <aura:attribute name="vwo_campaign_name" type="String"/>
+    <aura:attribute name="vwo_campaign_id" type="String"/>
+
+
+
+
+    <!-- EVENT HANDLERS -->
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <aura:handler name="inputChange" event="c:inputChange" action="{!c.Exp_input_change}" />
+    <!-- CARD HEADER -->
+    <c:analyticsBeacon interactionHistory="{!v.interactionHistory}" utmData="{!v.utmData}" disableBeacon="{!v.disableAbandonBeacon}"/>
+
+    <aura:attribute name="enrolCardTitle" type="Aura.Component[]">
+        <!-- Define the card title in an attribute so styling can be set -->
+        <div id="card-header">
+            <!-- LANGUAGE -->
+            <table>
+                <tr>
+                    <td>
+                        <p  class="enrol-card-title" style="{!v.headerStyle}">{!v.labels.aura_title}</p>
+                    </td>
+                    <!--<td>
+                      <div class="toggle">
+                        <span class="slds-form-element__label">{!v.labels.language}</span>
+                      </div>
+                    </td>
+                    <td style="padding-bottom: 5px"><lightning:input type="toggle" name="language" variant="label-hidden" onchange="{!c.handleLangChange}"/></td>-->
+                </tr>
+            </table>
+        </div>
+    </aura:attribute>
+    <!-- CARD FOOTER -->
+    <!--aura:attribute name="enrolCardFooter" type="Aura.Component[]">
+      <div class="slds-grid slds-grid_align-center slds-wrap">
+        <div class="slds-col slds-size_1-of-1">
+          <p>{!v.labels.aura_already_registered}<a href="{!v.loginUrl}">{!v.labels.here}</a>.</p>
+        </div>
+        <div class="slds-col slds-size_1-of-1">
+          <p>{!v.labels.aura_footer}</p>
+        </div>
+      </div>
+    </aura:attribute-->
+
+    <div class="full-page" style="{!v.colorStyle}" ontouchstart="">
+        <c:Exp_Self_Registration_Header logo="{!v.logo}" title="{!v.labels.header_title}" loginLabel="{!v.labels.login}"
+                                        schoolId="{!v.schoolId}"/>
+        <div class="esr-body-container" style="{!v.backgroundImageStyle}">
+            <div class="esr-card-container">
+
+                <lightning:card aura:id="esr-card" class="esr-card hide-input-errors">
+                    <!-- CARD TITLE/FOOTER -->
+
+                    <!--aura:set attribute="footer">{!v.enrolCardFooter}</aura:set-->
+                    <!-- CARD BODY -->
+                    <div class="slds-card__body slds-card__body_inner" style="{!v.bodyStyle}">
+                        <div class="title">
+                            <h1 >{!v.labels.welcome_title}</h1>
+                        </div>
+                        <!-- <div  class="enrol-card-title">
+                            {!v.labels.let_s_get_your_household_enrolled}
+                        </div> -->
+                        <!--p class="subheader">{!v.labels.aura_subtitle}</p-->
+                        <p class="centeredText" >{!v.labels.get_started_in_just_a_few_steps}</p>
+
+                        <!-- <p class="centeredText" >{!v.labels.aura_already_registered + ' ' + v.labels.login + ' '}<a class="url"
+                                                                                    href="{!v.loginUrl}">{!v.labels.here}</a>.
+                        </p> -->
+                        <aura:if isTrue="{!v.userExists}">
+                            <p class="slds-text-color_error error-msg centeredText">{!v.labels.aura_existing_user_1+' '}<a
+                                        href="{!v.loginUrl}">{!v.labels.login_lower}</a>{!' '+v.labels.or+' '}
+                                <a id="pw-reset-link"
+                                   onclick="{!c.handleExistingUserLoginClick}">{!v.labels.reset_your_password}</a>.
+                            </p>
+                        </aura:if>
+                        <aura:if isTrue="{!v.userLoggedIn}">
+                            <p class="slds-text-color_error error-msg centeredText">{!v.labels.logged_in_user_1+' '}<a
+                                        onclick="{!c.navHome}">{!v.labels.view_your_dashboard}</a>{!' '+v.labels.or+' '}
+                                <a onclick="{!c.handleLogout}">{!v.labels.logout}</a>.
+                            </p>
+                        </aura:if>
+                        <!-- <br/> -->
+                        <!-- SIGN UP FORM - FIRST PAGE -->
+                        <!-- NAME -->
+
+                        <div class="columnInput">
+                            <!-- <div  class="slds-form-element__label slds-no-flex">
+                                <span class="slds-required">*</span>
+                                {!v.labels.first_name}
+                            </div> -->
+                            <c:Exp_Input label="{!v.labels.first_name}" aura:id="input"
+                                        isPlaceholder="true"
+                                        isPlaceholderLabel="{!v.labels.your}"
+                                        name="pvs-f-n" value="{!v.form.first_name}" required="true"
+                                        messageWhenValueMissing="{!v.labels.name_required}"
+                                        messageWhenTypeMismatch="{!v.labels.invalidformat}"
+                                        disabled="{!v.disableHarFirstName}"
+                                        pattern="^[A-Za-zÀ-ÖØ-öø-əḈ-ỹ\s\-']*$"
+                                        messageWhenPatternMismatch="{!v.labels.numbersinname}"
+                                        Exp_input-focus="{!c.trackInteraction}"
+                                        />
+                        </div>
+                        <div class="columnInput">
+                            <!-- <div  class="slds-form-element__label slds-no-flex">
+                                <span class="slds-required">*</span>
+                                {!v.labels.last_name}
+                            </div> -->
+                            <lightning:layout class="last-name-and-suffix-container">
+                                <lightning:layoutItem flexibility="grow">
+                                    <c:Exp_Input aura:id="input" name="pvs-l-n"
+                                                isPlaceholder="true"
+                                                isPlaceholderLabel="{!v.labels.your}"
+                                                label="{!v.labels.last_name}" value="{!v.form.last_name}" required="true"
+                                                messageWhenValueMissing="{!v.labels.name_required}"
+                                                messageWhenTypeMismatch="{!v.labels.invalidformat}"
+                                                disabled="{!v.disableHarLastName}"
+                                                pattern="^[A-Za-zÀ-ÖØ-öø-əḈ-ỹ\s\-']*$"
+                                                messageWhenPatternMismatch="{!v.labels.numbersinname}"
+                                                Exp_input-focus="{!c.trackInteraction}"
+                                                />
+                                </lightning:layoutItem>
+                                <!-- <lightning:layoutItem size="2" class="slds-m-left_small">
+                                    <lightning:combobox label="{!v.labels.suffix}" placeholder=""
+                                        aura:id="input" name="pvs-suffix"
+                                        value="{!v.form.suffix}"
+                                        options="{!v.suffixOptions}"
+                                        onfocus="{!c.trackInteraction}"
+                                        />
+                                    </lightning:layoutItem> -->
+                            </lightning:layout>
+                        </div>
+
+                        <!--div class="columnInput columnSuffixInput">
+                            
+                        </div-->
+
+
+                        <aura:if isTrue="{!!v.noEmail}">
+                          <div class="columnInput email-input-field">
+                              <c:Exp_Input aura:id="email-input" type="email" name="pvs-e-mail"
+                                           messageWhenPatternMismatch="{!v.labels.email_pattern_error}"
+                                           value="{!v.form.email}" label="{!v.labels.email}" required="true"
+                                           messageWhenValueMissing="{!v.labels.email_required}"
+                                           messageWhenTypeMismatch="{!v.labels.email_invalid_format}"
+                                           Exp_input-blur="{!c.handleBlurEmail}"
+                                           disabled="{!v.disableHarEmails}"
+                                           Exp_input-focus="{!c.trackInteraction}"
+                                           />
+                          </div>
+                          <div class="columnInput">
+                              <c:Exp_Input aura:id="input" type="email" name="pvs-c-e-mail"
+                                           value="{!v.form.email_confirm}" label="{!v.labels.email_confirm}"
+                                           required="true" messageWhenValueMissing="{!v.labels.email_required}"
+                                           messageWhenTypeMismatch="{!v.labels.email_invalid_format}"
+                                           disabled="{!v.disableHarEmails}"
+                                           Exp_input-focus="{!c.trackInteraction}"
+                                           />
+                          </div>
+                            <aura:if isTrue="{!v.emailsDontMatch}">
+                                <div class="red zipError slds-form-element__help">
+                                {!v.emailsDontMatchText}
+                                </div>
+                            </aura:if>
+                      </aura:if>
+                        <!-- <div class="columnInput relative">
+                            <c:Exp_Input aura:id="input" name="pvs-address" label="{!v.labels.address}"
+                                         value="{!v.form.address}" required="true"
+                                         messageWhenValueMissing="{!v.labels.address_required}"
+                                         messageWhenTypeMismatch="{!v.labels.invalidformat}"
+                                         inputChange="{!c.handleChangeStreetAddress}"
+                                         Exp_input-focus="{!c.trackInteraction}"
+                                         />
+                            <aura:if isTrue="{!v.addressSuggestions &amp;&amp; v.addressSuggestions.length > 0}">
+                                <div aura:id="address-suggestion-listbox" class="slds-dropdown slds-dropdown_left slds-dropdown_small slds-dropdown_length-with-icon-7 address-suggestions"
+                                     role="listbox">
+                                    <ul class="slds-listbox slds-listbox_vertical" role="group" aria-label="Suggested Addresses">
+                                        <aura:iteration items="{!v.addressSuggestions}" var="address" indexVar="suggestionIndex">
+                                            <li role="presentation" class="slds-listbox__item slds-m-bottom_xx-small">
+                                                <a role="option"  onclick="{!c.handleClickAddressSuggestion}" data-suggestion-index="{!suggestionIndex}">{!address.displayValue}</a>
+                                            </li>
+                                        </aura:iteration>
+                                    </ul>
+                                </div>
+                            </aura:if>
+                        </div> -->
+                        <!-- <div class="columnInput">
+                            <c:Exp_Input aura:id="input" name="pvs-city" label="{!v.labels.city}"
+                                         value="{!v.form.city}" required="true"
+                                         messageWhenValueMissing="{!v.labels.city_required}"
+                                         messageWhenTypeMismatch="{!v.labels.invalidformat}"
+                                         Exp_input-focus="{!c.trackInteraction}"/>
+                        </div>
+                        <div class="columnInput">
+                            <lightning:combobox label="{!v.labels.state}" aura:id="input"
+
+                                                name="pvs-state" value="{!v.form.state}" required="true"
+                                                placeholder="{!v.labels.select_state}"
+                                                messageWhenValueMissing="{!v.labels.state_required}"
+                                                options="{!v.stateOptions}"
+                                                onfocus="{!c.trackInteraction}"
+                                                />
+                        </div> -->
+                        <aura:if isTrue="{!AND(v.zipCodeValid, v.zipIsShowOnCommunity)}">
+                          <div class="columnInput">
+                            <lightning:input label="{!v.labels.zip}" aura:id="input" class="zipFieldFont"
+                                            pattern="^\d{5}$"
+                                            messageWhenPatternMismatch="{!v.labels.zip_error}"
+                                            onchange="{!c.zipCodeCheck}"
+                                            type="text" name="pvs-zip" value="{!v.form.zip}"
+                                            required="true" messageWhenValueMissing="{!v.labels.requiredfieldmissing}"
+                                            autocomplete="off"
+                                            onfocus="{!c.trackInteraction}"></lightning:input>
+                          </div>
+                        </aura:if>
+                        <aura:if isTrue="{!AND(v.zipCodeValid,!v.zipIsShowOnCommunity)}">
+                            <div class="columnInput">
+                              <lightning:input label="{!v.labels.zip}" aura:id="input" class="zipFieldFont"
+                                               onchange="{!c.zipCodeCheck}"
+                                               type="text" name="pvs-zip" value="{!v.form.zip}"
+                                               required="true" messageWhenValueMissing="{!v.labels.requiredfieldmissing}"
+                                               autocomplete="off"
+                                               onfocus="{!c.trackInteraction}"></lightning:input>
+                            </div>
+                            <div class="zipError">
+                                <lightning:icon class="warningIcon" iconName="utility:warning" size="x-small"/>&nbsp;
+                                <lightning:formattedRichText class="red"
+                                                            value="{!v.schlZipUrl}"/>
+                            </div>
+                        </aura:if>
+                        <aura:if isTrue="{!!v.zipCodeValid}">
+                          <div class="columnInput">
+                            <lightning:input label="{!v.labels.zip}" aura:id="input" class="zipFieldFont"
+                                             onchange="{!c.zipCodeCheck}"
+                                             type="text" name="pvs-zip" value="{!v.form.zip}"
+                                             required="true" messageWhenValueMissing="{!v.labels.requiredfieldmissing}"
+                                             autocomplete="off"
+                                             onfocus="{!c.trackInteraction}"></lightning:input>
+                            </div>
+                            <div class="zipError">
+                                <lightning:icon class="warningIcon" iconName="utility:warning" size="x-small"/>&nbsp;
+                                <lightning:formattedRichText class="red"
+                                                             value="{!$Label.c.Login_Zip_Code_No_Schools_1}"/>
+                                &nbsp;<lightning:formattedRichText
+                                        value="{!$Label.c.Login_Zip_Code_No_Schools_2}"/>
+                            </div>
+                        </aura:if>
+
+
+                        <!-- <c:Exp_Input aura:id="input" type="text" name="pvs-zip" pattern="(^\d{5}$)|(^\d{5}-\d{4}$)" messageWhenPatternMismatch="{!v.labels.zip_error}" value="{!v.form.zip}" label="{!v.labels.zip}" required="true" messageWhenValueMissing = "{!v.labels.requiredfieldmissing}"/> -->
+
+
+                        <!-- EMAIL -->
+                        <!-- <aura:if isTrue="{!!v.noEmail}">
+                            <div class="columnInput">
+                                <c:Exp_Input isPlaceholder="true" aura:id="input" type="email" name="pvs-e-mail"
+                                             messageWhenPatternMismatch="{!v.labels.email_pattern_error}"
+                                             value="{!v.form.email}" label="{!v.labels.email}" required="true"
+                                             messageWhenValueMissing="{!v.labels.requiredfieldmissing}"
+                                             messageWhenTypeMismatch="{!v.labels.invalidformat}"/>
+                            </div>
+                            <div class="columnInput">
+                                <c:Exp_Input isPlaceholder="true" aura:id="input" type="email" name="pvs-e-mail"
+                                             value="{!v.form.email_confirm}" label="{!v.labels.email_confirm}"
+                                             required="true" messageWhenValueMissing="{!v.labels.requiredfieldmissing}"
+                                             messageWhenTypeMismatch="{!v.labels.invalidformat}"/>
+                            </div>
+                        </aura:if> -->
+
+                        <div class="columnInput">
+                            <c:Exp_Input aura:id="phone-input" type="tel" name="pvs-tel-nb"
+                                         messageWhenPatternMismatch="{!v.labels.phone_error}" 
+                                         messageWhenTooShort="{!v.labels.phone_too_few_digits}"
+                                         value="{!v.form.phone}"
+                                         minLength="15"
+                                         label="{!v.labels.phone}" required="true"
+                                         messageWhenValueMissing="{!v.labels.phone_required}"
+                                         Exp_input-blur="{!c.handleBlurPhone}"
+                                         disabled="{!v.disableHarPhone}"
+                                         Exp_input-focus="{!c.trackInteraction}"
+                                         />
+                        </div>
+                        <br/>
+                        <div class="slds-grow">
+
+                            <div class="fullWidthInput">
+                                  <span class="slds-checkbox">
+                                    <lightning:input aura:id="input"  id="smsOptIn" type="checkbox" label="{!v.labels.sms_opt_in}"
+                                                     name="pvs-smsOptIn" checked="{!v.form.smsOptIn}"/>
+                                  </span>
+                                <!--<label  class="slds-checkbox__label">
+                                    {!v.labels.sms_opt_in}
+                                </label>-->
+                            </div>
+                        </div>
+
+                        <!-- PHONE -->
+                        <aura:if isTrue="{!v.allowCellPhone}">
+                            <aura:if isTrue="{!v.noEmail}">
+                                <c:Exp_Input aura:id="phone-input" type="tel" name="pvs-phone" pattern="^\d{10}$"
+                                             messageWhenPatternMismatch="{!v.labels.phone_error}"
+                                             value="{!v.form.phone}" label="{!v.labels.your + ' ' + v.labels.phone}"
+                                             disabled="{! v.challenge || v.emailPopulated}" required="true"
+                                             messageWhenValueMissing="{!v.labels.requiredfieldmissing}"
+                                             Exp_input-blur="{!c.handleBlurPhone}"
+                                             Exp_input-focus="{!c.trackInteraction}"
+                                             />
+                                <lightning:select aura:id="carrier" class="carrier-select" name="pvs-carrier-select"
+                                                  label="{!v.labels.carrier}" required="true" value="{!v.form.carrier}">
+                                    <option value="">{!v.labels.choose}</option>
+                                    <option value="vtext.com">Verizon Wireless</option>
+                                    <option value="messaging.sprintpcs.com">Sprint</option>
+                                    <option value="txt.att.net">ATT</option>
+                                    <option value="sms.alltelwireless.com">Alltel</option>
+                                    <option value="sms.myboostmobile.com">Boost Mobile</option>
+                                    <option value="mms.cricketwireless.net">Cricket Wireless</option>
+                                    <option value="sms.firstnet.com">FirstNet</option>
+                                    <option value="msg.fi.google.com">Google Fi</option>
+                                    <option value="mymetropcs.com">MetroPCS</option>
+                                    <option value="text.republicwireless.com">Republic Wireless</option>
+                                    <option value="tmomail.net">T-Mobile</option>
+                                    <option value="email.uscc.net">U.S. Cellular</option>
+                                    <option value="vmobl.com">Virgin Mobile</option>
+                                </lightning:select>
+                            </aura:if>
+                            <!-- EMAIL/PHONE TOGGLE -->
+                            <lightning:input aura:id="input" id="email-toggle" type="checkbox"
+                                             label="{!v.labels.aura_no_email_checkbox}" name="pvs-noEmail"
+                                             checked="{!v.noEmail}" disabled="{! v.challenge || v.emailPopulated}"/>
+                        </aura:if>
+                        <!-- PASSWORD -->
+                        <div class="fullWidthInput">
+                            <c:Exp_Password_Input aura:id="input" label="{!v.labels.password}"
+                                                  value="{!v.form.password}"
+                                                  confirmLabel="{!v.labels.password_confirm}"
+                                                  messageWhenValuesMismatch="{!v.labels.password_error}"
+                                                  language="{!v.form.language}" textValid="{!v.labels.textvalid}"
+                                                  textInvalid="{!v.labels.textinvalid}"
+                                                  messageWhenValueMissing="{!v.labels.password_required}"/>
+                        </div>
+
+                        <!-- <div class="fullWidthInput"> -->
+                            <!-- <div  class="slds-form-element__label slds-no-flex">
+                                <span class="slds-required">*</span>
+                                {!v.labels.state_interested}
+                            </div> -->
+
+                            <!-- <br/> -->
+
+                            <!-- <lightning:combobox label="{!v.labels.state_interested}" placeholder="{!v.labels.select_state}"
+                                                aura:id="input" name="pvs-state-interested"
+                                                value="{!v.form.state_interested}" required="true"
+                                                messageWhenValueMissing="{!v.labels.attending_required}"
+                                                options="{!v.stateOptions}"
+                                                onfocus="{!c.trackInteraction}"/>
+                        </div> -->
+
+                        <!-- <div class="fullWidthInput"> -->
+
+                            <!-- <div  class="slds-form-element__label slds-no-flex">
+                                <span class="slds-required">*</span>
+                                {!v.labels.grade}
+                            </div> -->
+
+                            <!--<div onclick="{! c.updateShowGrades}" onkeydown="{! c.updateShowGrades}">
+                                <lightning:input aura:id="input" label="{!v.labels.grade}" placeholder="{!v.labels.grade_levels}" required="true" readonly="true"
+                                                 value="{!v.form.gradeString}" class="fakeInput" messageWhenValueMissing="{!v.labels.requiredfieldmissing}"/>
+                             </div>-->
+                            <!--<aura:if isTrue="{!v.showGrades}">-->
+                            <!-- <label class="slds-form-element__label">
+                                <span class="slds-required">*</span>{!v.labels.grade}
+                            </label>
+                                <div class="picklist">
+                                    <lightning:checkboxGroup aura:id="input" variant="label-hidden" label="{!v.labels.grade}" name="pvs-grade"
+                                                             value="{!v.form.grade}" required="true"
+                                                             options="{!v.gradeOptions}"
+                                                             onchange="{!c.updateGradeString}" messageWhenValueMissing="{!v.labels.requiredfieldmissing}"
+                                                             />
+                                </div> -->
+                            <!--</aura:if>-->
+
+                        <!-- </div> -->
+
+                        <br/>
+
+
+                        <aura:if isTrue="{!v.errorMessage}">
+                            <p class="slds-text-color_error slds-form-element__help" >
+                                <lightning:formattedRichText value="{!v.errorMessage}"/>
+                            </p>
+                            <br/>
+                        </aura:if>
+                        <div class="submit-btn-container">
+                            <!-- SUBMIT BUTTON -->
+                            <lightning:button class="greenButton" label="{!v.labels.continue}"
+                                              title="{!v.labels.continue}" onclick="{!c.checkUserExists}"/>
+                        </div>
+                        <br/>
+                        <p class="centeredText" >{!v.labels.aura_already_registered + ' ' + v.labels.login + ' '}<a class="url"
+                            href="{!v.loginUrl}">{!v.labels.here}</a>.
+                        </p>
+                        <!-- SIGN UP FORM - USER FOUND - VERIFICATION MODAL -->
+                        <aura:if isTrue="{!v.showUserVerifyModal}">
+                            <c:Exp_One_Time_Login isOpen="{!v.showUserVerifyModal}"
+                                                  labels="{!v.labels}"
+                                                  email="{!v.verificationDestination}"
+                                                  password="{!v.form.password}"
+                                                  isLogin="{!!v.pwReset}"
+                                                  isEmail="{!!v.noEmail}"
+                                                  language="{!v.form.language}"
+                            />
+                        </aura:if>
+                        <!-- <div aura:id="myModal" role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" class="{!!v.zipCodeValid ? 'slds-modal slds-fade-in-open' : 'slds-modal'}"> -->
+                        <!-- <div class="slds-modal__container"> -->
+                        <!-- Modal Header -->
+                        <!-- <header class="slds-modal__header">
+                            <h2 id="modal-heading-01" class="slds-text-heading_medium">{!v.labels.warning}</h2>
+                        </header> -->
+                        <!-- Modal Body -->
+                        <!-- <div class="slds-modal__content slds-p-around_medium centeredText"> -->
+
+                        <!-- Modal Content -->
+                        <!-- <lightning:formattedRichText value="{!$Label.ycadmissions.New_Student_No_Schools}"/> -->
+                        <!-- <p>{!v.labels.zip_error_message}</p> -->
+                        <!-- </div> -->
+                        <!-- Modal Footer -->
+                        <!-- <footer class="slds-modal__footer">
+                            <button class="slds-button slds-button_neutral" onclick="{!c.closeModal}">{!v.labels.cancel}</button>
+                        </footer>
+                    </div>
+                </div> -->
+                        <!-- <div aura:id="backdrop" class="{!!v.zipCodeValid ? 'slds-backdrop slds-backdrop_open' : 'slds-backdrop'}"></div> -->
+                    </div>
+                    <aura:if isTrue="{!v.isSpinning}">
+                        <div class="spinnerHolder">
+                            <lightning:spinner aura:id="spinner" class="{!'spins '+v.spinnerLanguage}"
+                                               alternativeText="{!v.labels.spinning}" size="large"/>
+                        </div>
+                    </aura:if>
+                    <div class="slds-card__footer" >
+                        <aura:if isTrue="{!notequals(v.labels.aura_footer_maintenance, 'NA')}">
+                            <b>{!v.labels.aura_footer_maintenance}</b>
+                            <br/>
+                            <br/>
+                        </aura:if>
+                        {!v.labels.aura_footer}
+                        <br/>
+                        <br/>
+                        {!v.labels.aura_footer1 + ' '}<a class="url" target="_blank"
+                                                         href="{!v.labels.aura_footer7}">{!v.labels.aura_footer2}</a>,
+                        <a class="url" target="_blank" href="{!v.labels.aura_footer8}">{!v.labels.aura_footer3}</a>&#160;{!v.labels.aura_footer4 + ' '}
+                        <a class="url" target="_blank" href="{!v.labels.aura_footer9}">{!v.labels.aura_footer5}</a>&#160;{!v.labels.aura_footer6}
+                    </div>
+                </lightning:card>
+                <br/>
+                <br/>
+                <br/>
+            </div>
+
+        </div>
+
+    </div>
+
+
+</aura:component>

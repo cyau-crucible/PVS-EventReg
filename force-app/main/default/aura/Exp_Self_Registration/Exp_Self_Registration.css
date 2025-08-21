@@ -1,0 +1,404 @@
+@font-face {
+  font-family: Taviraj, "Times New Roman";
+  src: url('/resource/1692110603000/TavirajFontFamily');
+}
+
+
+.THIS .slds-checkbox .slds-form-element__label{
+    font-size: 14px !important;
+}
+.THIS .slds-has-focus{
+  background-color: #ededed !important;
+  filter: brightness(95%) !important;
+}
+
+.THIS .slds-listbox__option:hover, .THIS .slds-listbox__option:focus, .THIS .slds-listbox__option:focus-visible{
+    background-color: #ededed !important;
+}
+
+.THIS .fakeInput{
+    pointer-events: none;
+}
+
+.THIS .fakeInput .slds-input{
+    background-color: white !important;
+}
+
+.THIS .inputHeight{
+  height: 46px;
+}
+
+.THIS .slds-form-element__help,.THIS .slds-form-element__helper{
+  display: block !important;
+}
+
+.THIS .picklist{
+    border-color: #BFBBBF;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 10px;
+    padding: 10px;
+    padding-bottom: 20px;
+}
+.THIS .slds-spinner_container{
+  z-index: 100 !important;
+}
+
+.THIS .slds-input, .THIS .slds-combobox__input{
+    padding: 7px;
+}
+
+.THIS ::placeholder, .THIS .slds-combobox__input .slds-truncate{
+  color: #707981;
+  font-size: 1rem;
+  opacity: 1; /* Firefox */
+}
+
+.THIS .warningIcon svg{
+    fill: #FF538A !important;
+}
+
+.THIS .slds-modal__container{
+  z-index: 10000 !important;
+}
+
+
+.THIS .esr-card.hide-input-errors div.slds-form-element__help{
+    display: block !important;
+    /* height:0px !important; */
+    overflow:visible;
+    margin-bottom: -10px;
+}
+
+.THIS .toggle .slds-form-element__label{
+    margin: 0px !important;
+}
+
+.THIS, .THIS .slds-form-element__label{
+    color: #392F3D;
+}
+
+.THIS .toggle .slds-form-element__label{
+    margin: 0px !important;
+}
+
+.THIS .slds-form-element__label{
+    font-size: 1rem !important;
+}
+
+.THIS .slds-form-element__label, .THIS .slds-checkbox_faux_container{
+    margin: 8px 0px 0px 0px;
+}
+
+.THIS .zipError{
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+.THIS .red{
+    color: #EA001E;
+}
+
+.THIS .columnSuffixInput{
+  width: auto; /* Let the suffix input size dynamically */
+  flex-grow: 0; /* Prevent it from growing */
+  flex-shrink: 0; /* Prevent it from shrinking too small */
+  max-width: 60px; /* Allow enough space for a 3-char suffix */
+}
+
+.THIS .lastNameInput {
+  flex-grow: 2; /* Slightly smaller than the first name input */
+  min-width: 100px;
+  max-width: 200px; /* Ensures a reasonable width for last name */
+   /* Ensures a reasonable width for last name */
+}
+
+.THIS .columnInput{
+    margin: 10px;
+    vertical-align: top;
+}
+
+.THIS .form-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.THIS .fullWidthInput{
+    margin: 10px;
+    max-width: 610px;
+}
+
+.THIS a{
+    color: #BF0366;
+    text-decoration: underline;
+}
+
+.THIS .url {
+  text-decoration: underline;
+}
+
+
+.THIS .title{
+    font-family: Taviraj;
+    color: #722362;
+    font-size: 2rem;
+    text-align: center;
+    /* max-width: 300px; */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.THIS.full-page{
+  height: 100vh;
+  width: 100vw;
+  position: fixed;
+  left: 0px;
+  top: 0px;
+  overflow-y: scroll;
+}
+
+.THIS .body{
+    background-color: #722362;
+}
+
+.THIS .greenButton:hover{
+    background: #B0B70C;
+    border-color: #B0B70C;
+}
+
+.THIS .greenButton:focus{
+    background: #B0B70C;
+    border-color: #0000FF;
+}
+
+.THIS .greenButton{
+    background: #D2DB0E;
+    border-color: #D2DB0E;
+    border-radius: 8px !important;
+    padding: 12px 20px 12px 20px;
+    color: #1f0a1b;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.THIS #email-toggle {
+  margin-top: 1.5rem;
+}
+
+.THIS .carrier-select {
+  margin-top: 1rem;
+}
+
+.THIS .esr-card.hide-input-errors div.slds-form-element__help {
+  display: none;
+}
+
+.THIS .slds-input-has-icon .slds-input__icon:not(button) {
+  display: none;
+  pointer-events: none;
+}
+
+.THIS .esr-body-container {
+  background-repeat: no-repeat;
+  background-size: 880px;
+  height: 100%;
+}
+
+.THIS .esr-card-container {
+  position: relative;
+  height: 100%;
+}
+
+
+.THIS .esr-card {
+  top: -8rem;
+  max-width: 700px;
+  padding: 20px;
+  border-radius: 15px;
+  border: none;
+  box-shadow: 0 0 5px rgba(0, 0, 0, .1);
+}
+
+@media screen and (min-width: 880px) {
+
+.THIS .columnInput{
+    width: 293px;
+    display: inline-block;
+}
+  .THIS .esr-card {
+    width: 50rem;
+  }
+
+  .THIS .esr-body-container {
+    padding-top: 16rem;
+  }
+
+  .THIS.full-page{
+    background: url('/resource/1695051141000/RegistrationBackgroundImage') no-repeat center center fixed;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+  }
+
+  .THIS .esr-card {
+      margin-left: auto;
+      margin-right: 50px;
+  }
+}
+
+@media screen and (max-width: 880px) {
+
+.THIS .columnInput{
+    max-width: 610px;
+    display: block;
+}
+    .THIS .esr-body-container {
+      padding-top: 10rem;
+      }
+
+    .THIS .esr-card-container {
+        background-color: #F7F4F0;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .THIS .greenButton{
+          width: 100% !important;
+    }
+
+
+  .THIS .esr-card {
+      margin: 20px;
+  }
+  .THIS.full-page{
+    background-color: #F7F4F0;
+  }
+}
+
+.THIS .enrol-card-title {
+  /* font-size: 1.05rem;
+   */
+  font-size: 20px;
+  font-weight: var(--lwc-fontWeightBold,700);
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+.THIS .subheader {
+  font-size: 123%;
+}
+
+.THIS .error-msg {
+  margin-top: .75em;
+  margin-bottom: .75em;
+}
+
+.THIS .full-width {
+  width: 100%;
+}
+
+.THIS .slds-card__header-title {
+  display: block;
+}
+
+.THIS div#card-header .slds-checkbox_off, .THIS div#card-header .slds-checkbox_on {
+  display: none;
+}
+
+.THIS .slds-card__footer {
+  text-align: center;
+  padding-top: 0;
+}
+
+.THIS .logo {
+  max-height: 10em; /* Probably want this changed later */
+}
+
+.THIS .language-toggle {
+  display: flex;
+  justify-content: right;
+}
+
+.THIS #card-header {
+  position: relative;
+  white-space: normal;
+}
+.THIS .slds-select{
+    border-color: #BFBBBF !important ;
+}
+.THIS .slds-input, .THIS .slds-combobox__input{
+    border-color: #BFBBBF !important ;
+}
+.THIS .slds-radio [type=radio]:checked+.slds-radio_faux,.THIS .slds-radio [type=radio]:checked+.slds-radio--faux,.THIS .slds-radio [type=radio]:checked~.slds-radio_faux,.THIS .slds-radio [type=radio]:checked~.slds-radio--faux,.THIS .slds-radio [type=radio]:checked+.slds-radio__label .slds-radio_faux,.THIS .slds-radio [type=radio]:checked+.slds-radio__label .slds-radio--faux {
+    border-color: #BFBBBF !important ;
+}
+.THIS .slds-radio .slds-radio_faux,.THIS .slds-radio .slds-radio--faux {
+    border-color: #BFBBBF !important ;
+}
+.THIS .slds-form-element .slds-checkbox [type=checkbox]+.slds-checkbox_faux,.THIS .slds-form-element .slds-checkbox [type=checkbox]+.slds-checkbox--faux,.THIS .slds-form-element .slds-checkbox [type=checkbox]~.slds-checkbox_faux,.THIS .slds-form-element .slds-checkbox [type=checkbox]~.slds-checkbox--faux,.THIS .slds-form-element .slds-checkbox [type=checkbox]+.slds-checkbox__label .slds-checkbox_faux,.THIS .slds-form-element .slds-checkbox [type=checkbox]+.slds-checkbox__label .slds-checkbox--faux {
+    border-color: #BFBBBF !important ;
+}
+.THIS .submit-btn-container {
+  display: flex;
+  justify-content: center;
+}
+.THIS .spins::after {
+    position: absolute;
+    content: 'Processing - please wait.';
+    width: 100%;
+    text-align: center;
+    top: calc(50% + 3em);
+    font-weight: bold;
+}
+
+
+
+.THIS .spins.spanish::after {
+  content: 'Procesando .. por favor espere.';
+}
+
+.THIS .slds-checkbox [type=checkbox]:checked+.slds-checkbox__label .slds-checkbox_faux:after{
+       border-color: #fff;
+ }
+ .THIS .slds-checkbox [type=checkbox]:checked+.slds-checkbox__label .slds-checkbox_faux:after{
+  border-color: #BF0366;
+ }
+
+
+ .THIS .centeredText{
+  font-size: 16px;
+  text-align: center;
+ }
+
+ .THIS .zipFieldFont {
+  font-size: 1rem !important;
+}
+
+.THIS .relative {
+  position: relative;
+}
+
+.THIS .address-suggestions {
+  width: 100%;
+  font-size: 1rem;
+  max-height: 10rem;
+}
+
+.THIS .cExp_Input ~ .address-suggestions {
+  display: none;
+}
+
+.THIS .cExp_Input:focus-within ~ .address-suggestions, .THIS .address-suggestions:hover {
+  display: block;
+}
+
+.THIS .esr-card.hide-input-errors .email-input-field div.slds-form-element__help {
+  /* Undo logic making the error messages 0 height */
+  height: unset !important;
+  margin-bottom: -10px;
+}
+
+.THIS .last-name-and-suffix-container {
+  padding-left: -1px;
+}
