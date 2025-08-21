@@ -590,7 +590,10 @@ validateForm: function(component) {
         vwo_variation_name: component.get("v.vwo_variation_name"),
         vwo_variation_id: component.get("v.vwo_variation_id"),
         vwo_campaign_name: component.get("v.vwo_campaign_name"),
-        vwo_campaign_id: component.get("v.vwo_campaign_id")
+        vwo_campaign_id: component.get("v.vwo_campaign_id"),
+        termIdUrlParam: component.get("v.termIdUrlParam"),
+        bypassTerm: component.get("v.bypassTerm")
+
     };
     console.log('utmFields ', utmFields)
     var userAgent = navigator.userAgent;
@@ -633,6 +636,10 @@ validateForm: function(component) {
     component.set("v.vwo_variation_id", url.searchParams.get("vwo_variation_id"));
     component.set("v.vwo_campaign_name", url.searchParams.get("vwo_campaign_name"));
     component.set("v.vwo_campaign_id", url.searchParams.get("vwo_campaign_id"));
+    component.set("v.termIdUrlParam", url.searchParams.get("termId"));
+    component.set("v.bypassTerm", url.searchParams.get("bypassTerm"));
+
+
 
     var userAgent = navigator.userAgent;
     component.set("v.utmDevice", userAgent);

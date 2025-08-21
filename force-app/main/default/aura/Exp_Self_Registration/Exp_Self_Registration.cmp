@@ -84,6 +84,8 @@
     <aura:attribute name="vwo_variation_id" type="String"/>
     <aura:attribute name="vwo_campaign_name" type="String"/>
     <aura:attribute name="vwo_campaign_id" type="String"/>
+    <aura:attribute name="termIdUrlParam" type="String"/>
+    <aura:attribute name="bypassTerm" type="String"/>
 
 
 
