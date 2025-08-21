@@ -3,7 +3,9 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getUpcomingEvents from '@salesforce/apex/yc_EventListController.getUpcomingEvents';
 import registerForEvent from '@salesforce/apex/yc_EventListController.registerForEvent';
 import getUserRegisteredEventIds from '@salesforce/apex/yc_EventListController.getUserRegisteredEventIds';
-// Add these imports when you implement the backend
+import REGISTRATION_ADDITIONAL_MESSAGE from '@salesforce/label/c.Registration_Additional_Message';
+
+// Later for Lead form
 // import isGuest from '@salesforce/user/isGuest';
 // import createLeadAndRegister from '@salesforce/apex/yc_EventListController.createLeadAndRegister';
 
@@ -625,10 +627,18 @@ export default class YcEventModal extends LightningElement {
             console.log('Registration result:', result);
             
             if (result === 'SUCCESS') {
+                // Build the message with optional custom label
+                let toastMessage = `You have been registered for "${selectedEvent.title}"`;
+                
+                // Add custom label if it exists and is not blank
+                if (REGISTRATION_ADDITIONAL_MESSAGE && REGISTRATION_ADDITIONAL_MESSAGE.trim() !== '') {
+                    toastMessage += '\n\n' + REGISTRATION_ADDITIONAL_MESSAGE;
+                }
+                
                 // Show success message
                 this.dispatchEvent(new ShowToastEvent({
                     title: 'Registration Successful',
-                    message: `You have been registered for "${selectedEvent.title}"`,
+                    message: toastMessage,
                     variant: 'success'
                 }));
                 
