@@ -3,11 +3,8 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getUpcomingEvents from '@salesforce/apex/yc_EventListController.getUpcomingEvents';
 import registerForEvent from '@salesforce/apex/yc_EventListController.registerForEvent';
 import getUserRegisteredEventIds from '@salesforce/apex/yc_EventListController.getUserRegisteredEventIds';
-// Add these imports when you implement the backend
-// import isGuest from '@salesforce/user/isGuest';
-// import createLeadAndRegister from '@salesforce/apex/yc_EventListController.createLeadAndRegister';
 
-export default class YcEventModal extends LightningElement {
+export default class EventListing extends LightningElement {
     @track events = [];
     @track error;
     @track isLoading = true;
@@ -19,113 +16,16 @@ export default class YcEventModal extends LightningElement {
     @track featuredEvent = null;
     @track modalPermanentlyDismissed = false;
     inactivityTimer = null;
-    inactivityTimeoutMs = 20000; // 20 seconds
-
-    // Lead Registration Modal properties
-    @track showLeadRegistrationModal = false;
-    @track isSubmittingLead = false;
-    @track pendingEventForRegistration = null;
-    @track formErrorMessage = '';
-    @track leadFormData = {
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        state: '',
-        zipCode: '',
-        smsOptIn: false
-    };
-
-    // State options for dropdown
-    stateOptions = [
-        { label: 'Select a State', value: '' },
-        { label: 'Alabama', value: 'AL' },
-        { label: 'Alaska', value: 'AK' },
-        { label: 'Arizona', value: 'AZ' },
-        { label: 'Arkansas', value: 'AR' },
-        { label: 'California', value: 'CA' },
-        { label: 'Colorado', value: 'CO' },
-        { label: 'Connecticut', value: 'CT' },
-        { label: 'Delaware', value: 'DE' },
-        { label: 'Florida', value: 'FL' },
-        { label: 'Georgia', value: 'GA' },
-        { label: 'Hawaii', value: 'HI' },
-        { label: 'Idaho', value: 'ID' },
-        { label: 'Illinois', value: 'IL' },
-        { label: 'Indiana', value: 'IN' },
-        { label: 'Iowa', value: 'IA' },
-        { label: 'Kansas', value: 'KS' },
-        { label: 'Kentucky', value: 'KY' },
-        { label: 'Louisiana', value: 'LA' },
-        { label: 'Maine', value: 'ME' },
-        { label: 'Maryland', value: 'MD' },
-        { label: 'Massachusetts', value: 'MA' },
-        { label: 'Michigan', value: 'MI' },
-        { label: 'Minnesota', value: 'MN' },
-        { label: 'Mississippi', value: 'MS' },
-        { label: 'Missouri', value: 'MO' },
-        { label: 'Montana', value: 'MT' },
-        { label: 'Nebraska', value: 'NE' },
-        { label: 'Nevada', value: 'NV' },
-        { label: 'New Hampshire', value: 'NH' },
-        { label: 'New Jersey', value: 'NJ' },
-        { label: 'New Mexico', value: 'NM' },
-        { label: 'New York', value: 'NY' },
-        { label: 'North Carolina', value: 'NC' },
-        { label: 'North Dakota', value: 'ND' },
-        { label: 'Ohio', value: 'OH' },
-        { label: 'Oklahoma', value: 'OK' },
-        { label: 'Oregon', value: 'OR' },
-        { label: 'Pennsylvania', value: 'PA' },
-        { label: 'Rhode Island', value: 'RI' },
-        { label: 'South Carolina', value: 'SC' },
-        { label: 'South Dakota', value: 'SD' },
-        { label: 'Tennessee', value: 'TN' },
-        { label: 'Texas', value: 'TX' },
-        { label: 'Utah', value: 'UT' },
-        { label: 'Vermont', value: 'VT' },
-        { label: 'Virginia', value: 'VA' },
-        { label: 'Washington', value: 'WA' },
-        { label: 'West Virginia', value: 'WV' },
-        { label: 'Wisconsin', value: 'WI' },
-        { label: 'Wyoming', value: 'WY' }
-    ];
+    inactivityTimeoutMs = 60000; // 60 seconds
 
     connectedCallback() {
-        console.log('Component connected - starting inactivity timer');
         this.startInactivityTimer();
         this.addEventListeners();
-        this.checkForRegistrationParams();
-        
-        // Debug: Log current state
-        console.log('Initial state:', {
-            modalPermanentlyDismissed: this.modalPermanentlyDismissed,
-            inactivityTimeoutMs: this.inactivityTimeoutMs,
-            eventsCount: this.events.length,
-            events: this.events,
-            isGuestUser: this.isGuestUser
-        });
     }
 
     disconnectedCallback() {
         this.clearInactivityTimer();
         this.removeEventListeners();
-    }
-
-    // Check URL parameters to prevent modal if user just registered
-    checkForRegistrationParams() {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('fromEvent') === '1') {
-            this.modalPermanentlyDismissed = true;
-            console.log('User just registered, modal disabled');
-        }
-    }
-
-    // Check if user is a guest (stub for now - uncomment when import is available)
-    get isGuestUser() {
-        // return isGuest === true;
-        // For testing, you can toggle this
-        return true; // Set to true to test guest user flow
     }
 
     // Activity tracking methods
@@ -152,19 +52,15 @@ export default class YcEventModal extends LightningElement {
 
     startInactivityTimer() {
         this.clearInactivityTimer();
-        console.log('Starting inactivity timer for', this.inactivityTimeoutMs, 'ms');
         this.inactivityTimer = setTimeout(() => {
-            console.log('Timer expired! Calling showInactivityPrompt()');
             this.showInactivityPrompt();
         }, this.inactivityTimeoutMs);
     }
 
     resetInactivityTimer() {
-        if (this.showInactivityModal || this.showLeadRegistrationModal) {
-            console.log('Not resetting timer - modal is open');
+        if (this.showInactivityModal) {
             return; // Don't reset timer while modal is open
         }
-        console.log('Activity detected - resetting timer');
         this.startInactivityTimer();
     }
 
@@ -176,25 +72,8 @@ export default class YcEventModal extends LightningElement {
     }
 
     showInactivityPrompt() {
-        console.log('showInactivityPrompt called!');
-        console.log('Current state:', {
-            modalPermanentlyDismissed: this.modalPermanentlyDismissed,
-            eventsLength: this.events.length,
-            events: this.events,
-            registeredEventIds: this.registeredEventIds,
-            isLoading: this.isLoading
-        });
-        
         // Don't show modal if permanently dismissed
         if (this.modalPermanentlyDismissed) {
-            console.log('Modal permanently dismissed - not showing');
-            return;
-        }
-
-        // Check if events are loaded
-        if (this.events.length === 0) {
-            console.log('No events available. Giving up.');
-            // Don't restart timer - just give up
             return;
         }
         
@@ -203,19 +82,13 @@ export default class YcEventModal extends LightningElement {
             !this.isUserRegistered(event.id) && !this.isRegistering(event.id)
         );
 
-        console.log('Available event found:', availableEvent);
-
         if (availableEvent) {
             this.featuredEvent = availableEvent;
             this.showInactivityModal = true;
             console.log('Showing inactivity modal for event:', availableEvent.title);
-            console.log('Modal state:', this.showInactivityModal);
         } else {
             console.log('No available events for inactivity modal');
-            console.log('All events:', this.events);
-            console.log('Registered IDs:', this.registeredEventIds);
-            // Restart timer if no events available - matching EventList.js behavior
-            console.log('Restarting timer to check again...');
+            // Restart timer if no events available
             this.startInactivityTimer();
         }
     }
@@ -231,247 +104,32 @@ export default class YcEventModal extends LightningElement {
     // Handle register from modal
     handleModalRegister() {
         if (this.featuredEvent) {
-            // Store the event for registration
-            this.pendingEventForRegistration = this.featuredEvent;
+            // Create a mock event with the featured event ID
+            const mockEvent = {
+                target: {
+                    dataset: {
+                        eventId: this.featuredEvent.id
+                    }
+                }
+            };
             
-            // Close inactivity modal
+            // Close modal and permanently disable
             this.showInactivityModal = false;
+            this.featuredEvent = null;
             this.modalPermanentlyDismissed = true;
             
-            // Check if user is guest
-            if (this.isGuestUser) {
-                // Show lead registration form for guest users
-                this.showLeadRegistrationModal = true;
-            } else {
-                // For authenticated users, proceed with normal registration
-                const mockEvent = {
-                    target: {
-                        dataset: {
-                            eventId: this.pendingEventForRegistration.id
-                        }
-                    }
-                };
-                this.handleRegister(mockEvent);
-            }
+            // Call the existing register handler
+            this.handleRegister(mockEvent);
         }
-    }
-
-    // Lead Registration Form Handlers
-    handleLeadFormChange(event) {
-        const field = event.target.name;
-        const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
-        this.leadFormData = { ...this.leadFormData, [field]: value };
-    }
-
-    closeLeadRegistrationModal() {
-        this.showLeadRegistrationModal = false;
-        this.resetLeadForm();
-        this.pendingEventForRegistration = null;
-    }
-
-    resetLeadForm() {
-        this.leadFormData = {
-            firstName: '',
-            lastName: '',
-            email: '',
-            phone: '',
-            state: '',
-            zipCode: '',
-            smsOptIn: false
-        };
-        this.formErrorMessage = '';
-    }
-
-    validateLeadForm() {
-        const missingFields = [];
-        const invalidFields = [];
-        
-        // Field labels for user-friendly messages
-        const fieldLabels = {
-            firstName: 'First Name',
-            lastName: 'Last Name',
-            email: 'Email',
-            phone: 'Phone Number',
-            state: 'State',
-            zipCode: 'ZIP Code'
-        };
-        
-        // Check required fields
-        const required = ['firstName', 'lastName', 'email', 'phone', 'state', 'zipCode'];
-        for (let field of required) {
-            if (!this.leadFormData[field] || this.leadFormData[field].trim() === '') {
-                missingFields.push(fieldLabels[field]);
-            }
-        }
-        
-        // If email is provided, validate format
-        if (this.leadFormData.email && this.leadFormData.email.trim() !== '') {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(this.leadFormData.email.trim())) {
-                invalidFields.push('Email address format is invalid');
-            }
-        }
-        
-        // If ZIP code is provided, validate format (5 digits)
-        if (this.leadFormData.zipCode && this.leadFormData.zipCode.trim() !== '') {
-            const zipRegex = /^\d{5}$/;
-            if (!zipRegex.test(this.leadFormData.zipCode.trim())) {
-                invalidFields.push('ZIP Code must be exactly 5 digits');
-            }
-        }
-        
-        // If phone is provided, validate it has at least 10 digits (basic validation)
-        if (this.leadFormData.phone && this.leadFormData.phone.trim() !== '') {
-            const phoneDigits = this.leadFormData.phone.replace(/\D/g, '');
-            if (phoneDigits.length < 10) {
-                invalidFields.push('Phone number must have at least 10 digits');
-            }
-        }
-        
-        return { 
-            isValid: missingFields.length === 0 && invalidFields.length === 0,
-            missingFields,
-            invalidFields
-        };
-    }
-
-    async handleLeadFormSubmit() {
-        console.log('Submit button clicked');
-        console.log('Current form data:', this.leadFormData);
-        
-        // Clear any previous error message
-        this.formErrorMessage = '';
-        
-        // Validate form
-        const validation = this.validateLeadForm();
-        console.log('Validation result:', validation);
-        
-        if (!validation.isValid) {
-            let errorMessage = '';
-            
-            // Build error message for missing fields
-            if (validation.missingFields.length > 0) {
-                if (validation.missingFields.length === 1) {
-                    errorMessage = `Please fill in: ${validation.missingFields[0]}`;
-                } else if (validation.missingFields.length === 2) {
-                    errorMessage = `Please fill in: ${validation.missingFields.join(' and ')}`;
-                } else {
-                    const lastField = [...validation.missingFields];
-                    const last = lastField.pop();
-                    errorMessage = `Please fill in: ${lastField.join(', ')}, and ${last}`;
-                }
-            }
-            
-            // Add invalid field messages
-            if (validation.invalidFields.length > 0) {
-                if (errorMessage) errorMessage += '\n\n';
-                errorMessage += validation.invalidFields.join('\n');
-            }
-            
-            console.log('Showing error with message:', errorMessage);
-            
-            // Set the error message to display in the form
-            this.formErrorMessage = errorMessage;
-            
-            // Also try to show toast (may not work in all contexts)
-            this.dispatchEvent(new ShowToastEvent({
-                title: 'Required Information Missing',
-                message: errorMessage,
-                variant: 'error',
-                mode: 'sticky'
-            }));
-            return;
-        }
-
-        console.log('Validation passed, proceeding with submission');
-        this.formErrorMessage = '';
-        this.isSubmittingLead = true;
-
-        this.isSubmittingLead = true;
-
-        try {
-            // TODO: Call Apex method to create lead and register for event
-            // const result = await createLeadAndRegister({
-            //     leadData: this.leadFormData,
-            //     eventId: this.pendingEventForRegistration.id
-            // });
-
-            // For now, simulate success
-            console.log('Lead form data:', this.leadFormData);
-            console.log('Event ID:', this.pendingEventForRegistration.id);
-
-            // Show success message
-            this.dispatchEvent(new ShowToastEvent({
-                title: 'Registration Successful',
-                message: `Thank you for registering for "${this.pendingEventForRegistration.title}". You will receive a confirmation email shortly.`,
-                variant: 'success'
-            }));
-
-            // Close modal and reset
-            this.closeLeadRegistrationModal();
-
-            // Build redirect URL with parameters
-            const currentUrl = new URL(window.location.href);
-            const params = new URLSearchParams(currentUrl.search);
-            
-            // Add registration parameters
-            params.set('fn', this.leadFormData.firstName);
-            params.set('ln', this.leadFormData.lastName);
-            params.set('email', this.leadFormData.email);
-            params.set('state', this.leadFormData.state);
-            params.set('zipcode', this.leadFormData.zipCode);
-            params.set('fromEvent', '1');
-            
-            // Redirect to the same page with parameters
-            window.location.href = `${currentUrl.pathname}?${params.toString()}`;
-
-        } catch (error) {
-            console.error('Lead registration error:', error);
-            
-            let errorMessage = 'An error occurred during registration. Please try again.';
-            if (error.body && error.body.message) {
-                errorMessage = error.body.message;
-            }
-            
-            this.dispatchEvent(new ShowToastEvent({
-                title: 'Registration Failed',
-                message: errorMessage,
-                variant: 'error'
-            }));
-        } finally {
-            this.isSubmittingLead = false;
-        }
-    }
-
-    // Link handlers for terms, privacy, and contact
-    handleTermsClick(event) {
-        event.preventDefault();
-        // Navigate to terms page or open in new window
-        window.open('/terms-of-use', '_blank');
-    }
-
-    handlePrivacyClick(event) {
-        event.preventDefault();
-        // Navigate to privacy policy page or open in new window
-        window.open('/privacy-policy', '_blank');
-    }
-
-    handleContactClick(event) {
-        event.preventDefault();
-        // Navigate to contact page or open in new window
-        window.open('/contact-us', '_blank');
     }
 
     // Wire the Apex method to get events
     @wire(getUpcomingEvents)
     wiredEvents({ error, data }) {
-        console.log('Wire method called with:', { hasData: !!data, hasError: !!error });
         if (data) {
-            console.log('Events data received:', data);
             this.loadRegisteredEvents().then(() => {
                 this.events = this.transformEventData(data);
                 this.isLoading = false; // Set to false after data is processed
-                console.log('Events loaded and transformed:', this.events);
             });
             this.error = undefined;
         } else if (error) {
@@ -492,60 +150,6 @@ export default class YcEventModal extends LightningElement {
         }
     }
 
-    // Convert 24-hour time to 12-hour format with AM/PM
-    formatTo12Hour(timeString) {
-        if (!timeString) {
-            return 'Time TBD';
-        }
-
-        try {
-            // Remove any timezone info (EST, PST, etc.) and trim whitespace
-            const cleanTime = timeString.trim().replace(/\s+[A-Z]{2,4}$/, '');
-            
-            // If already in 12-hour format (contains AM/PM), return as-is
-            if (cleanTime.toLowerCase().includes('am') || cleanTime.toLowerCase().includes('pm')) {
-                return timeString;
-            }
-
-            // Parse time assuming 24-hour format (HH:MM or HH:MM:SS)
-            const timeParts = cleanTime.split(':');
-            if (timeParts.length < 2) {
-                return timeString; // Return original if format unexpected
-            }
-
-            let hours = parseInt(timeParts[0], 10);
-            // Get minutes and remove any non-numeric characters
-            const minutesStr = timeParts[1].substring(0, 2);
-            const minutes = minutesStr.padStart(2, '0');
-
-            // Validate parsed values
-            if (isNaN(hours) || hours < 0 || hours > 23) {
-                return timeString; // Return original if invalid
-            }
-
-            // Determine AM/PM
-            const period = hours >= 12 ? 'PM' : 'AM';
-
-            // Convert to 12-hour format
-            if (hours === 0) {
-                hours = 12; // Midnight
-            } else if (hours > 12) {
-                hours = hours - 12;
-            }
-
-            // Check if original had timezone and preserve it
-            const timezoneMatch = timeString.match(/\s+([A-Z]{2,4})$/);
-            const timezone = timezoneMatch ? ' ' + timezoneMatch[1] : '';
-
-            // Format the output
-            return `${hours}:${minutes} ${period}${timezone}`;
-
-        } catch (error) {
-            console.error('Error formatting time:', timeString, error);
-            return timeString; // Return original on error
-        }
-    }
-
     // Transform Salesforce data to component format
     transformEventData(salesforceEvents) {
         return salesforceEvents.map(event => {
@@ -557,7 +161,7 @@ export default class YcEventModal extends LightningElement {
                 day: eventDate.day,
                 monthYear: eventDate.monthYear,
                 title: event.Event_Title__c || 'Event Title Not Available',
-                time: this.formatTo12Hour(event.Event_Start_Time_Web_F__c) || 'Time TBD',
+                time: event.Event_Start_Time_Web_F__c || 'Time TBD',
                 type: event.Event_Type__c || 'Virtual Event',
                 description: event.Event_Description__c || 'Event description not available.',
                 buttonLabel: this.getButtonLabel(event.Id),
@@ -576,19 +180,20 @@ export default class YcEventModal extends LightningElement {
         }
 
         try {
-            // Split the date string to avoid timezone issues
-            const [year, month, day] = eventDateString.split('-').map(num => parseInt(num));
+            // Parse the date string (format: YYYY-MM-DD)
+            const eventDate = new Date(eventDateString);
             
             // Format day
-            const dayStr = day.toString();
+            const day = eventDate.getDate().toString();
             
-            // Format month and year  
+            // Format month and year
             const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            const monthStr = monthNames[month - 1]; // month is 1-indexed in the string
-            const monthYear = `${monthStr} ${year}`;
+            const month = monthNames[eventDate.getMonth()];
+            const year = eventDate.getFullYear();
+            const monthYear = `${month} ${year}`;
 
-            return { day: dayStr, monthYear };
+            return { day, monthYear };
         } catch (error) {
             console.error('Error parsing date:', eventDateString, error);
             return { day: '??', monthYear: 'Date Error' };
@@ -743,4 +348,6 @@ export default class YcEventModal extends LightningElement {
             });
         }
     }
+
+    
 }

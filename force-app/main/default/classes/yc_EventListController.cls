@@ -3,62 +3,62 @@ public without sharing class yc_EventListController {
     @AuraEnabled(cacheable=true)
     public static List<PVS_Event__c> getUpcomingEvents() {
         try {
+            // Get current user's Contact information including school lookup and household
+            User currentUser = [
+                SELECT Id, ContactId, Contact.ycadmissions__InitialSchool__c, Contact.AccountId
+                FROM User 
+                WHERE Id = :UserInfo.getUserId() 
+                LIMIT 1
+            ];
+            
             // Build the list of permissible school IDs
             Set<Id> permissibleSchoolIds = new Set<Id>();
-            User currentUser;
-
-            // Get current user's Contact information including school lookup and household
-            List<User> currentUserQuery = [ SELECT Id, ContactId, Contact.ycadmissions__InitialSchool__c, Contact.AccountId
-                                            FROM User WHERE Id = :UserInfo.getUserId() ];
-            if (currentUserQuery.size() > 0) {
-                currentUser = currentUserQuery[0];
+            
+            // Add user's associated school if it exists
+            if (currentUser.ContactId != null && currentUser.Contact.ycadmissions__InitialSchool__c != null) {
+                permissibleSchoolIds.add(currentUser.Contact.ycadmissions__InitialSchool__c);
+                System.debug('Added InitialSchool: ' + currentUser.Contact.ycadmissions__InitialSchool__c);
+            }
+            
+            // Add schools from Applications related to the Contact's Household
+            if (currentUser.ContactId != null && currentUser.Contact.AccountId != null) {
+                // Query for Applications where Household matches Contact's Account (Household)
+                List<hed__Application__c> householdApplications = [
+                    SELECT Id, hed__Applying_To__c
+                    FROM hed__Application__c
+                    WHERE Household__c = :currentUser.Contact.AccountId
+                    AND hed__Applying_To__c != NULL
+                ];
                 
-                // Add user's associated school if it exists
-                if (currentUser.ContactId != null && currentUser.Contact.ycadmissions__InitialSchool__c != null) {
-                    permissibleSchoolIds.add(currentUser.Contact.ycadmissions__InitialSchool__c);
-                    System.debug('Added InitialSchool: ' + currentUser.Contact.ycadmissions__InitialSchool__c);
+                // Add all the school IDs from these applications
+                for (hed__Application__c app : householdApplications) {
+                    permissibleSchoolIds.add(app.hed__Applying_To__c);
+                    System.debug('Added Application School: ' + app.hed__Applying_To__c);
                 }
-                
-                // Add schools from Applications related to the Contact's Household
-                if (currentUser.ContactId != null && currentUser.Contact.AccountId != null) {
-                    // Query for Applications where Household matches Contact's Account (Household)
-                    List<hed__Application__c> householdApplications = [
-                        SELECT Id, hed__Applying_To__c
-                        FROM hed__Application__c
-                        WHERE Household__c = :currentUser.Contact.AccountId
-                        AND hed__Applying_To__c != NULL AND hed__Application_Status__c != 'Archived'
-                        AND RECORDTYPE.DeveloperName != 'Intent_to_Return'
-                    ];
-                    
-                    // Add all the school IDs from these applications
-                    for (hed__Application__c app : householdApplications) {
-                        permissibleSchoolIds.add(app.hed__Applying_To__c);
-                        System.debug('Added Application School: ' + app.hed__Applying_To__c);
-                    }
-                }
-            }  // end currentUserQuery
+            }
 
             // Build dynamic SOQL query with school filtering
             DateTime currentDateTime = System.now();
             String query = 'SELECT Id, Event_Title__c, Event_Date__c, Event_Start_Time_Web_F__c, ' +
                           'Event_Type__c, Event_Description__c, School_Abbreviation__c, School__c, ' + 
-                          'Zoom_Event_ID__c, Channel_Type__c ' + 
+                          'Zoom_Event_ID__c ' + 
                           'FROM PVS_Event__c ' +
                           'WHERE Event_Start_DateTime_F__c >= :currentDateTime AND Event_Status__c = \'Active\'';
+            // @TODO: Review Zoom_Ticket_ID__c field
 
             // Add school filtering
             if (!permissibleSchoolIds.isEmpty()) {
-                query += 'AND (School__c = NULL OR School__c IN :permissibleSchoolIds OR School__r.Name = \'National Event Hosts\') ';
+                query += 'AND (School__c = NULL OR School__c IN :permissibleSchoolIds OR School__r.Name = \'Enrollment Event\') ';
             } else {
                 // If no permissible schools, only show events with NULL school
-                query += 'AND (School__c = NULL OR School__r.Name = \'National Event Hosts\')';
+                query += 'AND (School__c = NULL OR School__r.Name = \'Enrollment Event\')';
             }
             
             query += 'ORDER BY Event_Start_DateTime_F__c ASC LIMIT 50';
             
             System.debug('Executing query: ' + query);
             System.debug('Permissible School IDs: ' + permissibleSchoolIds);
-            if (currentUser != NULL) { System.debug('Contact AccountId (Household): ' + currentUser.Contact.AccountId); }
+            System.debug('Contact AccountId (Household): ' + currentUser.Contact.AccountId);
             
             return Database.query(query);
             
@@ -86,7 +86,7 @@ public without sharing class yc_EventListController {
             
             // Get the event details for School_Abbreviation__c
             PVS_Event__c selectedEvent = [
-                SELECT Id,Name, School_Abbreviation__c, Event_Title__c, Event_Duration_F__c, Event_Start_DateTime_F__c, Zoom_Event_ID__c, Zoom_Ticket_Type_ID__c, Channel_Type__c 
+                SELECT Id,Name, School_Abbreviation__c, Event_Title__c, Event_Duration_F__c, Event_Start_DateTime_F__c, Zoom_Event_ID__c, Zoom_Ticket_Type_ID__c
                 FROM PVS_Event__c 
                 WHERE Id = :eventId 
                 LIMIT 1
@@ -148,10 +148,7 @@ public without sharing class yc_EventListController {
             regEvent.Last_Name__c = currentUser.Contact.lastName;
             regEvent.Phone__c = currentUser.Contact.Phone;
             regEvent.UTM_Campaign__c = 'enrollmentportal';
-            regEvent.Event_Attendance_Status__c = 'Registered';
             regEvent.Event_Registration_from_EP__c = true;
-            regEvent.Zoom_Ticket_Type_ID__c = selectedEvent.Zoom_Ticket_Type_ID__c;
-            regEvent.Channel_Type__c = selectedEvent.Channel_Type__c;
             if (taskRT.size() > 0) { regEvent.RecordTypeId = taskRT[0].Id; }
             
 

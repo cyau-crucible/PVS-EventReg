@@ -3,7 +3,6 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getUpcomingEvents from '@salesforce/apex/yc_EventListController.getUpcomingEvents';
 import registerForEvent from '@salesforce/apex/yc_EventListController.registerForEvent';
 import getUserRegisteredEventIds from '@salesforce/apex/yc_EventListController.getUserRegisteredEventIds';
-import REGISTRATION_ADDITIONAL_MESSAGE from '@salesforce/label/c.Registration_Additional_Message';
 
 export default class EventListing extends LightningElement {
     @track events = [];
@@ -151,60 +150,6 @@ export default class EventListing extends LightningElement {
         }
     }
 
-    // Convert 24-hour time to 12-hour format with AM/PM
-    formatTo12Hour(timeString) {
-        if (!timeString) {
-            return 'Time TBD';
-        }
-
-        try {
-            // Remove any timezone info (EST, PST, etc.) and trim whitespace
-            const cleanTime = timeString.trim().replace(/\s+[A-Z]{2,4}$/, '');
-            
-            // If already in 12-hour format (contains AM/PM), return as-is
-            if (cleanTime.toLowerCase().includes('am') || cleanTime.toLowerCase().includes('pm')) {
-                return timeString;
-            }
-
-            // Parse time assuming 24-hour format (HH:MM or HH:MM:SS)
-            const timeParts = cleanTime.split(':');
-            if (timeParts.length < 2) {
-                return timeString; // Return original if format unexpected
-            }
-
-            let hours = parseInt(timeParts[0], 10);
-            // Get minutes and remove any non-numeric characters
-            const minutesStr = timeParts[1].substring(0, 2);
-            const minutes = minutesStr.padStart(2, '0');
-
-            // Validate parsed values
-            if (isNaN(hours) || hours < 0 || hours > 23) {
-                return timeString; // Return original if invalid
-            }
-
-            // Determine AM/PM
-            const period = hours >= 12 ? 'PM' : 'AM';
-
-            // Convert to 12-hour format
-            if (hours === 0) {
-                hours = 12; // Midnight
-            } else if (hours > 12) {
-                hours = hours - 12;
-            }
-
-            // Check if original had timezone and preserve it
-            const timezoneMatch = timeString.match(/\s+([A-Z]{2,4})$/);
-            const timezone = timezoneMatch ? ' ' + timezoneMatch[1] : '';
-
-            // Format the output
-            return `${hours}:${minutes} ${period}${timezone}`;
-
-        } catch (error) {
-            console.error('Error formatting time:', timeString, error);
-            return timeString; // Return original on error
-        }
-    }
-
     // Transform Salesforce data to component format
     transformEventData(salesforceEvents) {
         return salesforceEvents.map(event => {
@@ -216,7 +161,7 @@ export default class EventListing extends LightningElement {
                 day: eventDate.day,
                 monthYear: eventDate.monthYear,
                 title: event.Event_Title__c || 'Event Title Not Available',
-                time: this.formatTo12Hour(event.Event_Start_Time_Web_F__c) || 'Time TBD',
+                time: event.Event_Start_Time_Web_F__c || 'Time TBD',
                 type: event.Event_Type__c || 'Virtual Event',
                 description: event.Event_Description__c || 'Event description not available.',
                 buttonLabel: this.getButtonLabel(event.Id),
@@ -284,18 +229,10 @@ export default class EventListing extends LightningElement {
             console.log('Registration result:', result);
             
             if (result === 'SUCCESS') {
-                // Build the message with optional custom label
-                let toastMessage = `You have been registered for "${selectedEvent.title}"`;
-                
-                // Add custom label if it exists and is not blank
-                if (REGISTRATION_ADDITIONAL_MESSAGE && REGISTRATION_ADDITIONAL_MESSAGE.trim() !== '') {
-                    toastMessage += '\n\n' + REGISTRATION_ADDITIONAL_MESSAGE;
-                }
-                
                 // Show success message
                 this.dispatchEvent(new ShowToastEvent({
                     title: 'Registration Successful',
-                    message: toastMessage,
+                    message: `You have been registered for "${selectedEvent.title}"`,
                     variant: 'success'
                 }));
                 
