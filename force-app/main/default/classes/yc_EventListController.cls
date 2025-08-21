@@ -13,12 +13,6 @@ public without sharing class yc_EventListController {
             if (currentUserQuery.size() > 0) {
                 currentUser = currentUserQuery[0];
                 
-                // Add user's associated school if it exists
-                if (currentUser.ContactId != null && currentUser.Contact.ycadmissions__InitialSchool__c != null) {
-                    permissibleSchoolIds.add(currentUser.Contact.ycadmissions__InitialSchool__c);
-                    System.debug('Added InitialSchool: ' + currentUser.Contact.ycadmissions__InitialSchool__c);
-                }
-                
                 // Add schools from Applications related to the Contact's Household
                 if (currentUser.ContactId != null && currentUser.Contact.AccountId != null) {
                     // Query for Applications where Household matches Contact's Account (Household)
@@ -48,10 +42,10 @@ public without sharing class yc_EventListController {
 
             // Add school filtering
             if (!permissibleSchoolIds.isEmpty()) {
-                query += 'AND (School__c = NULL OR School__c IN :permissibleSchoolIds OR School__r.Name = \'National Event Hosts\') ';
+                query += 'AND (School__c = NULL OR School__c IN :permissibleSchoolIds OR School__r.Name IN (\'National Event Hosts\', \'Enrollment Event\')) ';
             } else {
                 // If no permissible schools, only show events with NULL school
-                query += 'AND (School__c = NULL OR School__r.Name = \'National Event Hosts\')';
+                query += 'AND (School__c = NULL OR School__r.Name IN (\'National Event Hosts\', \'Enrollment Event\'))';
             }
             
             query += 'ORDER BY Event_Start_DateTime_F__c ASC LIMIT 50';
