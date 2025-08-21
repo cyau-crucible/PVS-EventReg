@@ -420,11 +420,13 @@ export default class YcEventModal extends LightningElement {
             const params = new URLSearchParams(currentUrl.search);
             
             // Add registration parameters
+            /*
             params.set('fn', this.leadFormData.firstName);
             params.set('ln', this.leadFormData.lastName);
             params.set('email', this.leadFormData.email);
             params.set('state', this.leadFormData.state);
             params.set('zipcode', this.leadFormData.zipCode);
+            */
             params.set('fromEvent', '1');
             
             // Redirect to the same page with parameters
@@ -645,12 +647,26 @@ export default class YcEventModal extends LightningElement {
                     variant: 'success'
                 }));
                 
+
+                /*
                 // Add to registered events list and refresh the events display
                 this.registeredEventIds = [...this.registeredEventIds, eventId];
                 
                 // Refresh the events to update button states
                 this.refreshEventData();
-                
+                */
+
+                // Redirect, if needed
+                // Check if we're on the events page
+                const currentUrl = new URL(window.location.href);
+                if (currentUrl.pathname.endsWith('/s/events')) {
+                    // Redirect
+                    const params = new URLSearchParams(currentUrl.search);
+                    params.set('fromEvent', '1'); // Suppresses future modal
+                    
+                    // Redirect to the same page with parameters
+                    window.location.href = `${currentUrl.pathname}?${params.toString()}`;
+                }
             } else if (result === 'ALREADY_REGISTERED') {
                 // Show info message
                 this.dispatchEvent(new ShowToastEvent({

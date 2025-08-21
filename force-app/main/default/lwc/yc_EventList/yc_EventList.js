@@ -15,7 +15,7 @@ export default class EventListing extends LightningElement {
     // Modal and timer properties
     @track showInactivityModal = false;
     @track featuredEvent = null;
-    @track modalPermanentlyDismissed = false;
+    @track modalPermanentlyDismissed = true;
     inactivityTimer = null;
     inactivityTimeoutMs = 60000; // 60 seconds
 
