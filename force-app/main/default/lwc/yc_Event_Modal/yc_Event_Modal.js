@@ -99,6 +99,15 @@ export default class YcEventModal extends LightningElement {
         this.addEventListeners();
         this.checkForRegistrationParams();
         
+        // Check for notification to display
+        const urlParams = new URLSearchParams(window.location.search);
+        const notificationTitle = urlParams.get('notificationTitle');
+        if (notificationTitle) {
+            // Decode and show the notification
+            const decodedTitle = decodeURIComponent(notificationTitle);
+            this.showRegistrationSuccessNotification(decodedTitle);
+        }
+        
         // Debug: Log current state
         console.log('Initial state:', {
             modalPermanentlyDismissed: this.modalPermanentlyDismissed,
@@ -665,12 +674,16 @@ export default class YcEventModal extends LightningElement {
                 // Check if we're on the events page
                 const currentUrl = new URL(window.location.href);
                 if (currentUrl.pathname.endsWith('/s/events')) {
-                    // Redirect
+                    // Redirect with notification params
                     const params = new URLSearchParams(currentUrl.search);
                     params.set('fromEvent', '1'); // Suppresses future modal
+                    params.set('notificationTitle', encodeURIComponent(selectedEvent.title));
                     
                     // Redirect to the same page with parameters
                     window.location.href = `${currentUrl.pathname}?${params.toString()}`;
+                } else {
+                    // Not on events page, show notification immediately
+                    this.showRegistrationSuccessNotification(selectedEvent.title);
                 }
             } else if (result === 'ALREADY_REGISTERED') {
                 // Show info message
