@@ -104,13 +104,13 @@
                     <!-- Lead Registration Form -->
                     <div class="modal-content lead-form-content">
                         <p class="lead-form-intro">Please provide the following information below to register for this event.</p>
-                        <p class="required-indicator">* Indicates Required</p>
+                        <p class="required-indicator">All fields are required except SMS opt-in</p>
                         
                         <div class="lead-form">
                             <!-- First Name -->
                             <div class="form-field">
                                 <label for="firstName" class="form-label">
-                                    First Name<span class="required">*</span>
+                                    First Name
                                 </label>
                                 <lightning-input
                                     type="text"
@@ -125,7 +125,7 @@
                             <!-- Last Name -->
                             <div class="form-field">
                                 <label for="lastName" class="form-label">
-                                    Last Name<span class="required">*</span>
+                                    Last Name
                                 </label>
                                 <lightning-input
                                     type="text"
@@ -140,7 +140,7 @@
                             <!-- Email -->
                             <div class="form-field">
                                 <label for="email" class="form-label">
-                                    Email address<span class="required">*</span>
+                                    Email address
                                 </label>
                                 <lightning-input
                                     type="email"
@@ -155,7 +155,7 @@
                             <!-- Phone -->
                             <div class="form-field">
                                 <label for="phone" class="form-label">
-                                    Phone number<span class="required">*</span>
+                                    Phone number
                                 </label>
                                 <lightning-input
                                     type="tel"
@@ -170,7 +170,7 @@
                             <!-- State -->
                             <div class="form-field">
                                 <label for="state" class="form-label">
-                                    State<span class="required">*</span>
+                                    State
                                 </label>
                                 <lightning-combobox
                                     name="state"
@@ -185,7 +185,7 @@
                             <!-- ZIP Code -->
                             <div class="form-field">
                                 <label for="zipCode" class="form-label">
-                                    ZIP Code<span class="required">*</span>
+                                    ZIP Code
                                 </label>
                                 <lightning-input
                                     type="text"
@@ -199,12 +199,12 @@
                                 </lightning-input>
                             </div>
                             
-                            <!-- SMS Opt-in Checkbox -->
+                            <!-- SMS Opt-in Checkbox (Optional) -->
                             <div class="form-field checkbox-field">
                                 <lightning-input
                                     type="checkbox"
                                     name="smsOptIn"
-                                    label="Text me about webinar reminders, enrollment updates, and other offers. Text message and data rates may apply. Message frequency varies. Reply STOP to opt-out."
+                                    label="Text me about webinar reminders, enrollment updates, and other offers. Text message and data rates may apply. Message frequency varies. Reply STOP to opt-out. (Optional)"
                                     value={leadFormData.smsOptIn}
                                     onchange={handleLeadFormChange}
                                     variant="standard">

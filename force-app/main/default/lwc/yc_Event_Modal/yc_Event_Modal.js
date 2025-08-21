@@ -281,35 +281,88 @@ export default class YcEventModal extends LightningElement {
     }
 
     validateLeadForm() {
+        const missingFields = [];
+        const invalidFields = [];
+        
+        // Field labels for user-friendly messages
+        const fieldLabels = {
+            firstName: 'First Name',
+            lastName: 'Last Name',
+            email: 'Email',
+            phone: 'Phone Number',
+            state: 'State',
+            zipCode: 'ZIP Code'
+        };
+        
+        // Check required fields
         const required = ['firstName', 'lastName', 'email', 'phone', 'state', 'zipCode'];
         for (let field of required) {
             if (!this.leadFormData[field] || this.leadFormData[field].trim() === '') {
-                return false;
+                missingFields.push(fieldLabels[field]);
             }
         }
         
-        // Validate email format
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(this.leadFormData.email)) {
-            return false;
+        // If email is provided, validate format
+        if (this.leadFormData.email && this.leadFormData.email.trim() !== '') {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(this.leadFormData.email.trim())) {
+                invalidFields.push('Email address format is invalid');
+            }
         }
         
-        // Validate ZIP code (5 digits)
-        const zipRegex = /^\d{5}$/;
-        if (!zipRegex.test(this.leadFormData.zipCode)) {
-            return false;
+        // If ZIP code is provided, validate format (5 digits)
+        if (this.leadFormData.zipCode && this.leadFormData.zipCode.trim() !== '') {
+            const zipRegex = /^\d{5}$/;
+            if (!zipRegex.test(this.leadFormData.zipCode.trim())) {
+                invalidFields.push('ZIP Code must be exactly 5 digits');
+            }
         }
         
-        return true;
+        // If phone is provided, validate it has at least 10 digits (basic validation)
+        if (this.leadFormData.phone && this.leadFormData.phone.trim() !== '') {
+            const phoneDigits = this.leadFormData.phone.replace(/\D/g, '');
+            if (phoneDigits.length < 10) {
+                invalidFields.push('Phone number must have at least 10 digits');
+            }
+        }
+        
+        return { 
+            isValid: missingFields.length === 0 && invalidFields.length === 0,
+            missingFields,
+            invalidFields
+        };
     }
 
     async handleLeadFormSubmit() {
         // Validate form
-        if (!this.validateLeadForm()) {
+        const validation = this.validateLeadForm();
+        
+        if (!validation.isValid) {
+            let errorMessage = '';
+            
+            // Build error message for missing fields
+            if (validation.missingFields.length > 0) {
+                if (validation.missingFields.length === 1) {
+                    errorMessage = `Please fill in: ${validation.missingFields[0]}`;
+                } else if (validation.missingFields.length === 2) {
+                    errorMessage = `Please fill in: ${validation.missingFields.join(' and ')}`;
+                } else {
+                    const lastField = validation.missingFields.pop();
+                    errorMessage = `Please fill in: ${validation.missingFields.join(', ')}, and ${lastField}`;
+                }
+            }
+            
+            // Add invalid field messages
+            if (validation.invalidFields.length > 0) {
+                if (errorMessage) errorMessage += '\n\n';
+                errorMessage += validation.invalidFields.join('\n');
+            }
+            
             this.dispatchEvent(new ShowToastEvent({
-                title: 'Missing Information',
-                message: 'Please fill in all required fields correctly.',
-                variant: 'error'
+                title: 'Required Information Missing',
+                message: errorMessage,
+                variant: 'error',
+                mode: 'sticky' // Keep the toast visible until dismissed
             }));
             return;
         }
@@ -419,6 +472,60 @@ export default class YcEventModal extends LightningElement {
         }
     }
 
+    // Convert 24-hour time to 12-hour format with AM/PM
+    formatTo12Hour(timeString) {
+        if (!timeString) {
+            return 'Time TBD';
+        }
+
+        try {
+            // Remove any timezone info (EST, PST, etc.) and trim whitespace
+            const cleanTime = timeString.trim().replace(/\s+[A-Z]{2,4}$/, '');
+            
+            // If already in 12-hour format (contains AM/PM), return as-is
+            if (cleanTime.toLowerCase().includes('am') || cleanTime.toLowerCase().includes('pm')) {
+                return timeString;
+            }
+
+            // Parse time assuming 24-hour format (HH:MM or HH:MM:SS)
+            const timeParts = cleanTime.split(':');
+            if (timeParts.length < 2) {
+                return timeString; // Return original if format unexpected
+            }
+
+            let hours = parseInt(timeParts[0], 10);
+            // Get minutes and remove any non-numeric characters
+            const minutesStr = timeParts[1].substring(0, 2);
+            const minutes = minutesStr.padStart(2, '0');
+
+            // Validate parsed values
+            if (isNaN(hours) || hours < 0 || hours > 23) {
+                return timeString; // Return original if invalid
+            }
+
+            // Determine AM/PM
+            const period = hours >= 12 ? 'PM' : 'AM';
+
+            // Convert to 12-hour format
+            if (hours === 0) {
+                hours = 12; // Midnight
+            } else if (hours > 12) {
+                hours = hours - 12;
+            }
+
+            // Check if original had timezone and preserve it
+            const timezoneMatch = timeString.match(/\s+([A-Z]{2,4})$/);
+            const timezone = timezoneMatch ? ' ' + timezoneMatch[1] : '';
+
+            // Format the output
+            return `${hours}:${minutes} ${period}${timezone}`;
+
+        } catch (error) {
+            console.error('Error formatting time:', timeString, error);
+            return timeString; // Return original on error
+        }
+    }
+
     // Transform Salesforce data to component format
     transformEventData(salesforceEvents) {
         return salesforceEvents.map(event => {
@@ -430,7 +537,7 @@ export default class YcEventModal extends LightningElement {
                 day: eventDate.day,
                 monthYear: eventDate.monthYear,
                 title: event.Event_Title__c || 'Event Title Not Available',
-                time: event.Event_Start_Time_Web_F__c || 'Time TBD',
+                time: this.formatTo12Hour(event.Event_Start_Time_Web_F__c) || 'Time TBD',
                 type: event.Event_Type__c || 'Virtual Event',
                 description: event.Event_Description__c || 'Event description not available.',
                 buttonLabel: this.getButtonLabel(event.Id),
@@ -449,20 +556,19 @@ export default class YcEventModal extends LightningElement {
         }
 
         try {
-            // Parse the date string (format: YYYY-MM-DD)
-            const eventDate = new Date(eventDateString);
+            // Split the date string to avoid timezone issues
+            const [year, month, day] = eventDateString.split('-').map(num => parseInt(num));
             
             // Format day
-            const day = eventDate.getDate().toString();
+            const dayStr = day.toString();
             
-            // Format month and year
+            // Format month and year  
             const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            const month = monthNames[eventDate.getMonth()];
-            const year = eventDate.getFullYear();
-            const monthYear = `${month} ${year}`;
+            const monthStr = monthNames[month - 1]; // month is 1-indexed in the string
+            const monthYear = `${monthStr} ${year}`;
 
-            return { day, monthYear };
+            return { day: dayStr, monthYear };
         } catch (error) {
             console.error('Error parsing date:', eventDateString, error);
             return { day: '??', monthYear: 'Date Error' };
