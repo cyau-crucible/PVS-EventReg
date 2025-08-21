@@ -25,6 +25,7 @@ export default class YcEventModal extends LightningElement {
     @track showLeadRegistrationModal = false;
     @track isSubmittingLead = false;
     @track pendingEventForRegistration = null;
+    @track formErrorMessage = '';
     @track leadFormData = {
         firstName: '',
         lastName: '',
@@ -278,6 +279,7 @@ export default class YcEventModal extends LightningElement {
             zipCode: '',
             smsOptIn: false
         };
+        this.formErrorMessage = '';
     }
 
     validateLeadForm() {
@@ -334,8 +336,15 @@ export default class YcEventModal extends LightningElement {
     }
 
     async handleLeadFormSubmit() {
+        console.log('Submit button clicked');
+        console.log('Current form data:', this.leadFormData);
+        
+        // Clear any previous error message
+        this.formErrorMessage = '';
+        
         // Validate form
         const validation = this.validateLeadForm();
+        console.log('Validation result:', validation);
         
         if (!validation.isValid) {
             let errorMessage = '';
@@ -347,8 +356,9 @@ export default class YcEventModal extends LightningElement {
                 } else if (validation.missingFields.length === 2) {
                     errorMessage = `Please fill in: ${validation.missingFields.join(' and ')}`;
                 } else {
-                    const lastField = validation.missingFields.pop();
-                    errorMessage = `Please fill in: ${validation.missingFields.join(', ')}, and ${lastField}`;
+                    const lastField = [...validation.missingFields];
+                    const last = lastField.pop();
+                    errorMessage = `Please fill in: ${lastField.join(', ')}, and ${last}`;
                 }
             }
             
@@ -358,14 +368,24 @@ export default class YcEventModal extends LightningElement {
                 errorMessage += validation.invalidFields.join('\n');
             }
             
+            console.log('Showing error with message:', errorMessage);
+            
+            // Set the error message to display in the form
+            this.formErrorMessage = errorMessage;
+            
+            // Also try to show toast (may not work in all contexts)
             this.dispatchEvent(new ShowToastEvent({
                 title: 'Required Information Missing',
                 message: errorMessage,
                 variant: 'error',
-                mode: 'sticky' // Keep the toast visible until dismissed
+                mode: 'sticky'
             }));
             return;
         }
+
+        console.log('Validation passed, proceeding with submission');
+        this.formErrorMessage = '';
+        this.isSubmittingLead = true;
 
         this.isSubmittingLead = true;
 
