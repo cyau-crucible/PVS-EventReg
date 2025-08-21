@@ -287,6 +287,24 @@ export default class YcEventModal extends LightningElement {
         this.formErrorMessage = '';
     }
 
+    // Show registration success notification
+    showRegistrationSuccessNotification(eventTitle) {
+        // Build the message with optional custom label
+        let toastMessage = `You have been registered for "${eventTitle}"`;
+        
+        // Add custom label if it exists and is not blank
+        if (REGISTRATION_ADDITIONAL_MESSAGE && REGISTRATION_ADDITIONAL_MESSAGE.trim() !== '') {
+            toastMessage += `. ${REGISTRATION_ADDITIONAL_MESSAGE}`;
+        }
+        
+        // Show success message
+        this.dispatchEvent(new ShowToastEvent({
+            title: 'Registration Successful',
+            message: toastMessage,
+            variant: 'success'
+        }));
+    }
+
     validateLeadForm() {
         const missingFields = [];
         const invalidFields = [];
@@ -632,21 +650,8 @@ export default class YcEventModal extends LightningElement {
             console.log('Registration result:', result);
             
             if (result === 'SUCCESS') {
-                // Build the message with optional custom label
-                let toastMessage = `You have been registered for "${selectedEvent.title}"`;
-                
-                // Add custom label if it exists and is not blank
-                if (REGISTRATION_ADDITIONAL_MESSAGE && REGISTRATION_ADDITIONAL_MESSAGE.trim() !== '') {
-                    toastMessage += '\n\n' + REGISTRATION_ADDITIONAL_MESSAGE;
-                }
-                
-                // Show success message
-                this.dispatchEvent(new ShowToastEvent({
-                    title: 'Registration Successful',
-                    message: toastMessage,
-                    variant: 'success'
-                }));
-                
+                // Show success notification
+                this.showRegistrationSuccessNotification(selectedEvent.title);
 
                 /*
                 // Add to registered events list and refresh the events display
