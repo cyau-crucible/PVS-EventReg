@@ -445,13 +445,12 @@ export default class YcEventModal extends LightningElement {
             const params = new URLSearchParams(currentUrl.search);
             
             // Add registration parameters
-            /*
             params.set('fn', this.leadFormData.firstName);
             params.set('ln', this.leadFormData.lastName);
             params.set('email', this.leadFormData.email);
+            params.set('phone', this.leadFormData.phone);
             params.set('state', this.leadFormData.state);
             params.set('zipcode', this.leadFormData.zipCode);
-            */
             params.set('fromEvent', '1');
             
             // Redirect to the same page with parameters
