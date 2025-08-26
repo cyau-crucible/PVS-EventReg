@@ -268,11 +268,27 @@ export default class YcEventModal extends LightningElement {
         }
     }
 
-    // Lead Registration Form Handlers
+    // Lead Registration Form Handlers - FIXED VERSION
     handleLeadFormChange(event) {
         const field = event.target.name;
-        const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
+        let value;
+        
+        // Handle different event structures for Lightning components
+        if (event.target.type === 'checkbox') {
+            value = event.target.checked;
+        } else if (event.detail && event.detail.value !== undefined) {
+            // This handles lightning-combobox and other Lightning components
+            value = event.detail.value;
+        } else {
+            // This handles standard lightning-input components
+            value = event.target.value;
+        }
+        
         this.leadFormData = { ...this.leadFormData, [field]: value };
+        
+        // Debug logging to verify values are being captured
+        console.log(`Form field updated - ${field}:`, value);
+        console.log('Current form data:', JSON.stringify(this.leadFormData));
     }
 
     closeLeadRegistrationModal() {
@@ -367,7 +383,7 @@ export default class YcEventModal extends LightningElement {
 
     async handleLeadFormSubmit() {
         console.log('Submit button clicked');
-        console.log('Current form data:', this.leadFormData);
+        console.log('Current form data:', JSON.stringify(this.leadFormData));
         
         // Clear any previous error message
         this.formErrorMessage = '';
@@ -416,8 +432,7 @@ export default class YcEventModal extends LightningElement {
         console.log('Validation passed, proceeding with submission');
         this.formErrorMessage = '';
         this.isSubmittingLead = true;
-
-        this.isSubmittingLead = true;
+        // Removed duplicate: this.isSubmittingLead = true;
 
         try {
             // TODO: Call Apex method to create lead and register for event
@@ -427,7 +442,7 @@ export default class YcEventModal extends LightningElement {
             // });
 
             // For now, simulate success
-            console.log('Lead form data:', this.leadFormData);
+            console.log('Lead form data before redirect:', JSON.stringify(this.leadFormData));
             console.log('Event ID:', this.pendingEventForRegistration.id);
 
             // Show success message
@@ -437,24 +452,37 @@ export default class YcEventModal extends LightningElement {
                 variant: 'success'
             }));
 
-            // Close modal and reset
-            this.closeLeadRegistrationModal();
-
             // Build redirect URL with parameters
             const currentUrl = new URL(window.location.href);
             const params = new URLSearchParams(currentUrl.search);
             
-            // Add registration parameters
-            params.set('fn', this.leadFormData.firstName);
-            params.set('ln', this.leadFormData.lastName);
-            params.set('email', this.leadFormData.email);
-            params.set('phone', this.leadFormData.phone);
-            params.set('state', this.leadFormData.state);
-            params.set('zipcode', this.leadFormData.zipCode);
+            // Add registration parameters - use defensive coding to ensure values
+            params.set('fn', this.leadFormData.firstName || '');
+            params.set('ln', this.leadFormData.lastName || '');
+            params.set('email', this.leadFormData.email || '');
+            params.set('phone', this.leadFormData.phone || '');
+            params.set('state', this.leadFormData.state || '');
+            params.set('zipcode', this.leadFormData.zipCode || '');
             params.set('fromEvent', '1');
             
+            // Debug: Log what we're about to redirect with
+            console.log('URL parameters being set:', {
+                fn: this.leadFormData.firstName || '',
+                ln: this.leadFormData.lastName || '',
+                email: this.leadFormData.email || '',
+                phone: this.leadFormData.phone || '',
+                state: this.leadFormData.state || '',
+                zipcode: this.leadFormData.zipCode || ''
+            });
+            
+            const redirectUrl = `${currentUrl.pathname}?${params.toString()}`;
+            console.log('Redirecting to:', redirectUrl);
+            
+            // Close modal and reset AFTER capturing values but BEFORE redirect
+            this.closeLeadRegistrationModal();
+            
             // Redirect to the same page with parameters
-            window.location.href = `${currentUrl.pathname}?${params.toString()}`;
+            window.location.href = redirectUrl;
 
         } catch (error) {
             console.error('Lead registration error:', error);
@@ -658,14 +686,6 @@ export default class YcEventModal extends LightningElement {
             if (result === 'SUCCESS') {
                 // Show success notification
                 this.showRegistrationSuccessNotification(selectedEvent.title);
-
-                /*
-                // Add to registered events list and refresh the events display
-                this.registeredEventIds = [...this.registeredEventIds, eventId];
-                
-                // Refresh the events to update button states
-                this.refreshEventData();
-                */
 
                 // Redirect, if needed
                 // Check if we're on the events page
