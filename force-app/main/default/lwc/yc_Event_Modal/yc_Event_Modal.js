@@ -22,7 +22,6 @@ export default class YcEventModal extends LightningElement {
     @track modalPermanentlyDismissed = false;
     inactivityTimer = null;
     inactivityTimeoutMs = 20000; // 20 seconds
-    timerStarted = false; // Track if timer has been started
 
     // Lead Registration Modal properties
     @track showLeadRegistrationModal = false;
@@ -95,8 +94,8 @@ export default class YcEventModal extends LightningElement {
     ];
 
     connectedCallback() {
-        console.log('Component connected - waiting for events to load before starting timer');
-        // Don't start timer here - wait for events to load
+        console.log('Component connected - starting inactivity timer');
+        this.startInactivityTimer();
         this.addEventListeners();
         this.checkForRegistrationParams();
         
@@ -161,12 +160,6 @@ export default class YcEventModal extends LightningElement {
     }
 
     startInactivityTimer() {
-        // Only start if we have events and timer hasn't been permanently dismissed
-        if (this.modalPermanentlyDismissed || this.events.length === 0) {
-            console.log('Not starting timer - dismissed or no events');
-            return;
-        }
-        
         this.clearInactivityTimer();
         console.log('Starting inactivity timer for', this.inactivityTimeoutMs, 'ms');
         this.inactivityTimer = setTimeout(() => {
@@ -180,12 +173,8 @@ export default class YcEventModal extends LightningElement {
             console.log('Not resetting timer - modal is open');
             return; // Don't reset timer while modal is open
         }
-        
-        // Only reset if timer was already started (events are loaded)
-        if (this.timerStarted) {
-            console.log('Activity detected - resetting timer');
-            this.startInactivityTimer();
-        }
+        console.log('Activity detected - resetting timer');
+        this.startInactivityTimer();
     }
 
     clearInactivityTimer() {
@@ -211,16 +200,10 @@ export default class YcEventModal extends LightningElement {
             return;
         }
 
-        // Check if still loading
-        if (this.isLoading) {
-            console.log('Still loading events, retrying in next cycle');
-            this.startInactivityTimer();
-            return;
-        }
-
         // Check if events are loaded
         if (this.events.length === 0) {
-            console.log('No events available. Stopping timer.');
+            console.log('No events available. Giving up.');
+            // Don't restart timer - just give up
             return;
         }
         
@@ -235,8 +218,13 @@ export default class YcEventModal extends LightningElement {
             this.featuredEvent = availableEvent;
             this.showInactivityModal = true;
             console.log('Showing inactivity modal for event:', availableEvent.title);
+            console.log('Modal state:', this.showInactivityModal);
         } else {
-            console.log('User registered for all events, restarting timer');
+            console.log('No available events for inactivity modal');
+            console.log('All events:', this.events);
+            console.log('Registered IDs:', this.registeredEventIds);
+            // Restart timer if no events available - matching EventList.js behavior
+            console.log('Restarting timer to check again...');
             this.startInactivityTimer();
         }
     }
@@ -535,21 +523,14 @@ export default class YcEventModal extends LightningElement {
             console.log('Events data received:', data);
             this.loadRegisteredEvents().then(() => {
                 this.events = this.transformEventData(data);
-                this.isLoading = false;
+                this.isLoading = false; // Set to false after data is processed
                 console.log('Events loaded and transformed:', this.events);
-                
-                // Start inactivity timer only after events are loaded
-                if (!this.modalPermanentlyDismissed && this.events.length > 0) {
-                    console.log('Events loaded, starting inactivity timer');
-                    this.timerStarted = true;
-                    this.startInactivityTimer();
-                }
             });
             this.error = undefined;
         } else if (error) {
             this.error = error;
             this.events = [];
-            this.isLoading = false;
+            this.isLoading = false; // Set to false after error is handled
             console.error('Error loading events:', error);
         }
     }
