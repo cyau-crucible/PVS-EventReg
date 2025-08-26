@@ -132,9 +132,12 @@ export default class YcEventModal extends LightningElement {
         }
     }
 
-    // Check if user is a guest
+    // Check if user is a guest (stub for now - uncomment when import is available)
     get isGuestUser() {
        return isGuest === true;
+       // For testing, you can toggle this
+       // return true; // Set to true to test guest user flow
+       // return false;
     }
 
     // Activity tracking methods
@@ -234,6 +237,7 @@ export default class YcEventModal extends LightningElement {
         this.showInactivityModal = false;
         this.featuredEvent = null;
         this.modalPermanentlyDismissed = true; // Permanently disable modal
+        // Modal will not appear again for this session
     }
 
     // Handle register from modal
@@ -246,7 +250,7 @@ export default class YcEventModal extends LightningElement {
             this.showInactivityModal = false;
             this.modalPermanentlyDismissed = true;
             
-            // Check if user is guest
+            // @TODO: Check if user is guest
             if (this.isGuestUser) {
                 // Show lead registration form for guest users
                 this.showLeadRegistrationModal = true;
@@ -267,20 +271,8 @@ export default class YcEventModal extends LightningElement {
     // Lead Registration Form Handlers
     handleLeadFormChange(event) {
         const field = event.target.name;
-        let value;
-        
-        if (event.target.type === 'checkbox') {
-            value = event.target.checked;
-        } else if (event.detail && event.detail.value !== undefined) {
-            // For lightning-combobox and other complex components
-            value = event.detail.value;
-        } else {
-            value = event.target.value;
-        }
-        
+        const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
         this.leadFormData = { ...this.leadFormData, [field]: value };
-        console.log(`Form field updated - ${field}:`, value);
-        console.log('Current form data state:', JSON.stringify(this.leadFormData));
     }
 
     closeLeadRegistrationModal() {
@@ -375,7 +367,7 @@ export default class YcEventModal extends LightningElement {
 
     async handleLeadFormSubmit() {
         console.log('Submit button clicked');
-        console.log('Current form data:', JSON.stringify(this.leadFormData));
+        console.log('Current form data:', this.leadFormData);
         
         // Clear any previous error message
         this.formErrorMessage = '';
@@ -411,7 +403,7 @@ export default class YcEventModal extends LightningElement {
             // Set the error message to display in the form
             this.formErrorMessage = errorMessage;
             
-            // Also show toast
+            // Also try to show toast (may not work in all contexts)
             this.dispatchEvent(new ShowToastEvent({
                 title: 'Required Information Missing',
                 message: errorMessage,
@@ -425,6 +417,8 @@ export default class YcEventModal extends LightningElement {
         this.formErrorMessage = '';
         this.isSubmittingLead = true;
 
+        this.isSubmittingLead = true;
+
         try {
             // TODO: Call Apex method to create lead and register for event
             // const result = await createLeadAndRegister({
@@ -433,7 +427,7 @@ export default class YcEventModal extends LightningElement {
             // });
 
             // For now, simulate success
-            console.log('Lead form data being submitted:', JSON.stringify(this.leadFormData));
+            console.log('Lead form data:', this.leadFormData);
             console.log('Event ID:', this.pendingEventForRegistration.id);
 
             // Show success message
@@ -443,43 +437,24 @@ export default class YcEventModal extends LightningElement {
                 variant: 'success'
             }));
 
+            // Close modal and reset
+            this.closeLeadRegistrationModal();
+
             // Build redirect URL with parameters
             const currentUrl = new URL(window.location.href);
             const params = new URLSearchParams(currentUrl.search);
             
-            // Add registration parameters using the current form data values
-            const firstName = this.leadFormData.firstName || '';
-            const lastName = this.leadFormData.lastName || '';
-            const email = this.leadFormData.email || '';
-            const phone = this.leadFormData.phone || '';
-            const state = this.leadFormData.state || '';
-            const zipCode = this.leadFormData.zipCode || '';
-            
-            console.log('Setting URL params:', {
-                fn: firstName,
-                ln: lastName,
-                email: email,
-                phone: phone,
-                state: state,
-                zipcode: zipCode
-            });
-            
-            params.set('fn', firstName);
-            params.set('ln', lastName);
-            params.set('email', email);
-            params.set('phone', phone);
-            params.set('state', state);
-            params.set('zipcode', zipCode);
+            // Add registration parameters
+            params.set('fn', this.leadFormData.firstName);
+            params.set('ln', this.leadFormData.lastName);
+            params.set('email', this.leadFormData.email);
+            params.set('phone', this.leadFormData.phone);
+            params.set('state', this.leadFormData.state);
+            params.set('zipcode', this.leadFormData.zipCode);
             params.set('fromEvent', '1');
             
-            const redirectUrl = `${currentUrl.pathname}?${params.toString()}`;
-            console.log('Redirecting to:', redirectUrl);
-            
-            // Close modal and reset before redirect
-            this.closeLeadRegistrationModal();
-            
             // Redirect to the same page with parameters
-            window.location.href = redirectUrl;
+            window.location.href = `${currentUrl.pathname}?${params.toString()}`;
 
         } catch (error) {
             console.error('Lead registration error:', error);
@@ -502,16 +477,19 @@ export default class YcEventModal extends LightningElement {
     // Link handlers for terms, privacy, and contact
     handleTermsClick(event) {
         event.preventDefault();
+        // Navigate to terms page or open in new window
         window.open('/terms-of-use', '_blank');
     }
 
     handlePrivacyClick(event) {
         event.preventDefault();
+        // Navigate to privacy policy page or open in new window
         window.open('/privacy-policy', '_blank');
     }
 
     handleContactClick(event) {
         event.preventDefault();
+        // Navigate to contact page or open in new window
         window.open('/contact-us', '_blank');
     }
 
@@ -681,6 +659,15 @@ export default class YcEventModal extends LightningElement {
                 // Show success notification
                 this.showRegistrationSuccessNotification(selectedEvent.title);
 
+                /*
+                // Add to registered events list and refresh the events display
+                this.registeredEventIds = [...this.registeredEventIds, eventId];
+                
+                // Refresh the events to update button states
+                this.refreshEventData();
+                */
+
+                // Redirect, if needed
                 // Check if we're on the events page
                 const currentUrl = new URL(window.location.href);
                 if (currentUrl.pathname.endsWith('/s/events')) {
