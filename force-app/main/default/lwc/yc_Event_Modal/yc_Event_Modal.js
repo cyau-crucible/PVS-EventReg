@@ -6,7 +6,7 @@ import getUserRegisteredEventIds from '@salesforce/apex/yc_EventListController.g
 import REGISTRATION_ADDITIONAL_MESSAGE from '@salesforce/label/c.Registration_Additional_Message';
 
 // Later for Lead form
-// import isGuest from '@salesforce/user/isGuest';
+import isGuest from '@salesforce/user/isGuest';
 // import createLeadAndRegister from '@salesforce/apex/yc_EventListController.createLeadAndRegister';
 
 export default class YcEventModal extends LightningElement {
@@ -134,10 +134,10 @@ export default class YcEventModal extends LightningElement {
 
     // Check if user is a guest (stub for now - uncomment when import is available)
     get isGuestUser() {
-        // return isGuest === true;
-        // For testing, you can toggle this
+       return isGuest === true;
+       // For testing, you can toggle this
        // return true; // Set to true to test guest user flow
-       return false;
+       // return false;
     }
 
     // Activity tracking methods
@@ -251,12 +251,10 @@ export default class YcEventModal extends LightningElement {
             this.modalPermanentlyDismissed = true;
             
             // @TODO: Check if user is guest
-            /*
             if (this.isGuestUser) {
                 // Show lead registration form for guest users
                 this.showLeadRegistrationModal = true;
             } else {
-            */
                 // For authenticated users, proceed with normal registration
                 const mockEvent = {
                     target: {
@@ -266,7 +264,7 @@ export default class YcEventModal extends LightningElement {
                     }
                 };
                 this.handleRegister(mockEvent);
-            // }
+            }
         }
     }
 
