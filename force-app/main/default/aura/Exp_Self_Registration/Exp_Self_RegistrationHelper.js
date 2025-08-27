@@ -823,4 +823,46 @@ validateForm: function(component) {
     var showGrades = component.get("v.showGrades");
     component.set("v.showGrades", !showGrades);
   },
+  extractEventRegistrationParams: function(component) {
+      // Prepopulate Form values if they were passed in
+      var urlString = window.location.href;
+      var url = new URL(urlString);
+      
+      // Check if this is coming from event registration (has fromEvent=1)
+      var fromEvent = url.searchParams.get('fromEvent');
+      if (fromEvent === '1') {
+          var form = component.get('v.form');
+          
+          // Extract and set only the fields that exist in the form
+          var fn = url.searchParams.get('fn');
+          var ln = url.searchParams.get('ln');
+          var email = url.searchParams.get('email');
+          var phone = url.searchParams.get('phone');
+          var zipcode = url.searchParams.get('zipcode');
+          
+          if (fn) form.first_name = fn;
+          if (ln) form.last_name = ln;
+          if (email) {
+              form.email = email;
+              form.email_confirm = email;
+          }
+          if (phone) {
+              // Format phone to match +1-XXX-XXX-XXXX format
+              var cleanPhone = phone.replace(/\D/g,'');
+              if (cleanPhone.length === 10) {
+                  form.phone = '+1-' + cleanPhone.substring(0,3) + '-' + cleanPhone.substring(3,6) + '-' + cleanPhone.substring(6);
+              } else if (cleanPhone.length === 11 && cleanPhone.startsWith('1')) {
+                  form.phone = '+1-' + cleanPhone.substring(1,4) + '-' + cleanPhone.substring(4,7) + '-' + cleanPhone.substring(7);
+              }
+          }
+          if (zipcode) form.zip = zipcode;
+          
+          component.set('v.form', form);
+          
+          // Trigger zip validation if provided
+          if (zipcode && zipcode.length === 5) {
+              this.zipCodeCheckHelper(component);
+          }
+      }
+  },
 })

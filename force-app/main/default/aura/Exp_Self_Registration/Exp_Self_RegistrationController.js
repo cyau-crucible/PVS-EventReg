@@ -49,6 +49,10 @@
     helper.isUserLoggedInJS(component);
     helper.extractUTMParameters(component);
     // helper.extractLeadSourceParameter(component);
+
+    // Pre-populate form fields if query string values are passed
+    helper.extractEventRegistrationParams(component);
+
     console.log(component.get('v.leadSource'));
     let harId = component.get('v.harId');
     if(harId!=null){
