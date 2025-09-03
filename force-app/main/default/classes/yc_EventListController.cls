@@ -1,7 +1,7 @@
 public without sharing class yc_EventListController {
     
     @AuraEnabled(cacheable=true)
-    public static List<PVS_Event__c> getUpcomingEvents() {
+    public static List<PVS_Event__c> getUpcomingEvents(String guestSchoolId) {
         try {
             // Build the list of permissible school IDs
             Set<Id> permissibleSchoolIds = new Set<Id>();
@@ -36,14 +36,18 @@ public without sharing class yc_EventListController {
             DateTime currentDateTime = System.now();
             String query = 'SELECT Id, Event_Title__c, Event_Date__c, Event_Start_Time_Web_F__c, ' +
                           'Event_Type__c, Event_Description__c, School_Abbreviation__c, School__c, ' + 
-                          'Zoom_Event_ID__c, Channel_Type__c ' + 
+                          'Zoom_Event_ID__c, Channel_Type__c, Allow_Guest_User_Registration__c ' + 
                           'FROM PVS_Event__c ' +
                           'WHERE Event_Start_DateTime_F__c >= :currentDateTime AND Event_Status__c = \'Active\'';
 
             // Add school filtering
-            if (!permissibleSchoolIds.isEmpty()) {
+            if (!permissibleSchoolIds.isEmpty() && UserInfo.getUserType() != 'Guest') {
                 query += 'AND (School__c = NULL OR School__c IN :permissibleSchoolIds OR School__r.Name IN (\'National Event Hosts\', \'Enrollment Event\')) ';
-            } else {
+            } 
+            else if (UserInfo.getUserType() == 'Guest' && String.isNotBlank(guestSchoolId) ) {
+                query += 'AND ( (School__c = \'' + guestSchoolId + '\' AND Allow_Guest_User_Registration__c = true) OR School__c = NULL OR School__r.Name IN (\'National Event Hosts\', \'Enrollment Event\'))';
+            }
+            else {
                 // If no permissible schools, only show events with NULL school
                 query += 'AND (School__c = NULL OR School__r.Name IN (\'National Event Hosts\', \'Enrollment Event\'))';
             }
@@ -112,20 +116,6 @@ public without sharing class yc_EventListController {
                 return 'ALREADY_REGISTERED';
             }
 
-            /*
-            // Create the registration record (Event)
-            PVS_Event_Registration__c registration = new PVS_Event_Registration__c(
-                Email__c = currentUser.Contact.Email,
-                First_Name__c = currentUser.Contact.FirstName,
-                Last_Name__c = currentUser.Contact.LastName,
-                Phone__c = currentUser.Contact.Phone,
-                PVS_Event__c = selectedEvent.Id,
-                School_Abbreviation__c = selectedEvent.School_Abbreviation__c,
-                Stage__c = 'Prospect'
-            );
-            insert registration;
-            */
-
             // Find the Task Record Type
             List<RecordType> taskRT = [SELECT Id FROM RecordType WHERE DeveloperName='Form_Submission'];
 
@@ -162,7 +152,6 @@ public without sharing class yc_EventListController {
     
     @AuraEnabled
     public static String createLeadAndRegister(Map<String, String> leadData, String eventId) {
-        /* comment out for speed testing
         try {
             // Get the event details
             PVS_Event__c selectedEvent = [
@@ -270,9 +259,6 @@ public without sharing class yc_EventListController {
             System.debug('Error in createLeadAndRegister: ' + e.getMessage());
             throw new AuraHandledException('Registration failed: ' + e.getMessage());
         }
-        */
-
-        return 'SUCCESS';
     }
     
     @AuraEnabled(cacheable=true)

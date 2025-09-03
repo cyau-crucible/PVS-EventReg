@@ -1,5 +1,5 @@
 import { LightningElement, wire, track } from 'lwc';
-import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import Toast from 'lightning/toast';
 import getUpcomingEvents from '@salesforce/apex/yc_EventListController.getUpcomingEvents';
 import registerForEvent from '@salesforce/apex/yc_EventListController.registerForEvent';
 import getUserRegisteredEventIds from '@salesforce/apex/yc_EventListController.getUserRegisteredEventIds';
@@ -10,6 +10,8 @@ import REGISTRATION_ADDITIONAL_MESSAGE from '@salesforce/label/c.Registration_Ad
 import isGuest from '@salesforce/user/isGuest';
 
 export default class YcEventModal extends LightningElement {
+    schoolId;  // Filter for Guest user schools
+    
     @track events = [];
     @track error;
     @track isLoading = true;
@@ -125,21 +127,35 @@ export default class YcEventModal extends LightningElement {
         // Check for notification to display
         const notificationTitle = urlParams.get('notificationTitle');
         if (notificationTitle) {
-console.log('*** SHOWING NOTIFICATION ON CONNECTED CALLBACK');
 
             // Decode and show the notification
             const decodedTitle = decodeURIComponent(notificationTitle);
-console.log('*** Decoded Title: ' + decodedTitle);
             this.showRegistrationSuccessNotification(decodedTitle);
         }
+
+        const guestSchoolId = urlParams.get('schoolId');
+        if (this.isGuestUser && guestSchoolId) { this.schoolId = guestSchoolId; }
     }
 
-    // Check if user is a guest (stub for now - uncomment when import is available)
+    // Check if user is a guest
     get isGuestUser() {
        return isGuest === true;
-       // For testing, you can toggle this
-       // return true; // Set to true to test guest user flow
-       // return false;
+    }
+
+    // Helper method for toast notifications using Toast.show()
+    showToast(title, message, variant, mode) {
+        const config = {
+            label: title,
+            message: message,
+            variant: variant
+        };
+        
+        // Only add mode if provided
+        if (mode) {
+            config.mode = mode;
+        }
+        
+        Toast.show(config, this);
     }
 
     // Activity tracking methods
@@ -308,22 +324,16 @@ console.log('*** Decoded Title: ' + decodedTitle);
 
     // Show registration success notification
     showRegistrationSuccessNotification(eventTitle) {
-console.log('+++ inside showRegistrationSuccessNotification');
         // Build the message with optional custom label
         let toastMessage = `You have been registered for "${eventTitle}"`;
         
         // Add custom label if it exists and is not blank
         if (REGISTRATION_ADDITIONAL_MESSAGE && REGISTRATION_ADDITIONAL_MESSAGE.trim() !== '') {
             toastMessage += `. ${REGISTRATION_ADDITIONAL_MESSAGE}`;
-console.log('Showing: ' + toastMessage);
         }
         
         // Show success message
-        this.dispatchEvent(new ShowToastEvent({
-            title: 'Registration Successful',
-            message: toastMessage,
-            variant: 'success'
-        }));
+        this.showToast('Registration Successful', toastMessage, 'success');
     }
 
     validateLeadForm() {
@@ -418,12 +428,7 @@ console.log('Showing: ' + toastMessage);
             this.formErrorMessage = errorMessage;
             
             // Also try to show toast (may not work in all contexts)
-            this.dispatchEvent(new ShowToastEvent({
-                title: 'Required Information Missing',
-                message: errorMessage,
-                variant: 'error',
-                mode: 'sticky'
-            }));
+            this.showToast('Required Information Missing', errorMessage, 'error', 'sticky');
             return;
         }
 
@@ -448,15 +453,6 @@ console.log('Showing: ' + toastMessage);
             console.log('Registration result:', result);
 
             if (result === 'SUCCESS') {
-                /*
-                // Show success message
-                this.dispatchEvent(new ShowToastEvent({
-                    title: 'Registration Successful',
-                    message: `Thank you for registering for "${this.pendingEventForRegistration.title}". You will receive a confirmation email shortly.`,
-                    variant: 'success'
-                }));
-                */
-
                 // Build redirect URL with parameters
                 const currentUrl = new URL(window.location.href);
                 const params = new URLSearchParams(currentUrl.search);
@@ -494,12 +490,8 @@ console.log('Showing: ' + toastMessage);
                 
             } else if (result === 'ALREADY_REGISTERED') {
                 // Show info message
-                this.dispatchEvent(new ShowToastEvent({
-                    title: 'Already Registered',
-                    message: `You are already registered for "${this.pendingEventForRegistration.title}"`,
-                    variant: 'info'
-                }));
-                
+                this.showToast('Already Registered', `You are already registered for "${this.pendingEventForRegistration.title}"`, 'info', 'sticky');
+
                 // Close the modal
                 this.closeLeadRegistrationModal();
             }
@@ -512,11 +504,7 @@ console.log('Showing: ' + toastMessage);
                 errorMessage = error.body.message;
             }
             
-            this.dispatchEvent(new ShowToastEvent({
-                title: 'Registration Failed',
-                message: errorMessage,
-                variant: 'error'
-            }));
+            this.showToast('Registration Failed', errorMessage, 'error', 'sticky');
         } finally {
             this.isSubmittingLead = false;
         }
@@ -542,7 +530,7 @@ console.log('Showing: ' + toastMessage);
     }
 
     // Wire the Apex method to get events
-    @wire(getUpcomingEvents)
+    @wire(getUpcomingEvents, { schoolId: '$schoolId' })
     wiredEvents({ error, data }) {
         console.log('Wire method called with:', { hasData: !!data, hasError: !!error });
         if (data) {
@@ -724,11 +712,7 @@ console.log('Showing: ' + toastMessage);
                 }
             } else if (result === 'ALREADY_REGISTERED') {
                 // Show info message
-                this.dispatchEvent(new ShowToastEvent({
-                    title: 'Already Registered',
-                    message: `You are already registered for "${selectedEvent.title}"`,
-                    variant: 'info'
-                }));
+                this.showToast('Already Registered', `You are already registered for "${this.pendingEventForRegistration.title}"`, 'info', 'sticky');
                 
                 // Add to registered list since they're already registered
                 this.registeredEventIds = [...this.registeredEventIds, eventId];
@@ -747,11 +731,7 @@ console.log('Showing: ' + toastMessage);
             }
             
             // Show error message
-            this.dispatchEvent(new ShowToastEvent({
-                title: 'Registration Failed',
-                message: errorMessage,
-                variant: 'error'
-            }));
+            this.showToast('Registration Failed', errorMessage, 'error', 'sticky');
             
         } finally {
             this.registeringEventId = null;
