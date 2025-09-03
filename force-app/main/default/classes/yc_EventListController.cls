@@ -162,6 +162,7 @@ public without sharing class yc_EventListController {
     
     @AuraEnabled
     public static String createLeadAndRegister(Map<String, String> leadData, String eventId) {
+        /* comment out for speed testing
         try {
             // Get the event details
             PVS_Event__c selectedEvent = [
@@ -262,12 +263,16 @@ public without sharing class yc_EventListController {
             
             insert regEvent;
             
+            
             System.debug('Successfully registered Lead for event: ' + selectedEvent.Event_Title__c);
             return 'SUCCESS';
         } catch (Exception e) {
             System.debug('Error in createLeadAndRegister: ' + e.getMessage());
             throw new AuraHandledException('Registration failed: ' + e.getMessage());
         }
+        */
+
+        return 'SUCCESS';
     }
     
     @AuraEnabled(cacheable=true)

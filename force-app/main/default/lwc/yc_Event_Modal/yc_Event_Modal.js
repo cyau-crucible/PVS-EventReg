@@ -21,7 +21,7 @@ export default class YcEventModal extends LightningElement {
     @track featuredEvent = null;
     @track modalPermanentlyDismissed = false;
     inactivityTimer = null;
-    inactivityTimeoutMs = 90000; // 60 seconds
+    inactivityTimeoutMs = 20000; // 60 seconds
 
     // Lead Registration Modal properties
     @track showLeadRegistrationModal = false;
@@ -99,15 +99,6 @@ export default class YcEventModal extends LightningElement {
         this.addEventListeners();
         this.checkForRegistrationParams();
         
-        // Check for notification to display
-        const urlParams = new URLSearchParams(window.location.search);
-        const notificationTitle = urlParams.get('notificationTitle');
-        if (notificationTitle) {
-            // Decode and show the notification
-            const decodedTitle = decodeURIComponent(notificationTitle);
-            this.showRegistrationSuccessNotification(decodedTitle);
-        }
-        
         // Debug: Log current state
         console.log('Initial state:', {
             modalPermanentlyDismissed: this.modalPermanentlyDismissed,
@@ -129,6 +120,17 @@ export default class YcEventModal extends LightningElement {
         if (urlParams.get('fromEvent') === '1') {
             this.modalPermanentlyDismissed = true;
             console.log('User just registered, modal disabled');
+        }
+
+        // Check for notification to display
+        const notificationTitle = urlParams.get('notificationTitle');
+        if (notificationTitle) {
+console.log('*** SHOWING NOTIFICATION ON CONNECTED CALLBACK');
+
+            // Decode and show the notification
+            const decodedTitle = decodeURIComponent(notificationTitle);
+console.log('*** Decoded Title: ' + decodedTitle);
+            this.showRegistrationSuccessNotification(decodedTitle);
         }
     }
 
@@ -306,12 +308,14 @@ export default class YcEventModal extends LightningElement {
 
     // Show registration success notification
     showRegistrationSuccessNotification(eventTitle) {
+console.log('+++ inside showRegistrationSuccessNotification');
         // Build the message with optional custom label
         let toastMessage = `You have been registered for "${eventTitle}"`;
         
         // Add custom label if it exists and is not blank
         if (REGISTRATION_ADDITIONAL_MESSAGE && REGISTRATION_ADDITIONAL_MESSAGE.trim() !== '') {
             toastMessage += `. ${REGISTRATION_ADDITIONAL_MESSAGE}`;
+console.log('Showing: ' + toastMessage);
         }
         
         // Show success message
@@ -444,12 +448,14 @@ export default class YcEventModal extends LightningElement {
             console.log('Registration result:', result);
 
             if (result === 'SUCCESS') {
+                /*
                 // Show success message
                 this.dispatchEvent(new ShowToastEvent({
                     title: 'Registration Successful',
                     message: `Thank you for registering for "${this.pendingEventForRegistration.title}". You will receive a confirmation email shortly.`,
                     variant: 'success'
                 }));
+                */
 
                 // Build redirect URL with parameters
                 const currentUrl = new URL(window.location.href);
