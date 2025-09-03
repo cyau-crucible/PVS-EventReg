@@ -3,11 +3,11 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getUpcomingEvents from '@salesforce/apex/yc_EventListController.getUpcomingEvents';
 import registerForEvent from '@salesforce/apex/yc_EventListController.registerForEvent';
 import getUserRegisteredEventIds from '@salesforce/apex/yc_EventListController.getUserRegisteredEventIds';
+import createLeadAndRegister from '@salesforce/apex/yc_EventListController.createLeadAndRegister';
 import REGISTRATION_ADDITIONAL_MESSAGE from '@salesforce/label/c.Registration_Additional_Message';
 
 // Later for Lead form
 import isGuest from '@salesforce/user/isGuest';
-// import createLeadAndRegister from '@salesforce/apex/yc_EventListController.createLeadAndRegister';
 
 export default class YcEventModal extends LightningElement {
     @track events = [];
@@ -21,7 +21,7 @@ export default class YcEventModal extends LightningElement {
     @track featuredEvent = null;
     @track modalPermanentlyDismissed = false;
     inactivityTimer = null;
-    inactivityTimeoutMs = 20000; // 20 seconds
+    inactivityTimeoutMs = 90000; // 60 seconds
 
     // Lead Registration Modal properties
     @track showLeadRegistrationModal = false;
@@ -35,7 +35,7 @@ export default class YcEventModal extends LightningElement {
         phone: '',
         state: '',
         zipCode: '',
-        smsOptIn: false
+        smsOptIn: true
     };
 
     // State options for dropdown
@@ -164,19 +164,19 @@ export default class YcEventModal extends LightningElement {
 
     startInactivityTimer() {
         this.clearInactivityTimer();
-        console.log('Starting inactivity timer for', this.inactivityTimeoutMs, 'ms');
+        // console.log('Starting inactivity timer for', this.inactivityTimeoutMs, 'ms');
         this.inactivityTimer = setTimeout(() => {
-            console.log('Timer expired! Calling showInactivityPrompt()');
+            // console.log('Timer expired! Calling showInactivityPrompt()');
             this.showInactivityPrompt();
         }, this.inactivityTimeoutMs);
     }
 
     resetInactivityTimer() {
         if (this.showInactivityModal || this.showLeadRegistrationModal) {
-            console.log('Not resetting timer - modal is open');
-            return; // Don't reset timer while modal is open
+            // console.log('Not resetting timer - modal is open');
+            return;  // Don't reset timer while modal is open
         }
-        console.log('Activity detected - resetting timer');
+        // console.log('Activity detected - resetting timer');
         this.startInactivityTimer();
     }
 
@@ -199,7 +199,7 @@ export default class YcEventModal extends LightningElement {
         
         // Don't show modal if permanently dismissed
         if (this.modalPermanentlyDismissed) {
-            console.log('Modal permanently dismissed - not showing');
+            // console.log('Modal permanently dismissed - not showing');
             return;
         }
 
@@ -215,19 +215,17 @@ export default class YcEventModal extends LightningElement {
             !this.isUserRegistered(event.id) && !this.isRegistering(event.id)
         );
 
-        console.log('Available event found:', availableEvent);
+        // console.log('Available event found:', availableEvent);
 
         if (availableEvent) {
             this.featuredEvent = availableEvent;
             this.showInactivityModal = true;
-            console.log('Showing inactivity modal for event:', availableEvent.title);
-            console.log('Modal state:', this.showInactivityModal);
         } else {
             console.log('No available events for inactivity modal');
             console.log('All events:', this.events);
+            console.log(JSON.stringify(this.events));
             console.log('Registered IDs:', this.registeredEventIds);
-            // Restart timer if no events available - matching EventList.js behavior
-            console.log('Restarting timer to check again...');
+            console.log(JSON.stringify(this.registeredEventIds));
             this.startInactivityTimer();
         }
     }
@@ -250,7 +248,7 @@ export default class YcEventModal extends LightningElement {
             this.showInactivityModal = false;
             this.modalPermanentlyDismissed = true;
             
-            // @TODO: Check if user is guest
+            // Check if user is guest
             if (this.isGuestUser) {
                 // Show lead registration form for guest users
                 this.showLeadRegistrationModal = true;
@@ -285,10 +283,6 @@ export default class YcEventModal extends LightningElement {
         }
         
         this.leadFormData = { ...this.leadFormData, [field]: value };
-        
-        // Debug logging to verify values are being captured
-        console.log(`Form field updated - ${field}:`, value);
-        console.log('Current form data:', JSON.stringify(this.leadFormData));
     }
 
     closeLeadRegistrationModal() {
@@ -390,7 +384,7 @@ export default class YcEventModal extends LightningElement {
         
         // Validate form
         const validation = this.validateLeadForm();
-        console.log('Validation result:', validation);
+        // console.log('Validation result:', validation);
         
         if (!validation.isValid) {
             let errorMessage = '';
@@ -429,60 +423,80 @@ export default class YcEventModal extends LightningElement {
             return;
         }
 
-        console.log('Validation passed, proceeding with submission');
+        // console.log('Validation passed, proceeding with submission');
         this.formErrorMessage = '';
         this.isSubmittingLead = true;
-        // Removed duplicate: this.isSubmittingLead = true;
 
         try {
-            // TODO: Call Apex method to create lead and register for event
-            // const result = await createLeadAndRegister({
-            //     leadData: this.leadFormData,
-            //     eventId: this.pendingEventForRegistration.id
-            // });
-
-            // For now, simulate success
-            console.log('Lead form data before redirect:', JSON.stringify(this.leadFormData));
-            console.log('Event ID:', this.pendingEventForRegistration.id);
-
-            // Show success message
-            this.dispatchEvent(new ShowToastEvent({
-                title: 'Registration Successful',
-                message: `Thank you for registering for "${this.pendingEventForRegistration.title}". You will receive a confirmation email shortly.`,
-                variant: 'success'
-            }));
-
-            // Build redirect URL with parameters
-            const currentUrl = new URL(window.location.href);
-            const params = new URLSearchParams(currentUrl.search);
-            
-            // Add registration parameters - use defensive coding to ensure values
-            params.set('fn', this.leadFormData.firstName || '');
-            params.set('ln', this.leadFormData.lastName || '');
-            params.set('email', this.leadFormData.email || '');
-            params.set('phone', this.leadFormData.phone || '');
-            params.set('state', this.leadFormData.state || '');
-            params.set('zipcode', this.leadFormData.zipCode || '');
-            params.set('fromEvent', '1');
-            
-            // Debug: Log what we're about to redirect with
-            console.log('URL parameters being set:', {
-                fn: this.leadFormData.firstName || '',
-                ln: this.leadFormData.lastName || '',
-                email: this.leadFormData.email || '',
-                phone: this.leadFormData.phone || '',
-                state: this.leadFormData.state || '',
-                zipcode: this.leadFormData.zipCode || ''
+            // Call Apex method to create lead and register for event
+            const result = await createLeadAndRegister({
+                leadData: {
+                    firstName: this.leadFormData.firstName,
+                    lastName: this.leadFormData.lastName,
+                    email: this.leadFormData.email,
+                    phone: this.leadFormData.phone,
+                    zipCode: this.leadFormData.zipCode,
+                    smsOptIn: String(this.leadFormData.smsOptIn) // Convert boolean to string
+                },
+                eventId: this.pendingEventForRegistration.id
             });
-            
-            const redirectUrl = `${currentUrl.pathname}?${params.toString()}`;
-            console.log('Redirecting to:', redirectUrl);
-            
-            // Close modal and reset AFTER capturing values but BEFORE redirect
-            this.closeLeadRegistrationModal();
-            
-            // Redirect to the same page with parameters
-            window.location.href = redirectUrl;
+
+            console.log('Registration result:', result);
+
+            if (result === 'SUCCESS') {
+                // Show success message
+                this.dispatchEvent(new ShowToastEvent({
+                    title: 'Registration Successful',
+                    message: `Thank you for registering for "${this.pendingEventForRegistration.title}". You will receive a confirmation email shortly.`,
+                    variant: 'success'
+                }));
+
+                // Build redirect URL with parameters
+                const currentUrl = new URL(window.location.href);
+                const params = new URLSearchParams(currentUrl.search);
+                
+                // Add registration parameters - use defensive coding to ensure values
+                params.set('fn', this.leadFormData.firstName || '');
+                params.set('ln', this.leadFormData.lastName || '');
+                params.set('email', this.leadFormData.email || '');
+                params.set('phone', this.leadFormData.phone || '');
+                params.set('state', this.leadFormData.state || '');
+                params.set('zipcode', this.leadFormData.zipCode || '');
+                params.set('notificationTitle', encodeURIComponent(this.pendingEventForRegistration.title) || '');
+                params.set('fromEvent', '1');
+                
+                // Debug: Log what we're about to redirect with
+                /*
+                console.log('URL parameters being set:', {
+                    fn: this.leadFormData.firstName || '',
+                    ln: this.leadFormData.lastName || '',
+                    email: this.leadFormData.email || '',
+                    phone: this.leadFormData.phone || '',
+                    state: this.leadFormData.state || '',
+                    zipcode: this.leadFormData.zipCode || ''
+                });
+                */
+                
+                const redirectUrl = `${currentUrl.pathname}?${params.toString()}`;
+                console.log('Redirecting to:', redirectUrl);
+                
+                // Close modal and reset AFTER capturing values but BEFORE redirect
+                this.closeLeadRegistrationModal();
+                
+                // Redirect to the same page with parameters
+                window.location.href = redirectUrl;
+                
+            } else if (result === 'ALREADY_REGISTERED') {
+                // Show info message
+                this.dispatchEvent(new ShowToastEvent({
+                    title: 'Already Registered',
+                    message: `You are already registered for "${this.pendingEventForRegistration.title}"`,
+                    variant: 'info'
+                }));
+                
+                // Close the modal
+                this.closeLeadRegistrationModal();
+            }
 
         } catch (error) {
             console.error('Lead registration error:', error);
