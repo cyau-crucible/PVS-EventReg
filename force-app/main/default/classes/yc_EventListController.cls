@@ -1,7 +1,8 @@
 public without sharing class yc_EventListController {
     
     @AuraEnabled(cacheable=true)
-    public static List<PVS_Event__c> getUpcomingEvents(String guestSchoolId) {
+    // public static List<PVS_Event__c> getUpcomingEvents(String guestSchoolId) {
+    public static List<PVS_Event__c> getUpcomingEvents() {
         try {
             // Build the list of permissible school IDs
             Set<Id> permissibleSchoolIds = new Set<Id>();
@@ -36,7 +37,7 @@ public without sharing class yc_EventListController {
             DateTime currentDateTime = System.now();
             String query = 'SELECT Id, Event_Title__c, Event_Date__c, Event_Start_Time_Web_F__c, ' +
                           'Event_Type__c, Event_Description__c, School_Abbreviation__c, School__c, ' + 
-                          'Zoom_Event_ID__c, Channel_Type__c, Allow_Guest_User_Registration__c ' + 
+                          'Zoom_Event_ID__c, Channel_Type__c, School__r.Allow_Guest_User_Registration__c ' + 
                           'FROM PVS_Event__c ' +
                           'WHERE Event_Start_DateTime_F__c >= :currentDateTime AND Event_Status__c = \'Active\'';
 
@@ -44,9 +45,11 @@ public without sharing class yc_EventListController {
             if (!permissibleSchoolIds.isEmpty() && UserInfo.getUserType() != 'Guest') {
                 query += 'AND (School__c = NULL OR School__c IN :permissibleSchoolIds OR School__r.Name IN (\'National Event Hosts\', \'Enrollment Event\')) ';
             } 
+            /*
             else if (UserInfo.getUserType() == 'Guest' && String.isNotBlank(guestSchoolId) ) {
-                query += 'AND ( (School__c = \'' + guestSchoolId + '\' AND Allow_Guest_User_Registration__c = true) OR School__c = NULL OR School__r.Name IN (\'National Event Hosts\', \'Enrollment Event\'))';
+                query += 'AND ( (School__c = \'' + guestSchoolId + '\' AND School__r.Allow_Guest_User_Registration__c = true) OR School__c = NULL OR School__r.Name IN (\'National Event Hosts\', \'Enrollment Event\'))';
             }
+                */
             else {
                 // If no permissible schools, only show events with NULL school
                 query += 'AND (School__c = NULL OR School__r.Name IN (\'National Event Hosts\', \'Enrollment Event\'))';

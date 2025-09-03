@@ -530,7 +530,8 @@ export default class YcEventModal extends LightningElement {
     }
 
     // Wire the Apex method to get events
-    @wire(getUpcomingEvents, { schoolId: '$schoolId' })
+    // @wire(getUpcomingEvents, { schoolId: '$schoolId' })
+    @wire(getUpcomingEvents)
     wiredEvents({ error, data }) {
         console.log('Wire method called with:', { hasData: !!data, hasError: !!error });
         if (data) {
