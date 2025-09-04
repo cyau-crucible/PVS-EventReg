@@ -680,9 +680,6 @@ export default class YcEventModal extends LightningElement {
             console.log('Registration result:', result);
             
             if (result === 'SUCCESS') {
-                // Show success notification
-                this.showRegistrationSuccessNotification(selectedEvent.title);
-
                 // Redirect, if needed
                 // Check if we're on the events page
                 const currentUrl = new URL(window.location.href);
@@ -783,7 +780,7 @@ export default class YcEventModal extends LightningElement {
     async loadEvents() {
         this.isLoading = true;
         try {
-            const data = await getUpcomingEvents(this.schoolId);
+            const data = await getUpcomingEvents({ schoolId: this.schoolId });
             console.log('Events data received:', data);
             
             await this.loadRegisteredEvents();

@@ -32,6 +32,17 @@ public without sharing class yc_EventListController {
                 }
             }  // end currentUserQuery
 
+            List<PVS_Event__c> noEvents = new List<PVS_Event__c>();
+
+            // If this is a Guest User and schoolId is blank, return nothing
+            if (UserInfo.getUserType() == 'Guest' && String.isBlank(schoolId)) {
+                return noEvents;
+            }
+            // If this is a Guest User and schoolId is NOT a school with Allow Guest User Registration, then return nothing
+            if (UserInfo.getUserType() == 'Guest' && String.isNotBlank(schoolId)) {
+                if (checkGuestSchool(schoolId) == false) { return noEvents; }
+            }
+
             // Build dynamic SOQL query with school filtering
             DateTime currentDateTime = System.now();
             String query = 'SELECT Id, Event_Title__c, Event_Date__c, Event_Start_Time_Web_F__c, ' +
@@ -42,7 +53,8 @@ public without sharing class yc_EventListController {
 
             // Add school filtering
             if (UserInfo.getUserType() == 'Guest') {
-                query += 'AND (School__r.Name = \'National Event Hosts\' AND School__r.Allow_Guest_User_Registration__c = true) ';
+                // By now, the school Id should have allowed reg, return only National Events
+                query += 'AND (School__r.Name = \'National Event Hosts\') ';
             }
             else if (!permissibleSchoolIds.isEmpty()) {
                 query += 'AND (School__c = NULL OR School__c IN :permissibleSchoolIds OR School__r.Name IN (\'National Event Hosts\', \'Enrollment Event\')) ';

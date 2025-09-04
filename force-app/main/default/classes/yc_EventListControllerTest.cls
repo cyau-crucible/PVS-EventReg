@@ -280,7 +280,7 @@ public class yc_EventListControllerTest {
         
         Test.startTest();
         System.runAs(testUser) {
-            List<PVS_Event__c> events = yc_EventListController.getUpcomingEvents();
+            List<PVS_Event__c> events = yc_EventListController.getUpcomingEvents(NULL);
             
             // Should return events from:
             // 1. InitialSchool (school1)
@@ -330,7 +330,7 @@ public class yc_EventListControllerTest {
         
         Test.startTest();
         System.runAs(userWithoutContact) {
-            List<PVS_Event__c> events = yc_EventListController.getUpcomingEvents();
+            List<PVS_Event__c> events = yc_EventListController.getUpcomingEvents(NULL);
             
             // Should only return global events (null school)
             // System.assert(events.size() >= 1, 'Expected at least 1 global event');
@@ -508,7 +508,7 @@ public class yc_EventListControllerTest {
         System.runAs(testUser) {
             try {
                 // The method should not throw unhandled exceptions
-                List<PVS_Event__c> events = yc_EventListController.getUpcomingEvents();
+                List<PVS_Event__c> events = yc_EventListController.getUpcomingEvents(NULL);
                 // If no exception, that's good
                 System.assert(true, 'Method completed without unhandled exceptions');
             } catch (AuraHandledException e) {
@@ -517,5 +517,135 @@ public class yc_EventListControllerTest {
             }
         }
         Test.stopTest();
+    }
+
+    @isTest
+    static void testCreateLeadAndRegister_NewLead() {
+        PVS_Event__c testEvent = [SELECT Id FROM PVS_Event__c WHERE Event_Title__c = 'Global Event' LIMIT 1];
+        
+        // Prepare lead data
+        Map<String, String> leadData = new Map<String, String>{
+            'firstName' => 'Jane',
+            'lastName' => 'Doe',
+            'email' => 'jane.doe@example.com',
+            'phone' => '5551234567',
+            'zipCode' => '12345',
+            'smsOptIn' => 'true'
+        };
+        
+        // Prepare UTM data
+        Map<String, String> utmFields = new Map<String, String>{
+            'utmCampaign' => 'test-campaign',
+            'utmContent' => 'test-content',
+            'utmSource' => 'google',
+            'utmTerm' => 'test-term',
+            'utmMedium' => 'cpc',
+            'utmClickId' => 'test-gclid',
+            'utmClientId' => 'test-ga-id',
+            'utmDevice' => 'desktop',
+            'leadSource' => null
+        };
+        
+        Test.startTest();
+        String result = yc_EventListController.createLeadAndRegister(leadData, utmFields, testEvent.Id);
+        Test.stopTest();
+        
+        // Verify success
+        System.assertEquals('SUCCESS', result, 'Registration should succeed');
+        
+        // Verify Lead was created
+        List<Lead> createdLeads = [
+            SELECT Id, FirstName, LastName, Email, Phone, PostalCode, UTM_Campaign__c, 
+                UTM_Source__c, GA_Medium__c, LeadSource, Event_Name__c, Zoom_Event_ID__c
+            FROM Lead 
+            WHERE Email = 'jane.doe@example.com'
+        ];
+        
+        System.assertEquals(1, createdLeads.size(), 'Should create one Lead record');
+    }
+
+    @isTest
+    static void testCreateLeadAndRegister_ExistingLead() {
+        PVS_Event__c testEvent = [SELECT Id FROM PVS_Event__c WHERE Event_Title__c = 'Test Event 1' LIMIT 1];
+        
+        // Create an existing Lead first
+        Lead existingLead = new Lead(
+            FirstName = 'John',
+            LastName = 'Smith',
+            Email = 'john.smith@example.com',
+            Phone = '5559876543',
+            Company = 'Test Company',
+            Status = 'New'
+        );
+        insert existingLead;
+        
+        // Prepare lead data with same email
+        Map<String, String> leadData = new Map<String, String>{
+            'firstName' => 'John',
+            'lastName' => 'Smith',
+            'email' => 'john.smith@example.com',
+            'phone' => '5559876543',
+            'zipCode' => '54321',
+            'smsOptIn' => 'false'
+        };
+        
+        // Prepare UTM data
+        Map<String, String> utmFields = new Map<String, String>{
+            'utmCampaign' => 'existing-campaign',
+            'leadSource' => null
+        };
+        
+        Test.startTest();
+        String result = yc_EventListController.createLeadAndRegister(leadData, utmFields, testEvent.Id);
+        Test.stopTest();
+        
+        // Verify success with existing lead
+        System.assertEquals('SUCCESS', result, 'Registration should succeed with existing Lead');
+        
+        // Verify no duplicate Lead was created
+        List<Lead> leads = [SELECT Id FROM Lead WHERE Email = 'john.smith@example.com'];
+        System.assertEquals(1, leads.size(), 'Should not create duplicate Lead');
+    }
+
+    @isTest
+    static void testCreateLeadAndRegister_AlreadyRegistered() {
+        PVS_Event__c testEvent = [SELECT Id FROM PVS_Event__c WHERE Event_Title__c = 'Test Event 1' LIMIT 1];
+        
+        // Create a Lead and existing registration
+        Lead testLead = new Lead(
+            FirstName = 'Already',
+            LastName = 'Registered',
+            Email = 'already.registered@example.com',
+            Company = 'Test Company',
+            Status = 'New'
+        );
+        insert testLead;
+        
+        // Create existing registration
+        PVS_Event_Registration__c existingReg = new PVS_Event_Registration__c(
+            Email__c = testLead.Email,
+            First_Name__c = testLead.FirstName,
+            Last_Name__c = testLead.LastName,
+            PVS_Event__c = testEvent.Id
+        );
+        insert existingReg;
+        
+        // Prepare lead data
+        Map<String, String> leadData = new Map<String, String>{
+            'firstName' => 'Already',
+            'lastName' => 'Registered',
+            'email' => 'already.registered@example.com',
+            'phone' => '5551111111',
+            'zipCode' => '11111'
+        };
+        
+        Map<String, String> utmFields = new Map<String, String>();
+        
+        Test.startTest();
+        String result = yc_EventListController.createLeadAndRegister(leadData, utmFields, testEvent.Id);
+        Test.stopTest();
+        
+        // Should detect existing registration
+        System.assertEquals('ALREADY_REGISTERED', result, 'Should detect existing registration');
     }
 }
