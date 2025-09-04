@@ -527,7 +527,7 @@ public class yc_EventListControllerTest {
         Map<String, String> leadData = new Map<String, String>{
             'firstName' => 'Jane',
             'lastName' => 'Doe',
-            'email' => 'jane.doe@example.com',
+            'email' => 'jane.doe@testthislead.com',
             'phone' => '5551234567',
             'zipCode' => '12345',
             'smsOptIn' => 'true'
@@ -543,7 +543,7 @@ public class yc_EventListControllerTest {
             'utmClickId' => 'test-gclid',
             'utmClientId' => 'test-ga-id',
             'utmDevice' => 'desktop',
-            'leadSource' => null
+            'leadSource' => 'Direct-to-App'
         };
         
         Test.startTest();
@@ -558,7 +558,7 @@ public class yc_EventListControllerTest {
             SELECT Id, FirstName, LastName, Email, Phone, PostalCode, UTM_Campaign__c, 
                 UTM_Source__c, GA_Medium__c, LeadSource, Event_Name__c, Zoom_Event_ID__c
             FROM Lead 
-            WHERE Email = 'jane.doe@example.com'
+            WHERE Email = 'jane.doe@testthislead.com'
         ];
         
         System.assertEquals(1, createdLeads.size(), 'Should create one Lead record');
@@ -572,7 +572,7 @@ public class yc_EventListControllerTest {
         Lead existingLead = new Lead(
             FirstName = 'John',
             LastName = 'Smith',
-            Email = 'john.smith@example.com',
+            Email = 'john.smith@testthislead.com',
             Phone = '5559876543',
             Company = 'Test Company',
             Status = 'New'
@@ -583,7 +583,7 @@ public class yc_EventListControllerTest {
         Map<String, String> leadData = new Map<String, String>{
             'firstName' => 'John',
             'lastName' => 'Smith',
-            'email' => 'john.smith@example.com',
+            'email' => 'john.smith@testthislead.com',
             'phone' => '5559876543',
             'zipCode' => '54321',
             'smsOptIn' => 'false'
@@ -615,7 +615,7 @@ public class yc_EventListControllerTest {
         Lead testLead = new Lead(
             FirstName = 'Already',
             LastName = 'Registered',
-            Email = 'already.registered@example.com',
+            Email = 'already.registered@testthislead.com',
             Company = 'Test Company',
             Status = 'New'
         );
@@ -634,7 +634,7 @@ public class yc_EventListControllerTest {
         Map<String, String> leadData = new Map<String, String>{
             'firstName' => 'Already',
             'lastName' => 'Registered',
-            'email' => 'already.registered@example.com',
+            'email' => 'already.registered@testthislead.com',
             'phone' => '5551111111',
             'zipCode' => '11111'
         };
