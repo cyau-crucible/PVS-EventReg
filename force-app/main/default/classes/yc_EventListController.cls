@@ -1,7 +1,7 @@
 public without sharing class yc_EventListController {
     
     @AuraEnabled(cacheable=true)
-    public static List<PVS_Event__c> getUpcomingEvents() {
+    public static List<PVS_Event__c> getUpcomingEvents(String schoolId) {
         try {
             // Build the list of permissible school IDs
             Set<Id> permissibleSchoolIds = new Set<Id>();

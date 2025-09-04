@@ -783,41 +783,12 @@ export default class YcEventModal extends LightningElement {
     async loadEvents() {
         this.isLoading = true;
         try {
-            const data = await getUpcomingEvents();
+            const data = await getUpcomingEvents(this.schoolId);
             console.log('Events data received:', data);
             
             await this.loadRegisteredEvents();
             
             let eventsToTransform = data;
-            
-            // Apply guest user filtering if needed
-            if (this.isGuestUser) {
-                if (this.schoolId) {
-                    try {
-                        const schoolAllowsGuests = await checkGuestSchool({ schoolId: this.schoolId });
-                        console.log('School allows guest registration:', schoolAllowsGuests);
-                        
-                        if (schoolAllowsGuests) {
-                            // Show only National Event Hosts
-                            eventsToTransform = data.filter(event => {
-                                const schoolName = event.School__r?.Name;
-                                return schoolName === 'National Event Hosts';
-                            });
-                        } else {
-                            // School doesn't allow guests - no events
-                            eventsToTransform = [];
-                        }
-                    } catch (error) {
-                        console.error('Error checking guest school:', error);
-                        // On error, show no events for safety
-                        eventsToTransform = [];
-                    }
-                } else {
-                    // If "schoolId" isn't specified for Guest Users, then clear ALL events
-                    eventsToTransform = [];
-                    console.log('No schoolId for guest user - showing no events');
-                }
-            }
             
             this.events = this.transformEventData(eventsToTransform);
             this.error = undefined;
