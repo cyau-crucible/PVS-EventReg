@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
+        <members>Exp_Self_Registration_Controller</members>
         <members>yc_EventListController</members>
         <name>ApexClass</name>
     </types>
