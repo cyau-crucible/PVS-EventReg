@@ -530,22 +530,43 @@ export default class YcEventModal extends LightningElement {
     }
 
     // Wire the Apex method to get events
-    // @wire(getUpcomingEvents, { schoolId: '$schoolId' })
     @wire(getUpcomingEvents)
     wiredEvents({ error, data }) {
         console.log('Wire method called with:', { hasData: !!data, hasError: !!error });
         if (data) {
             console.log('Events data received:', data);
             this.loadRegisteredEvents().then(() => {
-                this.events = this.transformEventData(data);
-                this.isLoading = false; // Set to false after data is processed
+                let eventsToTransform = data;
+                
+                // Apply guest user filtering if needed
+                if (this.isGuestUser && this.schoolId != null) {
+                    eventsToTransform = data.filter(event => {
+                        // Keep National Event Hosts and Enrollment Events
+                        const schoolName = event.School__r?.Name;
+
+                        if (schoolName === 'National Event Hosts' || schoolName === 'Enrollment Event') {
+                            return true;
+                        }
+                        
+                        // Keep matching school with guest access
+                        if (event.School__c === this.schoolId && event.School__r.Allow_Guest_User_Registration__c === true) {
+                            return true;
+                        }
+
+                        return false;
+                    });
+                }
+
+                this.events = this.transformEventData(eventsToTransform);
+                
+                this.isLoading = false;
                 console.log('Events loaded and transformed:', this.events);
             });
             this.error = undefined;
         } else if (error) {
             this.error = error;
             this.events = [];
-            this.isLoading = false; // Set to false after error is handled
+            this.isLoading = false;
             console.error('Error loading events:', error);
         }
     }
