@@ -438,6 +438,9 @@ export default class YcEventModal extends LightningElement {
         this.isSubmittingLead = true;
 
         try {
+            // Get UTM/Lead Source data
+            const utmData = this.extractUTMParameters();
+            
             // Call Apex method to create lead and register for event
             const result = await createLeadAndRegister({
                 leadData: {
@@ -448,6 +451,7 @@ export default class YcEventModal extends LightningElement {
                     zipCode: this.leadFormData.zipCode,
                     smsOptIn: String(this.leadFormData.smsOptIn) // Convert boolean to string
                 },
+                utmFields: utmData, 
                 eventId: this.pendingEventForRegistration.id
             });
 
@@ -849,4 +853,22 @@ export default class YcEventModal extends LightningElement {
             });
         }
     }
+
+    // Get UTM parameters from the Query String to append to Lead Creation
+    extractUTMParameters() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const userAgent = navigator.userAgent;
+
+        return {
+            utmCampaign: urlParams.get("utm_campaign"),
+            utmContent: urlParams.get("utm_content"),
+            utmSource: urlParams.get("utm_source"),
+            utmTerm: urlParams.get("utm_term"),
+            utmMedium: urlParams.get("utm_medium"),
+            utmClickId: urlParams.get("gclid"),
+            utmClientId: urlParams.get("_ga"),
+            utmDevice: userAgent,
+            leadSource: urlParams.get("ls")
+        };
+    } // end extractUTMParameters
 }

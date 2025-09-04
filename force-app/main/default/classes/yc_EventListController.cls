@@ -42,7 +42,7 @@ public without sharing class yc_EventListController {
 
             // Add school filtering
             if (UserInfo.getUserType() == 'Guest') {
-                query += 'AND (School__r.Name = \'National Event Hosts\' OR School__r.Allow_Guest_User_Registration__c = true) ';
+                query += 'AND (School__r.Name = \'National Event Hosts\' AND School__r.Allow_Guest_User_Registration__c = true) ';
             }
             else if (!permissibleSchoolIds.isEmpty()) {
                 query += 'AND (School__c = NULL OR School__c IN :permissibleSchoolIds OR School__r.Name IN (\'National Event Hosts\', \'Enrollment Event\')) ';
@@ -151,14 +151,15 @@ public without sharing class yc_EventListController {
     }
     
     @AuraEnabled
-    public static String createLeadAndRegister(Map<String, String> leadData, String eventId) {
+    public static String createLeadAndRegister(Map<String, String> leadData, Map<String, String> utmFields, String eventId) {
         try {
             // Get the event details
             PVS_Event__c selectedEvent = [
-                SELECT Id, Name, School_Abbreviation__c, Event_Title__c, Event_Duration_F__c, 
-                       Event_Start_DateTime_F__c, Zoom_Event_ID__c, Zoom_Ticket_Type_ID__c, Channel_Type__c 
-                FROM PVS_Event__c 
-                WHERE Id = :eventId 
+                SELECT Id, Name, School_Abbreviation__c, Event_Title__c, Event_Duration_F__c,
+                    Event_Start_DateTime_F__c, Zoom_Event_ID__c, Zoom_Ticket_Type_ID__c, 
+                    Channel_Type__c, Event_URL__c, Event_Location__c
+                FROM PVS_Event__c
+                WHERE Id = :eventId
                 LIMIT 1
             ];
             
@@ -187,6 +188,33 @@ public without sharing class yc_EventListController {
                 eventLead.PostalCode = leadData.get('zipCode');
                 eventLead.Status = 'New';
                 eventLead.Company = 'Unknown'; // Required field
+                eventLead.Channel_Type__c = selectedEvent.Channel_Type__c;
+
+                // UTM and tracking fields
+                eventLead.UTM_Campaign__c = utmFields.get('utmCampaign');
+                eventLead.UTM_Content__c = utmFields.get('utmContent');
+                eventLead.UTM_Source__c = utmFields.get('utmSource');
+                eventLead.UTM_Term__c = utmFields.get('utmTerm');
+                eventLead.GA_Medium__c = utmFields.get('utmMedium');
+                eventLead.GA_Click_ID__c = utmFields.get('utmClickId');
+                eventLead.GA_Client_ID__c = utmFields.get('utmClientId');
+                eventLead.GA_Device__c = utmFields.get('utmDevice');
+
+                // Populate the Lead Source
+                String leadsource = utmFields.get('leadSource');
+                List<Registration_Lead_Source_Mapping__mdt> lsMtd = new List<Registration_Lead_Source_Mapping__mdt>([SELECT value__c, url_Parameter__c FROM Registration_Lead_Source_Mapping__mdt WHERE url_Parameter__c=: leadsource LIMIT 1]);
+                eventLead.LeadSource = !lsMtd.isEmpty() ? lsMtd[0].value__c : 'Direct-to-App';
+
+                // Event-related field mappings
+                eventLead.Event_Code__c = selectedEvent.Name; 
+                eventLead.Event_Date_Time__c = selectedEvent.Event_Start_DateTime_F__c; 
+                eventLead.Event_Location__c = selectedEvent.Event_Location__c; 
+                eventLead.Event_Name__c = selectedEvent.Event_Title__c; 
+                eventLead.Event_URL__c = selectedEvent.Event_URL__c; 
+                eventLead.Zoom_Event_ID__c = selectedEvent.Zoom_Event_ID__c; 
+                eventLead.Zoom_Ticket_Type_ID__c = selectedEvent.Zoom_Ticket_Type_ID__c; 
+
+                // Additional mappings if the fields exist on your Lead object
                 eventLead.Channel_Type__c = selectedEvent.Channel_Type__c;
                 
                 // Add SMS Opt-in if provided
@@ -227,6 +255,7 @@ public without sharing class yc_EventListController {
                 return 'ALREADY_REGISTERED';
             }
                        
+            /* Deprecated
             // Create Task Registration
             List<RecordType> taskRT = [SELECT Id FROM RecordType WHERE DeveloperName='Form_Submission'];
             
@@ -252,7 +281,7 @@ public without sharing class yc_EventListController {
             }
             
             insert regEvent;
-            
+            */
             
             System.debug('Successfully registered Lead for event: ' + selectedEvent.Event_Title__c);
             return 'SUCCESS';
