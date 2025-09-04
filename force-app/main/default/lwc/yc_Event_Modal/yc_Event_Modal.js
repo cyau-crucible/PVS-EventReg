@@ -101,6 +101,9 @@ export default class YcEventModal extends LightningElement {
         this.startInactivityTimer();
         this.addEventListeners();
         this.checkForRegistrationParams();
+
+        // Load events imperatively
+        this.loadEvents();
         
         // Debug: Log current state
         console.log('Initial state:', {
@@ -534,67 +537,6 @@ export default class YcEventModal extends LightningElement {
         window.open('/contact-us', '_blank');
     }
 
-    // Wire the Apex method to get events
-    @wire(getUpcomingEvents)
-    wiredEvents({ error, data }) {
-        console.log('Wire method called with:', { hasData: !!data, hasError: !!error });
-        if (data) {
-            console.log('Events data received:', data);
-            this.loadRegisteredEvents().then(() => {
-                let eventsToTransform = data;
-                
-                // Apply guest user filtering if needed
-                if (this.isGuestUser) {
-                    if (this.schoolId) {
-                        // Call checkGuestSchool to determine if this school allows guest registration
-                        checkGuestSchool({ schoolId: this.schoolId })
-                            .then(schoolAllowsGuests => {
-                                console.log('School allows guest registration:', schoolAllowsGuests);
-                                
-                                if (schoolAllowsGuests) {
-                                    // Show only National Event Hosts
-                                    eventsToTransform = data.filter(event => {
-                                        const schoolName = event.School__r?.Name;
-                                        return schoolName === 'National Event Hosts';
-                                    });
-                                } else {
-                                    // School doesn't allow guests - no events
-                                    eventsToTransform = [];
-                                }
-                                
-                                this.events = this.transformEventData(eventsToTransform);
-                                this.isLoading = false;
-                                console.log('Events loaded and transformed:', this.events);
-                            })
-                            .catch(error => {
-                                console.error('Error checking guest school:', error);
-                                // On error, show no events for safety
-                                this.events = [];
-                                this.isLoading = false;
-                            });
-                    } else {
-                        // If "schoolId" isn't specified for Guest Users, then clear ALL events
-                        eventsToTransform = [];
-                        this.events = this.transformEventData(eventsToTransform);
-                        this.isLoading = false;
-                        console.log('No schoolId for guest user - showing no events');
-                    }
-                } else {
-                    // Not a guest user - show all events
-                    this.events = this.transformEventData(eventsToTransform);
-                    this.isLoading = false;
-                    console.log('Events loaded and transformed:', this.events);
-                }
-            });
-            this.error = undefined;
-        } else if (error) {
-            this.error = error;
-            this.events = [];
-            this.isLoading = false;
-            console.error('Error loading events:', error);
-        }
-    }
-
     // Load registered events separately to avoid wire conflicts
     async loadRegisteredEvents() {
         try {
@@ -835,6 +777,59 @@ export default class YcEventModal extends LightningElement {
 
     get errorMessage() {
         return this.error?.body?.message || 'An error occurred while loading events.';
+    }
+
+    // Load event data
+    async loadEvents() {
+        this.isLoading = true;
+        try {
+            const data = await getUpcomingEvents();
+            console.log('Events data received:', data);
+            
+            await this.loadRegisteredEvents();
+            
+            let eventsToTransform = data;
+            
+            // Apply guest user filtering if needed
+            if (this.isGuestUser) {
+                if (this.schoolId) {
+                    try {
+                        const schoolAllowsGuests = await checkGuestSchool({ schoolId: this.schoolId });
+                        console.log('School allows guest registration:', schoolAllowsGuests);
+                        
+                        if (schoolAllowsGuests) {
+                            // Show only National Event Hosts
+                            eventsToTransform = data.filter(event => {
+                                const schoolName = event.School__r?.Name;
+                                return schoolName === 'National Event Hosts';
+                            });
+                        } else {
+                            // School doesn't allow guests - no events
+                            eventsToTransform = [];
+                        }
+                    } catch (error) {
+                        console.error('Error checking guest school:', error);
+                        // On error, show no events for safety
+                        eventsToTransform = [];
+                    }
+                } else {
+                    // If "schoolId" isn't specified for Guest Users, then clear ALL events
+                    eventsToTransform = [];
+                    console.log('No schoolId for guest user - showing no events');
+                }
+            }
+            
+            this.events = this.transformEventData(eventsToTransform);
+            this.error = undefined;
+            console.log('Events loaded and transformed:', this.events);
+            
+        } catch (error) {
+            this.error = error;
+            this.events = [];
+            console.error('Error loading events:', error);
+        } finally {
+            this.isLoading = false;
+        }
     }
 
     // Refresh event data to update button states
