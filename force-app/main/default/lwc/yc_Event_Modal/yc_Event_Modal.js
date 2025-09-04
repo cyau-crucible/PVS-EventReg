@@ -4,6 +4,7 @@ import getUpcomingEvents from '@salesforce/apex/yc_EventListController.getUpcomi
 import registerForEvent from '@salesforce/apex/yc_EventListController.registerForEvent';
 import getUserRegisteredEventIds from '@salesforce/apex/yc_EventListController.getUserRegisteredEventIds';
 import createLeadAndRegister from '@salesforce/apex/yc_EventListController.createLeadAndRegister';
+import checkGuestSchool from '@salesforce/apex/yc_EventListController.checkGuestSchool';
 import REGISTRATION_ADDITIONAL_MESSAGE from '@salesforce/label/c.Registration_Additional_Message';
 
 // Later for Lead form
@@ -539,28 +540,47 @@ export default class YcEventModal extends LightningElement {
                 let eventsToTransform = data;
                 
                 // Apply guest user filtering if needed
-                if (this.isGuestUser && this.schoolId != null) {
-                    eventsToTransform = data.filter(event => {
-                        // Keep National Event Hosts and Enrollment Events
-                        const schoolName = event.School__r?.Name;
-
-                        if (schoolName === 'National Event Hosts' || schoolName === 'Enrollment Event') {
-                            return true;
-                        }
-                        
-                        // Keep matching school with guest access
-                        if (event.School__c === this.schoolId && event.School__r.Allow_Guest_User_Registration__c === true) {
-                            return true;
-                        }
-
-                        return false;
-                    });
+                if (this.isGuestUser) {
+                    if (this.schoolId) {
+                        // Call checkGuestSchool to determine if this school allows guest registration
+                        checkGuestSchool({ schoolId: this.schoolId })
+                            .then(schoolAllowsGuests => {
+                                console.log('School allows guest registration:', schoolAllowsGuests);
+                                
+                                if (schoolAllowsGuests) {
+                                    // Show only National Event Hosts
+                                    eventsToTransform = data.filter(event => {
+                                        const schoolName = event.School__r?.Name;
+                                        return schoolName === 'National Event Hosts';
+                                    });
+                                } else {
+                                    // School doesn't allow guests - no events
+                                    eventsToTransform = [];
+                                }
+                                
+                                this.events = this.transformEventData(eventsToTransform);
+                                this.isLoading = false;
+                                console.log('Events loaded and transformed:', this.events);
+                            })
+                            .catch(error => {
+                                console.error('Error checking guest school:', error);
+                                // On error, show no events for safety
+                                this.events = [];
+                                this.isLoading = false;
+                            });
+                    } else {
+                        // If "schoolId" isn't specified for Guest Users, then clear ALL events
+                        eventsToTransform = [];
+                        this.events = this.transformEventData(eventsToTransform);
+                        this.isLoading = false;
+                        console.log('No schoolId for guest user - showing no events');
+                    }
+                } else {
+                    // Not a guest user - show all events
+                    this.events = this.transformEventData(eventsToTransform);
+                    this.isLoading = false;
+                    console.log('Events loaded and transformed:', this.events);
                 }
-
-                this.events = this.transformEventData(eventsToTransform);
-                
-                this.isLoading = false;
-                console.log('Events loaded and transformed:', this.events);
             });
             this.error = undefined;
         } else if (error) {
