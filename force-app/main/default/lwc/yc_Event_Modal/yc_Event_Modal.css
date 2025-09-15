@@ -399,24 +399,4 @@
     .modal-title {
         font-size: 1.25rem;
     }
-
-.slds-notify_toast {
-    background-color: white !important;
-    border: 1px solid #ccc !important;
-}
-
-.slds-notify_toast .slds-notify__content,
-.slds-notify_toast .slds-notify__content * {
-    color: black !important;
-}
-
-.slds-notify_toast .slds-icon {
-    fill: #666 !important;
-}
-
-/* Override close button for visibility */
-.slds-notify_toast .slds-button_icon-inverse {
-    filter: invert(1) !important;
-}
-
 }
