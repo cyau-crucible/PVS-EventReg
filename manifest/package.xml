@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
-        <members>Exp_Self_Registration_Controller</members>
         <members>yc_EventListController</members>
+        <members>yc_EventListControllerTest</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -10,6 +10,8 @@
         <name>AuraDefinitionBundle</name>
     </types>
     <types>
+        <members>Account.Allow_Guest_User_Registration__c</members>
+        <members>Account.Show_PVS_Events_to_Guest_Users__c</members>
         <members>Activity.Stage__c</members>
         <members>PVS_Event__c.Event_Duration_F__c</members>
         <members>PVS_Event__c.Event_Type__c</members>

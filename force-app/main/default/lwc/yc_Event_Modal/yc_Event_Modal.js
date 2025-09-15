@@ -151,13 +151,16 @@ export default class YcEventModal extends LightningElement {
         const config = {
             label: title,
             message: message,
-            variant: variant
+            variant: variant,
+            mode: sticky
         };
         
+        /*
         // Only add mode if provided
         if (mode) {
             config.mode = mode;
         }
+        */
         
         Toast.show(config, this);
     }

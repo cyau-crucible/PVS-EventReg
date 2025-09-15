@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Show_PVS_Events_to_Guest_Users__c</fullName>
+    <defaultValue>false</defaultValue>
+    <inlineHelpText>If this checkbox is set to TRUE, users who go to the EP registration page with this school code in the URL will see PVS events to register for.</inlineHelpText>
+    <label>Show PVS Events to Guest Users</label>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>Checkbox</type>
+</CustomField>
