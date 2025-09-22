@@ -1,7 +1,7 @@
 public without sharing class yc_EventListController {
     
     @AuraEnabled(cacheable=true)
-    public static List<PVS_Event__c> getUpcomingEvents(String schoolId) {
+    public static List<PVS_Event__c> getUpcomingEvents() {
         try {
             // Build the list of permissible school IDs
             Set<Id> permissibleSchoolIds = new Set<Id>();
@@ -32,34 +32,18 @@ public without sharing class yc_EventListController {
                 }
             }  // end currentUserQuery
 
-            List<PVS_Event__c> noEvents = new List<PVS_Event__c>();
-
-            // If this is a Guest User and schoolId is blank, return nothing
-            if (UserInfo.getUserType() == 'Guest' && String.isBlank(schoolId)) {
-                return noEvents;
-            }
-            // If this is a Guest User and schoolId is NOT a school with Allow Guest User Registration, then return nothing
-            if (UserInfo.getUserType() == 'Guest' && String.isNotBlank(schoolId)) {
-                if (checkGuestSchool(schoolId) == false) { return noEvents; }
-            }
-
             // Build dynamic SOQL query with school filtering
             DateTime currentDateTime = System.now();
             String query = 'SELECT Id, Event_Title__c, Event_Date__c, Event_Start_Time_Web_F__c, ' +
-                          'Event_Type__c, Event_Description__c, School_Abbreviation__c, School__c, School__r.Name, ' + 
-                          'Zoom_Event_ID__c, Channel_Type__c, School__r.Allow_Guest_User_Registration__c ' + 
+                          'Event_Type__c, Event_Description__c, School_Abbreviation__c, School__c, ' + 
+                          'Zoom_Event_ID__c, Channel_Type__c ' + 
                           'FROM PVS_Event__c ' +
                           'WHERE Event_Start_DateTime_F__c >= :currentDateTime AND Event_Status__c = \'Active\'';
 
             // Add school filtering
-            if (UserInfo.getUserType() == 'Guest') {
-                // By now, the school Id should have allowed reg, return only National Events
-                query += 'AND (School__r.Name = \'National Event Hosts\') ';
-            }
-            else if (!permissibleSchoolIds.isEmpty()) {
+            if (!permissibleSchoolIds.isEmpty()) {
                 query += 'AND (School__c = NULL OR School__c IN :permissibleSchoolIds OR School__r.Name IN (\'National Event Hosts\', \'Enrollment Event\')) ';
-            } 
-            else {
+            } else {
                 // If no permissible schools, only show events with NULL school
                 query += 'AND (School__c = NULL OR School__r.Name IN (\'National Event Hosts\', \'Enrollment Event\'))';
             }
@@ -128,6 +112,20 @@ public without sharing class yc_EventListController {
                 return 'ALREADY_REGISTERED';
             }
 
+            /*
+            // Create the registration record (Event)
+            PVS_Event_Registration__c registration = new PVS_Event_Registration__c(
+                Email__c = currentUser.Contact.Email,
+                First_Name__c = currentUser.Contact.FirstName,
+                Last_Name__c = currentUser.Contact.LastName,
+                Phone__c = currentUser.Contact.Phone,
+                PVS_Event__c = selectedEvent.Id,
+                School_Abbreviation__c = selectedEvent.School_Abbreviation__c,
+                Stage__c = 'Prospect'
+            );
+            insert registration;
+            */
+
             // Find the Task Record Type
             List<RecordType> taskRT = [SELECT Id FROM RecordType WHERE DeveloperName='Form_Submission'];
 
@@ -163,15 +161,14 @@ public without sharing class yc_EventListController {
     }
     
     @AuraEnabled
-    public static String createLeadAndRegister(Map<String, String> leadData, Map<String, String> utmFields, String eventId) {
+    public static String createLeadAndRegister(Map<String, String> leadData, String eventId) {
         try {
             // Get the event details
             PVS_Event__c selectedEvent = [
-                SELECT Id, Name, School_Abbreviation__c, Event_Title__c, Event_Duration_F__c,
-                    Event_Start_DateTime_F__c, Zoom_Event_ID__c, Zoom_Ticket_Type_ID__c, 
-                    Channel_Type__c, Event_URL__c, Event_Location__c
-                FROM PVS_Event__c
-                WHERE Id = :eventId
+                SELECT Id, Name, School_Abbreviation__c, Event_Title__c, Event_Duration_F__c, 
+                       Event_Start_DateTime_F__c, Zoom_Event_ID__c, Zoom_Ticket_Type_ID__c, Channel_Type__c 
+                FROM PVS_Event__c 
+                WHERE Id = :eventId 
                 LIMIT 1
             ];
             
@@ -200,34 +197,6 @@ public without sharing class yc_EventListController {
                 eventLead.PostalCode = leadData.get('zipCode');
                 eventLead.Status = 'New';
                 eventLead.Company = 'Unknown'; // Required field
-                eventLead.Channel_Type__c = selectedEvent.Channel_Type__c;
-
-                // UTM and tracking fields
-                eventLead.UTM_Campaign__c = utmFields.get('utmCampaign');
-                eventLead.UTM_Content__c = utmFields.get('utmContent');
-                eventLead.UTM_Source__c = utmFields.get('utmSource');
-                eventLead.UTM_Term__c = utmFields.get('utmTerm');
-                eventLead.GA_Medium__c = utmFields.get('utmMedium');
-                eventLead.GA_Click_ID__c = utmFields.get('utmClickId');
-                eventLead.GA_Client_ID__c = utmFields.get('utmClientId');
-                eventLead.GA_Device__c = utmFields.get('utmDevice');
-
-                // Populate the Lead Source
-                String leadsource = utmFields.get('leadSource');
-                List<Registration_Lead_Source_Mapping__mdt> lsMtd = new List<Registration_Lead_Source_Mapping__mdt>([SELECT value__c, url_Parameter__c FROM Registration_Lead_Source_Mapping__mdt WHERE url_Parameter__c=: leadsource LIMIT 1]);
-                eventLead.LeadSource = !lsMtd.isEmpty() ? lsMtd[0].value__c : 'Direct-to-App';
-
-                // Event-related field mappings
-                eventLead.Event_Code__c = selectedEvent.Name; 
-                eventLead.Event_Date_Time__c = selectedEvent.Event_Start_DateTime_F__c; 
-                eventLead.Event_Location__c = selectedEvent.Event_Location__c; 
-                eventLead.Event_Name__c = selectedEvent.Event_Title__c; 
-                eventLead.Event_URL__c = selectedEvent.Event_URL__c; 
-                eventLead.Zoom_Event_ID__c = selectedEvent.Zoom_Event_ID__c; 
-                eventLead.Zoom_Ticket_Type_ID__c = selectedEvent.Zoom_Ticket_Type_ID__c; 
-
-                // Additional mappings if the fields exist on your Lead object
-                eventLead.Channel_Type__c = selectedEvent.Channel_Type__c;
                 
                 // Add SMS Opt-in if provided
                 String smsOptIn = leadData.get('smsOptIn');
@@ -267,7 +236,6 @@ public without sharing class yc_EventListController {
                 return 'ALREADY_REGISTERED';
             }
                        
-            /* Deprecated
             // Create Task Registration
             List<RecordType> taskRT = [SELECT Id FROM RecordType WHERE DeveloperName='Form_Submission'];
             
@@ -293,7 +261,6 @@ public without sharing class yc_EventListController {
             }
             
             insert regEvent;
-            */
             
             System.debug('Successfully registered Lead for event: ' + selectedEvent.Event_Title__c);
             return 'SUCCESS';
@@ -340,33 +307,6 @@ public without sharing class yc_EventListController {
         } catch (Exception e) {
             System.debug('Error getting user registrations: ' + e.getMessage());
             return new List<String>();
-        }
-    }
-
-    // Check the Guest School
-    @AuraEnabled(cacheable=true)
-    public static Boolean checkGuestSchool(String schoolId) {
-        // Input validation
-        if (String.isBlank(schoolId)) {
-            return false;
-        }
-        
-        try {
-            // Query the school record to check guest registration setting
-            List<Account> schools = [
-                SELECT Allow_Guest_User_Registration__c 
-                FROM Account 
-                WHERE Id = :schoolId 
-                LIMIT 1
-            ];
-            
-            // Return true if school exists and allows guest registration
-            return !schools.isEmpty() && schools[0].Allow_Guest_User_Registration__c == true;
-            
-        } catch (Exception e) {
-            // Log error and return false for security
-            System.debug('Error in checkGuestSchool: ' + e.getMessage());
-            return false;
         }
     }
     

@@ -1,18 +1,15 @@
 import { LightningElement, wire, track } from 'lwc';
-import Toast from 'lightning/toast';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getUpcomingEvents from '@salesforce/apex/yc_EventListController.getUpcomingEvents';
 import registerForEvent from '@salesforce/apex/yc_EventListController.registerForEvent';
 import getUserRegisteredEventIds from '@salesforce/apex/yc_EventListController.getUserRegisteredEventIds';
 import createLeadAndRegister from '@salesforce/apex/yc_EventListController.createLeadAndRegister';
-import checkGuestSchool from '@salesforce/apex/yc_EventListController.checkGuestSchool';
 import REGISTRATION_ADDITIONAL_MESSAGE from '@salesforce/label/c.Registration_Additional_Message';
 
 // Later for Lead form
 import isGuest from '@salesforce/user/isGuest';
 
 export default class YcEventModal extends LightningElement {
-    schoolId;  // Filter for Guest user schools
-    
     @track events = [];
     @track error;
     @track isLoading = true;
@@ -24,7 +21,7 @@ export default class YcEventModal extends LightningElement {
     @track featuredEvent = null;
     @track modalPermanentlyDismissed = false;
     inactivityTimer = null;
-    inactivityTimeoutMs = 20000; // 60 seconds
+    inactivityTimeoutMs = 20000; // 20 seconds
 
     // Lead Registration Modal properties
     @track showLeadRegistrationModal = false;
@@ -38,7 +35,7 @@ export default class YcEventModal extends LightningElement {
         phone: '',
         state: '',
         zipCode: '',
-        smsOptIn: true
+        smsOptIn: false
     };
 
     // State options for dropdown
@@ -101,9 +98,15 @@ export default class YcEventModal extends LightningElement {
         this.startInactivityTimer();
         this.addEventListeners();
         this.checkForRegistrationParams();
-
-        // Load events imperatively
-        this.loadEvents();
+        
+        // Check for notification to display
+        const urlParams = new URLSearchParams(window.location.search);
+        const notificationTitle = urlParams.get('notificationTitle');
+        if (notificationTitle) {
+            // Decode and show the notification
+            const decodedTitle = decodeURIComponent(notificationTitle);
+            this.showRegistrationSuccessNotification(decodedTitle);
+        }
         
         // Debug: Log current state
         console.log('Initial state:', {
@@ -127,42 +130,14 @@ export default class YcEventModal extends LightningElement {
             this.modalPermanentlyDismissed = true;
             console.log('User just registered, modal disabled');
         }
-
-        // Check for notification to display
-        const notificationTitle = urlParams.get('notificationTitle');
-        if (notificationTitle) {
-
-            // Decode and show the notification
-            const decodedTitle = decodeURIComponent(notificationTitle);
-            this.showRegistrationSuccessNotification(decodedTitle);
-        }
-
-        const guestSchoolId = urlParams.get('schoolId');
-        if (this.isGuestUser && guestSchoolId) { this.schoolId = guestSchoolId; }
     }
 
-    // Check if user is a guest
+    // Check if user is a guest (stub for now - uncomment when import is available)
     get isGuestUser() {
        return isGuest === true;
-    }
-
-    // Helper method for toast notifications using Toast.show()
-    showToast(title, message, variant, mode) {
-        const config = {
-            label: title,
-            message: message,
-            variant: variant,
-            mode: sticky
-        };
-        
-        /*
-        // Only add mode if provided
-        if (mode) {
-            config.mode = mode;
-        }
-        */
-        
-        Toast.show(config, this);
+       // For testing, you can toggle this
+       // return true; // Set to true to test guest user flow
+       // return false;
     }
 
     // Activity tracking methods
@@ -340,7 +315,11 @@ export default class YcEventModal extends LightningElement {
         }
         
         // Show success message
-        this.showToast('Registration Successful', toastMessage, 'success');
+        this.dispatchEvent(new ShowToastEvent({
+            title: 'Registration Successful',
+            message: toastMessage,
+            variant: 'success'
+        }));
     }
 
     validateLeadForm() {
@@ -435,7 +414,12 @@ export default class YcEventModal extends LightningElement {
             this.formErrorMessage = errorMessage;
             
             // Also try to show toast (may not work in all contexts)
-            this.showToast('Required Information Missing', errorMessage, 'error', 'sticky');
+            this.dispatchEvent(new ShowToastEvent({
+                title: 'Required Information Missing',
+                message: errorMessage,
+                variant: 'error',
+                mode: 'sticky'
+            }));
             return;
         }
 
@@ -444,9 +428,6 @@ export default class YcEventModal extends LightningElement {
         this.isSubmittingLead = true;
 
         try {
-            // Get UTM/Lead Source data
-            const utmData = this.extractUTMParameters();
-            
             // Call Apex method to create lead and register for event
             const result = await createLeadAndRegister({
                 leadData: {
@@ -457,13 +438,19 @@ export default class YcEventModal extends LightningElement {
                     zipCode: this.leadFormData.zipCode,
                     smsOptIn: String(this.leadFormData.smsOptIn) // Convert boolean to string
                 },
-                utmFields: utmData, 
                 eventId: this.pendingEventForRegistration.id
             });
 
             console.log('Registration result:', result);
 
             if (result === 'SUCCESS') {
+                // Show success message
+                this.dispatchEvent(new ShowToastEvent({
+                    title: 'Registration Successful',
+                    message: `Thank you for registering for "${this.pendingEventForRegistration.title}". You will receive a confirmation email shortly.`,
+                    variant: 'success'
+                }));
+
                 // Build redirect URL with parameters
                 const currentUrl = new URL(window.location.href);
                 const params = new URLSearchParams(currentUrl.search);
@@ -501,8 +488,12 @@ export default class YcEventModal extends LightningElement {
                 
             } else if (result === 'ALREADY_REGISTERED') {
                 // Show info message
-                this.showToast('Already Registered', `You are already registered for "${this.pendingEventForRegistration.title}"`, 'info', 'sticky');
-
+                this.dispatchEvent(new ShowToastEvent({
+                    title: 'Already Registered',
+                    message: `You are already registered for "${this.pendingEventForRegistration.title}"`,
+                    variant: 'info'
+                }));
+                
                 // Close the modal
                 this.closeLeadRegistrationModal();
             }
@@ -515,7 +506,11 @@ export default class YcEventModal extends LightningElement {
                 errorMessage = error.body.message;
             }
             
-            this.showToast('Registration Failed', errorMessage, 'error', 'sticky');
+            this.dispatchEvent(new ShowToastEvent({
+                title: 'Registration Failed',
+                message: errorMessage,
+                variant: 'error'
+            }));
         } finally {
             this.isSubmittingLead = false;
         }
@@ -538,6 +533,26 @@ export default class YcEventModal extends LightningElement {
         event.preventDefault();
         // Navigate to contact page or open in new window
         window.open('/contact-us', '_blank');
+    }
+
+    // Wire the Apex method to get events
+    @wire(getUpcomingEvents)
+    wiredEvents({ error, data }) {
+        console.log('Wire method called with:', { hasData: !!data, hasError: !!error });
+        if (data) {
+            console.log('Events data received:', data);
+            this.loadRegisteredEvents().then(() => {
+                this.events = this.transformEventData(data);
+                this.isLoading = false; // Set to false after data is processed
+                console.log('Events loaded and transformed:', this.events);
+            });
+            this.error = undefined;
+        } else if (error) {
+            this.error = error;
+            this.events = [];
+            this.isLoading = false; // Set to false after error is handled
+            console.error('Error loading events:', error);
+        }
     }
 
     // Load registered events separately to avoid wire conflicts
@@ -683,6 +698,9 @@ export default class YcEventModal extends LightningElement {
             console.log('Registration result:', result);
             
             if (result === 'SUCCESS') {
+                // Show success notification
+                this.showRegistrationSuccessNotification(selectedEvent.title);
+
                 // Redirect, if needed
                 // Check if we're on the events page
                 const currentUrl = new URL(window.location.href);
@@ -700,7 +718,11 @@ export default class YcEventModal extends LightningElement {
                 }
             } else if (result === 'ALREADY_REGISTERED') {
                 // Show info message
-                this.showToast('Already Registered', `You are already registered for "${this.pendingEventForRegistration.title}"`, 'info', 'sticky');
+                this.dispatchEvent(new ShowToastEvent({
+                    title: 'Already Registered',
+                    message: `You are already registered for "${selectedEvent.title}"`,
+                    variant: 'info'
+                }));
                 
                 // Add to registered list since they're already registered
                 this.registeredEventIds = [...this.registeredEventIds, eventId];
@@ -719,7 +741,11 @@ export default class YcEventModal extends LightningElement {
             }
             
             // Show error message
-            this.showToast('Registration Failed', errorMessage, 'error', 'sticky');
+            this.dispatchEvent(new ShowToastEvent({
+                title: 'Registration Failed',
+                message: errorMessage,
+                variant: 'error'
+            }));
             
         } finally {
             this.registeringEventId = null;
@@ -779,30 +805,6 @@ export default class YcEventModal extends LightningElement {
         return this.error?.body?.message || 'An error occurred while loading events.';
     }
 
-    // Load event data
-    async loadEvents() {
-        this.isLoading = true;
-        try {
-            const data = await getUpcomingEvents({ schoolId: this.schoolId });
-            console.log('Events data received:', data);
-            
-            await this.loadRegisteredEvents();
-            
-            let eventsToTransform = data;
-            
-            this.events = this.transformEventData(eventsToTransform);
-            this.error = undefined;
-            console.log('Events loaded and transformed:', this.events);
-            
-        } catch (error) {
-            this.error = error;
-            this.events = [];
-            console.error('Error loading events:', error);
-        } finally {
-            this.isLoading = false;
-        }
-    }
-
     // Refresh event data to update button states
     refreshEventData() {
         if (this.events && this.events.length > 0) {
@@ -819,22 +821,4 @@ export default class YcEventModal extends LightningElement {
             });
         }
     }
-
-    // Get UTM parameters from the Query String to append to Lead Creation
-    extractUTMParameters() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const userAgent = navigator.userAgent;
-
-        return {
-            utmCampaign: urlParams.get("utm_campaign"),
-            utmContent: urlParams.get("utm_content"),
-            utmSource: urlParams.get("utm_source"),
-            utmTerm: urlParams.get("utm_term"),
-            utmMedium: urlParams.get("utm_medium"),
-            utmClickId: urlParams.get("gclid"),
-            utmClientId: urlParams.get("_ga"),
-            utmDevice: userAgent,
-            leadSource: urlParams.get("ls")
-        };
-    } // end extractUTMParameters
 }

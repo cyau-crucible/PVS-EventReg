@@ -1,0 +1,108 @@
+<template>
+    <lightning-card title="Potential Duplicates" icon-name="utility:copy_to_clipboard">
+        <div class="slds-p-horizontal_medium slds-p-bottom_small header-actions">
+            <div class="left">
+                <template if:true={_fieldSetName}>
+                    <span class="context">
+                        Showing fields from field set <strong>{_fieldSetName}</strong>
+                    </span>
+                </template>
+            </div>
+            <div class="right">
+                <lightning-button-icon icon-name="utility:refresh" variant="border" alternative-text="Refresh"
+                                       title="Refresh" onclick={handleRefresh}>
+                </lightning-button-icon>
+            </div>
+        </div>
+
+        <template if:true={isLoading}>
+            <div class="slds-p-around_medium">
+                <lightning-spinner size="medium" alternative-text="Loading duplicates"></lightning-spinner>
+            </div>
+        </template>
+
+        <template if:true={hasSets}>
+            <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+                <template for:each={sets} for:item="set">
+                    <article key={set.setId} class="set-card slds-m-bottom_large">
+                        <header class="set-card__header slds-grid slds-grid_vertical-align-center">
+                            <div class="slds-truncate">
+                                <span class="slds-text-title_caps">Duplicate Record Set</span>
+                                <h3 class="slds-text-heading_small slds-m-top_xx-small">
+                                    <lightning-formatted-text value={set.setId}></lightning-formatted-text>
+                                </h3>
+                                <div class="meta">
+                                    <template if:true={set.ruleDeveloperName}>
+                                        <span class="rule">Rule: <strong>{set.ruleDeveloperName}</strong></span>
+                                    </template>
+                                    <span class="sep">•</span>
+                                    <span>{set.totalItems} records in set</span>
+                                </div>
+                            </div>
+                            <div class="set-card__actions slds-m-left_auto">
+                                <lightning-button-group>
+                                    <lightning-button label="Merge" title="Merge this set"
+                                                      onclick={handleMerge}
+                                                      data-set-id={set.setId} variant="brand"></lightning-button>
+                                    <lightning-button label="Approve (Not a duplicate)" title="Approve (delete this set)"
+                                                      onclick={handleApprove}
+                                                      data-set-id={set.setId} variant="destructive-text"></lightning-button>
+                                    <lightning-button label="View Set" title="Open Duplicate Record Set"
+                                                      onclick={handleViewSet}
+                                                      data-set-id={set.setId}></lightning-button>
+                                </lightning-button-group>
+                            </div>
+                        </header>
+
+                        <template if:true={set.duplicateContactIds.length}>
+                            <div class="tiles">
+                                <template for:each={set.duplicateContactIds} for:item="cid">
+                                    <section key={cid} class="tile">
+                                        <lightning-record-view-form record-id={cid} object-api-name="Contact">
+                                            <div class="tile__header slds-p-bottom_x-small">
+                                                <lightning-output-field field-name="Name"></lightning-output-field>
+                                            </div>
+
+                                            <div class="tile__body">
+                                                <template if:true={fieldDescriptors}>
+                                                    <template for:each={fieldDescriptors} for:item="f">
+                                                        <div key={f.apiName} class="field-row">
+                                                            <lightning-output-field field-name={f.apiName}></lightning-output-field>
+                                                        </div>
+                                                    </template>
+                                                </template>
+                                            </div>
+
+                                            <div class="tile__footer">
+                                                <lightning-button-icon icon-name="utility:new_window"
+                                                                       onclick={handleOpenContact}
+                                                                       data-contact-id={cid}
+                                                                       alternative-text="Open Contact"
+                                                                       title="Open Contact"></lightning-button-icon>
+                                            </div>
+                                        </lightning-record-view-form>
+                                    </section>
+                                </template>
+                            </div>
+                        </template>
+
+                        <template if:false={set.duplicateContactIds.length}>
+                            <div class="slds-p-around_medium slds-text-color_weak">
+                                No other records in this set (nothing to review).
+                            </div>
+                        </template>
+                    </article>
+                </template>
+            </div>
+        </template>
+
+        <template if:false={hasSets}>
+            <div class="slds-p-around_large empty-state">
+                <div class="slds-text-heading_small slds-m-bottom_x-small">No potential duplicates</div>
+                <div class="slds-text-color_weak">
+                    We didn’t find any Duplicate Record Sets that include this Contact.
+                </div>
+            </div>
+        </template>
+    </lightning-card>
+</template>

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
+        <members>ContactDuplicateSetsController</members>
         <members>yc_EventListController</members>
         <members>yc_EventListControllerTest</members>
         <name>ApexClass</name>
@@ -22,6 +23,7 @@
         <name>CustomLabel</name>
     </types>
     <types>
+        <members>bt_RecordDuplicateManager</members>
         <members>yc_EventList</members>
         <members>yc_Event_Modal</members>
         <name>LightningComponentBundle</name>
