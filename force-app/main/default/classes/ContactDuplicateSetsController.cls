@@ -142,6 +142,52 @@ public with sharing class ContactDuplicateSetsController {
         fd.createable = f.isCreateable();
         out.add(fd);
     }
+
+    /**
+     * Merge two contacts, due to native method the Master will "win" unless the duplicate has a value in the field where the master is blank
+     * Removes merged contact from any duplicate sets.
+     */
+    @AuraEnabled
+    public static Map<String, Object> mergeContacts(Id masterContactId, Id duplicateContactId) {
+        try {
+            // Validate inputs
+            if (masterContactId == null || duplicateContactId == null) {
+                throw new AuraHandledException('Both master and duplicate contact IDs are required');
+            }
+            if (masterContactId == duplicateContactId) {
+                throw new AuraHandledException('Cannot merge a contact with itself');
+            }
+            
+            // Verify both contacts exist
+            List<Contact> contacts = [
+                SELECT Id, Name 
+                FROM Contact 
+                WHERE Id IN :new Set<Id>{masterContactId, duplicateContactId}
+            ];
+            
+            if (contacts.size() != 2) {
+                throw new AuraHandledException('One or both contacts not found');
+            }
+            
+            // Merge using native method - master wins all field conflicts
+            Contact master = new Contact(Id = masterContactId);
+            Contact duplicate = new Contact(Id = duplicateContactId);
+            merge master duplicate;
+            
+            // Return success
+            return new Map<String, Object>{
+                'success' => true,
+                'masterContactId' => masterContactId,
+                'message' => 'Contacts successfully merged'
+            };
+        } catch (DmlException e) {
+            // Handle merge-specific errors
+            throw new AuraHandledException('Merge failed: ' + e.getDmlMessage(0));
+        } catch (Exception e) {
+            // Handle general errors
+            throw new AuraHandledException('Error merging contacts: ' + e.getMessage());
+        }
+    }  // end mergeContacts
     
 @AuraEnabled
 public static Boolean approveContactFromSet(Id contactId, Id duplicateRecordSetId) {

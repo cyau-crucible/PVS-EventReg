@@ -7,8 +7,8 @@ import LightningConfirm from 'lightning/confirm';
 
 import getDuplicateSets from '@salesforce/apex/ContactDuplicateSetsController.getDuplicateSets';
 import getContactFieldSet from '@salesforce/apex/ContactDuplicateSetsController.getContactFieldSet';
-import approveContactFromSet
-    from '@salesforce/apex/ContactDuplicateSetsController.approveContactFromSet';
+import approveContactFromSet from '@salesforce/apex/ContactDuplicateSetsController.approveContactFromSet';
+import mergeContacts from '@salesforce/apex/ContactDuplicateSetsController.mergeContacts';
 
 export default class ContactDuplicateManager extends NavigationMixin(LightningElement) {
     /** Record page injects this automatically */
@@ -65,8 +65,6 @@ export default class ContactDuplicateManager extends NavigationMixin(LightningEl
         }
     }
 
-    // ----- Actions -----
-
 
 async handleApprove(event) {
     const setId = event.currentTarget.dataset.setId;
@@ -90,7 +88,7 @@ async handleApprove(event) {
 }
 
 handleMerge(event) {
-    const setId = event.currentTarget.dataset.setId;
+    const setId = event.currentTarget.dataset.setId;   // REPLACE WITH A CONTACT ID INSTEAD
     if (!setId) return;
 
     // 1) Always-open path: go to the DRS record; user can click "Compare & Merge"
@@ -135,8 +133,57 @@ handleMerge(event) {
     }
 }
 
-
-
+    // Pass two Contact Ids, including the record Id, to Apex to merge
+    async handleContactMerge(event) {
+        const clickedContactId = event.currentTarget.dataset.contactId;
+        const recordPageContactId = this.recordId;
+        
+        console.log('=== Contact Merge Debug ===');
+        console.log('Record Page Contact ID (original):', recordPageContactId);
+        console.log('Clicked Contact ID (to merge):', clickedContactId);
+        
+        // Validation
+        if (!recordPageContactId || !clickedContactId) {
+            console.error('Missing contact IDs - cannot proceed with merge');
+            return;
+        }
+        if (recordPageContactId === clickedContactId) {
+            console.warn('Cannot merge a contact with itself');
+            return;
+        }
+        
+        try {
+            // Call Apex merge method
+            const result = await mergeContacts({
+                masterContactId: recordPageContactId,
+                duplicateContactId: clickedContactId
+            });
+            
+            console.log('Merge successful:', result);
+            
+            // Show success toast
+            this.dispatchEvent(new ShowToastEvent({
+                title: 'Success',
+                message: 'Contact merged successfully. Refreshing page...',
+                variant: 'success'
+            }));
+            
+            // Refresh the page after a short delay
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        } catch (error) {
+            console.error('Merge failed:', error);
+            
+            // Show error toast
+            this.dispatchEvent(new ShowToastEvent({
+                title: 'Merge Failed',
+                message: error.body?.message || 'An error occurred while merging contacts',
+                variant: 'error',
+                mode: 'sticky'
+            }));
+        }  // end try/catch
+    }  // end handleContactMerge
 
     handleViewSet(event) {
         const setId = event.currentTarget.dataset.setId;

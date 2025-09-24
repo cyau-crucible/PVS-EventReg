@@ -41,15 +41,9 @@
                             </div>
                             <div class="set-card__actions slds-m-left_auto">
                                 <lightning-button-group>
-                                    <lightning-button label="Merge" title="Merge this set"
-                                                      onclick={handleMerge}
-                                                      data-set-id={set.setId} variant="brand"></lightning-button>
                                     <lightning-button label="Approve (Not a duplicate)" title="Approve (delete this set)"
                                                       onclick={handleApprove}
                                                       data-set-id={set.setId} variant="destructive-text"></lightning-button>
-                                    <lightning-button label="View Set" title="Open Duplicate Record Set"
-                                                      onclick={handleViewSet}
-                                                      data-set-id={set.setId}></lightning-button>
                                 </lightning-button-group>
                             </div>
                         </header>
@@ -74,6 +68,10 @@
                                             </div>
 
                                             <div class="tile__footer">
+                                                <lightning-button label="Merge" title="Merge this set"
+                                                                onclick={handleContactMerge} 
+                                                                data-contact-id={cid} variant="brand" 
+                                                                class="slds-var-m-right_x-small"></lightning-button>
                                                 <lightning-button-icon icon-name="utility:new_window"
                                                                        onclick={handleOpenContact}
                                                                        data-contact-id={cid}
