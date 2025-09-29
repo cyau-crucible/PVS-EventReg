@@ -21,6 +21,7 @@ export default class ContactDuplicateManager extends NavigationMixin(LightningEl
     @track fieldDescriptors = [];
     @track sets = [];
     isLoading = true;
+    isMerging = false;  // NEW: tracks if a merge is in progress
 
     // store wire results for refresh
     _dupWireResult;
@@ -71,7 +72,7 @@ async handleApprove(event) {
     if (!setId) return;
 
     const ok = await this._confirm(
-        'Approve this record as “Not a Duplicate”? This removes only this contact from the set.'
+        'Approve this record as "Not a Duplicate"? This removes only this contact from the set.'
     );
     if (!ok) return;
 
@@ -81,7 +82,7 @@ async handleApprove(event) {
         this._toast('Approved', 'This contact was removed from the duplicate set.', 'success');
         await refreshApex(this._dupWireResult);
     } catch (e) {
-        this._toast('Couldn’t approve', this._errorMessage(e), 'error');
+        this._toast('Couldn\'t approve', this._errorMessage(e), 'error');
     } finally {
         this.isLoading = false;
     }
@@ -152,6 +153,9 @@ handleMerge(event) {
             return;
         }
         
+        // Set merging flag to disable all buttons and show spinner
+        this.isMerging = true;
+        
         try {
             // Call Apex merge method
             const result = await mergeContacts({
@@ -172,8 +176,12 @@ handleMerge(event) {
             setTimeout(() => {
                 window.location.reload();
             }, 2000);
+            
         } catch (error) {
             console.error('Merge failed:', error);
+            
+            // Clear the merging flag on error so buttons are re-enabled
+            this.isMerging = false;
             
             // Show error toast
             this.dispatchEvent(new ShowToastEvent({
@@ -250,7 +258,7 @@ handleMerge(event) {
                 label: 'Confirm'
             });
         } catch {
-            // Fallback if LightningConfirm isn’t available in some contexts
+            // Fallback if LightningConfirm isn't available in some contexts
             // eslint-disable-next-line no-alert
             return window.confirm(message);
         }
