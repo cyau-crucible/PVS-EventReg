@@ -224,39 +224,46 @@ public with sharing class ContactDuplicateSetsController {
 
     // New Code to handle Merges
     // Returns a list of Wrappers of Field Information from Field Set specified
+    // Modify to look for read-only status on Fields   
     @AuraEnabled(cacheable=true)
     public static List<FieldInfo> getFieldSetFields(String fieldSetName, String objectName) {
         List<FieldInfo> fieldInfoList = new List<FieldInfo>();
         
         try {
-            // Get the Contact fields via Schema describe
             Schema.SObjectType sObjectType = Schema.getGlobalDescribe().get('Contact');
+            Map<String, Schema.SObjectField> fieldMap = sObjectType.getDescribe().fields.getMap();
             
-            // Special handling for Test Coverage - Mock a Field Set using Name and Email
+            // Test handling (keep as is)
             if (Test.isRunningTest() && fieldSetName == 'TestFieldSet' && objectName == 'Contact') {
-                // Mock field set with Name and Email fields for testing
-                fieldInfoList.add(new FieldInfo('LastName', 'Last Name', 'STRING'));
-                fieldInfoList.add(new FieldInfo('Email', 'Email', 'EMAIL'));
+                fieldInfoList.add(new FieldInfo('LastName', 'Last Name', 'STRING', true));
+                fieldInfoList.add(new FieldInfo('Email', 'Email', 'EMAIL', true));
                 return fieldInfoList;
             }
             
-            // Get the Field Set
             Schema.FieldSet fieldSet = sObjectType.getDescribe().fieldSets.getMap().get(fieldSetName);
             if (fieldSet == null) {
-                // Try with namespace if initial attempt fails
                 fieldSet = sObjectType.getDescribe().fieldSets.getMap().get('c__' + fieldSetName);
                 if (fieldSet == null) {
                     throw new AuraHandledException('Field Set not found: ' + fieldSetName);
                 }
             }
             
-            // Extract field information
+            // Extract field information WITH updateability check
             for (Schema.FieldSetMember fieldMember : fieldSet.getFields()) {
-                String fieldType = String.valueOf(fieldMember.getType());
+                String fieldPath = fieldMember.getFieldPath();
+                Schema.SObjectField fieldToken = fieldMap.get(fieldPath);
+                Boolean isUpdateable = false;
+                
+                if (fieldToken != null) {
+                    Schema.DescribeFieldResult fieldDescribe = fieldToken.getDescribe();
+                    isUpdateable = fieldDescribe.isUpdateable();
+                }
+                
                 fieldInfoList.add(new FieldInfo(
-                    fieldMember.getFieldPath(),
+                    fieldPath,
                     fieldMember.getLabel(),
-                    fieldType
+                    String.valueOf(fieldMember.getType()),
+                    isUpdateable
                 ));
             }
         } catch (Exception e) {
@@ -264,8 +271,8 @@ public with sharing class ContactDuplicateSetsController {
         }
         
         return fieldInfoList;
-    }   // end getFieldSetFields
-    
+    }  // end getFieldSetFields
+
     // Method to retrieve Contact Wrapper of both requested Contacts, with the requested Field Names queried
     @AuraEnabled(cacheable=false)
     public static ContactWrapper getContactsWithFieldValues(Id masterId, Id targetId, List<String> fieldNames) {
@@ -437,11 +444,13 @@ public with sharing class ContactDuplicateSetsController {
         @AuraEnabled public String fieldName { get; set; }
         @AuraEnabled public String fieldLabel { get; set; }
         @AuraEnabled public String fieldType { get; set; }
+        @AuraEnabled public Boolean isUpdateable { get; set; }
         
         public FieldInfo(String fieldName, String fieldLabel, String fieldType) {
             this.fieldName = fieldName;
             this.fieldLabel = fieldLabel;
             this.fieldType = fieldType;
+            this.isUpdateable = isUpdateable;
         }
     }   // end FieldInfo
     

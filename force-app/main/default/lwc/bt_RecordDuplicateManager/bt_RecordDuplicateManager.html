@@ -219,50 +219,78 @@
                                             <td>
                                                 <div class="slds-truncate" title={field.fieldLabel}>
                                                     <strong>{field.fieldLabel}</strong>
+                                                    <template if:false={field.isUpdateable}>
+                                                        <lightning-icon icon-name="utility:lock" 
+                                                                      size="x-small" 
+                                                                      alternative-text="Read-only field"
+                                                                      title="Read-only field"
+                                                                      class="slds-m-left_x-small slds-text-color_weak">
+                                                        </lightning-icon>
+                                                    </template>
                                                 </div>
                                             </td>
                                             
-                                            <!-- Master Value with Radio -->
-                                            <td class={field.selectedClass}>
-                                                <div class="slds-grid slds-grid_vertical-align-center">
-                                                    <span class="slds-radio slds-m-right_x-small">
-                                                        <input type="radio" 
-                                                            id={field.masterRadioId}
-                                                            name={field.fieldName}
-                                                            value="master"
-                                                            checked={field.isMasterSelected}
-                                                            data-fieldname={field.fieldName}
-                                                            onchange={handleFieldSelectionChange} />
-                                                        <label class="slds-radio__label" for={field.masterRadioId}>
-                                                            <span class="slds-radio_faux"></span>
-                                                        </label>
-                                                    </span>
+                                            <!-- For updateable fields - show radio buttons -->
+                                            <template if:true={field.isUpdateable}>
+                                                <!-- Master Value with Radio -->
+                                                <td class={field.selectedClass}>
+                                                    <div class="slds-grid slds-grid_vertical-align-center">
+                                                        <span class="slds-radio slds-m-right_x-small">
+                                                            <input type="radio" 
+                                                                id={field.masterRadioId}
+                                                                name={field.fieldName}
+                                                                value="master"
+                                                                checked={field.isMasterSelected}
+                                                                data-fieldname={field.fieldName}
+                                                                onchange={handleFieldSelectionChange} />
+                                                            <label class="slds-radio__label" for={field.masterRadioId}>
+                                                                <span class="slds-radio_faux"></span>
+                                                            </label>
+                                                        </span>
+                                                        <div class="slds-truncate" title={field.masterValue}>
+                                                            {field.masterValue}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                
+                                                <!-- Target Value with Radio -->
+                                                <td class={field.targetSelectedClass}>
+                                                    <div class="slds-grid slds-grid_vertical-align-center">
+                                                        <span class="slds-radio slds-m-right_x-small">
+                                                            <input type="radio" 
+                                                                id={field.targetRadioId}
+                                                                name={field.fieldName}
+                                                                value="target"
+                                                                checked={field.isTargetSelected}
+                                                                data-fieldname={field.fieldName}
+                                                                onchange={handleFieldSelectionChange} />
+                                                            <label class="slds-radio__label" for={field.targetRadioId}>
+                                                                <span class="slds-radio_faux"></span>
+                                                            </label>
+                                                        </span>
+                                                        <div class="slds-truncate" title={field.targetValue}>
+                                                            {field.targetValue}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </template>
+                                            
+                                            <!-- For non-updateable fields - just show values without radio buttons -->
+                                            <template if:false={field.isUpdateable}>
+                                                <!-- Master Value (read-only) -->
+                                                <td class="slds-text-color_weak">
                                                     <div class="slds-truncate" title={field.masterValue}>
                                                         {field.masterValue}
                                                     </div>
-                                                </div>
-                                            </td>
-                                            
-                                            <!-- Target Value with Radio -->
-                                            <td class={field.targetSelectedClass}>
-                                                <div class="slds-grid slds-grid_vertical-align-center">
-                                                    <span class="slds-radio slds-m-right_x-small">
-                                                        <input type="radio" 
-                                                            id={field.targetRadioId}
-                                                            name={field.fieldName}
-                                                            value="target"
-                                                            checked={field.isTargetSelected}
-                                                            data-fieldname={field.fieldName}
-                                                            onchange={handleFieldSelectionChange} />
-                                                        <label class="slds-radio__label" for={field.targetRadioId}>
-                                                            <span class="slds-radio_faux"></span>
-                                                        </label>
-                                                    </span>
+                                                </td>
+                                                
+                                                <!-- Target Value (read-only) -->
+                                                <td class="slds-text-color_weak">
                                                     <div class="slds-truncate" title={field.targetValue}>
                                                         {field.targetValue}
                                                     </div>
-                                                </div>
-                                            </td>
+                                                </td>
+                                            </template>
                                         </tr>
                                     </template>
                                 </tbody>
@@ -276,8 +304,8 @@
                                     </div>
                                     <div class="slds-media__body">
                                         <p>
-                                            <strong>Note:</strong> Fields not shown here will use standard Salesforce merge rules 
-                                            (master record values are kept unless blank).
+                                            <strong>Note:</strong> Fields marked with <lightning-icon icon-name="utility:lock" size="x-small"></lightning-icon> are read-only and cannot be modified during merge.
+                                            Fields not shown here will use standard Salesforce merge rules (master record values are kept unless blank).
                                         </p>
                                     </div>
                                 </div>

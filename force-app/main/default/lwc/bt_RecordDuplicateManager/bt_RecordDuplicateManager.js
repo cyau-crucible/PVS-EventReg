@@ -187,7 +187,7 @@ export default class ContactDuplicateManager extends NavigationMixin(LightningEl
         this.isMergeLoading = true;
         
         try {
-            // Step 1: Get Field Set fields (using the same fieldSetName as configured)
+            // Get Field Set fields (using the same fieldSetName as configured)
             const fieldSetFields = await getFieldSetFields({
                 fieldSetName: this.fieldSetName,
                 objectName: 'Contact'
@@ -200,7 +200,7 @@ export default class ContactDuplicateManager extends NavigationMixin(LightningEl
             // Extract field names for query
             const fieldNames = fieldSetFields.map(field => field.fieldName);
             
-            // Step 2: Get Contact records with field values
+            // Get Contact records with field values
             const contactWrapper = await getContactsWithFieldValues({
                 masterId: this.recordId,
                 targetId: this.targetContactId,
@@ -216,8 +216,8 @@ export default class ContactDuplicateManager extends NavigationMixin(LightningEl
                 master: contactWrapper.masterContact,
                 target: contactWrapper.targetContact
             };
-            
-            // Step 3: Build field list for display
+
+            // Build field list for display
             this.mergeFieldList = fieldSetFields.map(field => {
                 const fieldName = field.fieldName;
                 const masterValue = this.getFieldValue(contactWrapper.masterContact, fieldName);
@@ -228,6 +228,7 @@ export default class ContactDuplicateManager extends NavigationMixin(LightningEl
                     fieldName: fieldName,
                     fieldLabel: field.fieldLabel,
                     fieldType: field.fieldType,
+                    isUpdateable: field.isUpdateable,  // Add this
                     masterValue: masterValue,
                     targetValue: targetValue,
                     selection: selection,
@@ -241,11 +242,13 @@ export default class ContactDuplicateManager extends NavigationMixin(LightningEl
                     targetRadioId: fieldName + '_target'
                 };
             });
-            
-            // Initialize field selections (all default to master)
+
+            // Initialize field selections (only for updateable fields)
             this.mergeFieldSelections = {};
             this.mergeFieldList.forEach(field => {
-                this.mergeFieldSelections[field.fieldName] = 'master';
+                if (field.isUpdateable) {
+                    this.mergeFieldSelections[field.fieldName] = 'master';
+                }
             });
             
         } catch (error) {
@@ -301,12 +304,21 @@ export default class ContactDuplicateManager extends NavigationMixin(LightningEl
             }
             
             console.log('Executing merge with selections:', this.mergeFieldSelections);
-            
+
+            // Filter selections to only include updateable fields
+            const updateableSelections = {};
+            Object.keys(this.mergeFieldSelections).forEach(fieldName => {
+                const field = this.mergeFieldList.find(f => f.fieldName === fieldName);
+                if (field && field.isUpdateable) {
+                    updateableSelections[fieldName] = this.mergeFieldSelections[fieldName];
+                }
+            });
+
             // Call the new Apex merge method with field selections
             const mergeResult = await mergeContactsWithSelections({
                 masterId: this.recordId,
                 targetId: this.targetContactId,
-                fieldSelections: this.mergeFieldSelections
+                fieldSelections: updateableSelections
             });
             
             if (mergeResult.success) {
