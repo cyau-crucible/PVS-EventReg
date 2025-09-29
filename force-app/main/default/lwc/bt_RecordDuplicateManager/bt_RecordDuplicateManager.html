@@ -130,7 +130,7 @@
     <!-- Merge Modal -->
     <template if:true={isQuickMergeModalOpen}>
         <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open" aria-labelledby="modal-heading-01" aria-modal="true">
-            <div class="slds-modal__container">
+            <div class="slds-modal__container" style="max-width: 90%; width: 80rem;">
                 <!-- Modal Header -->
                 <div class="slds-modal__header">
                     <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" 
@@ -197,21 +197,18 @@
                             <table class="slds-table slds-table_cell-buffer slds-table_bordered">
                                 <thead>
                                     <tr class="slds-line-height_reset">
-                                        <th scope="col" class="slds-text-title_caps" style="width: 25%;">
+                                        <th scope="col" class="slds-text-title_caps" style="width: 20%;">
                                             <div class="slds-truncate" title="Field">Field</div>
                                         </th>
-                                        <th scope="col" class="slds-text-title_caps" style="width: 35%;">
+                                        <th scope="col" class="slds-text-title_caps" style="width: 40%;">
                                             <div class="slds-truncate" title="Master Value">
                                                 Master Value (Keep)
                                             </div>
                                         </th>
-                                        <th scope="col" class="slds-text-title_caps" style="width: 35%;">
+                                        <th scope="col" class="slds-text-title_caps" style="width: 40%;">
                                             <div class="slds-truncate" title="Target Value">
                                                 Target Value (Merge)
                                             </div>
-                                        </th>
-                                        <th scope="col" class="slds-text-title_caps" style="width: 5%;">
-                                            <div class="slds-truncate" title="Select">Select</div>
                                         </th>
                                     </tr>
                                 </thead>
@@ -225,50 +222,44 @@
                                                 </div>
                                             </td>
                                             
-                                            <!-- Master Value -->
+                                            <!-- Master Value with Radio -->
                                             <td class={field.selectedClass}>
-                                                <div class="slds-truncate" title={field.masterValue}>
-                                                    {field.masterValue}
+                                                <div class="slds-grid slds-grid_vertical-align-center">
+                                                    <span class="slds-radio slds-m-right_x-small">
+                                                        <input type="radio" 
+                                                            id={field.masterRadioId}
+                                                            name={field.fieldName}
+                                                            value="master"
+                                                            checked={field.isMasterSelected}
+                                                            data-fieldname={field.fieldName}
+                                                            onchange={handleFieldSelectionChange} />
+                                                        <label class="slds-radio__label" for={field.masterRadioId}>
+                                                            <span class="slds-radio_faux"></span>
+                                                        </label>
+                                                    </span>
+                                                    <div class="slds-truncate" title={field.masterValue}>
+                                                        {field.masterValue}
+                                                    </div>
                                                 </div>
                                             </td>
                                             
-                                            <!-- Target Value -->
+                                            <!-- Target Value with Radio -->
                                             <td class={field.targetSelectedClass}>
-                                                <div class="slds-truncate" title={field.targetValue}>
-                                                    {field.targetValue}
-                                                </div>
-                                            </td>
-                                            
-                                            <!-- Radio Button Selection -->
-                                            <td>
-                                                <div class="slds-form-element">
-                                                    <div class="slds-form-element__control">
-                                                        <span class="slds-radio">
-                                                            <input type="radio" 
-                                                                   id={field.masterRadioId}
-                                                                   name={field.fieldName}
-                                                                   value="master"
-                                                                   checked={field.isMasterSelected}
-                                                                   data-fieldname={field.fieldName}
-                                                                   onchange={handleFieldSelectionChange} />
-                                                            <label class="slds-radio__label" for={field.masterRadioId}>
-                                                                <span class="slds-radio_faux"></span>
-                                                                <span class="slds-form-element__label slds-assistive-text">Master</span>
-                                                            </label>
-                                                        </span>
-                                                        <span class="slds-radio">
-                                                            <input type="radio" 
-                                                                   id={field.targetRadioId}
-                                                                   name={field.fieldName}
-                                                                   value="target"
-                                                                   checked={field.isTargetSelected}
-                                                                   data-fieldname={field.fieldName}
-                                                                   onchange={handleFieldSelectionChange} />
-                                                            <label class="slds-radio__label" for={field.targetRadioId}>
-                                                                <span class="slds-radio_faux"></span>
-                                                                <span class="slds-form-element__label slds-assistive-text">Target</span>
-                                                            </label>
-                                                        </span>
+                                                <div class="slds-grid slds-grid_vertical-align-center">
+                                                    <span class="slds-radio slds-m-right_x-small">
+                                                        <input type="radio" 
+                                                            id={field.targetRadioId}
+                                                            name={field.fieldName}
+                                                            value="target"
+                                                            checked={field.isTargetSelected}
+                                                            data-fieldname={field.fieldName}
+                                                            onchange={handleFieldSelectionChange} />
+                                                        <label class="slds-radio__label" for={field.targetRadioId}>
+                                                            <span class="slds-radio_faux"></span>
+                                                        </label>
+                                                    </span>
+                                                    <div class="slds-truncate" title={field.targetValue}>
+                                                        {field.targetValue}
                                                     </div>
                                                 </div>
                                             </td>
