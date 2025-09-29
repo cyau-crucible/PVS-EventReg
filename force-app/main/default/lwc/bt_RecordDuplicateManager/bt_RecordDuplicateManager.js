@@ -11,7 +11,7 @@ import approveContactFromSet from '@salesforce/apex/ContactDuplicateSetsControll
 // import mergeContacts from '@salesforce/apex/ContactDuplicateSetsController.mergeContacts';
 import getFieldSetFields from '@salesforce/apex/ContactDuplicateSetsController.getFieldSetFields';
 import getContactsWithFieldValues from '@salesforce/apex/ContactDuplicateSetsController.getContactsWithFieldValues';
-import mergeContactsWithSelections from '@salesforce/apex/ContactDuplicateSetsController.mergeContacts';
+import mergeContactsWithSelections from '@salesforce/apex/ContactDuplicateSetsController.mergeContactsNew';
 
 export default class ContactDuplicateManager extends NavigationMixin(LightningElement) {
     /** Record page injects this automatically */
