@@ -17,7 +17,11 @@
             <property name="fieldSetName"
                       type="String"
                       label="Contact Field Set API Name"
-                      description="Controls which Contact fields show for each duplicate. Defaults to 'Duplicate_Review'."/>
+                      description="Controls which Contact fields show for each duplicate when viewed. Defaults to 'Duplicate_Review'."/>
+            <property name="fieldSetMergeName"
+                      type="String"
+                      label="Contact Merging Field Set API Name"
+                      description="Controls which Contact fields will be allowed to be merged via 'Quick Merge' functionality. Defaults to 'Duplicate_Review'."/>
             <property name="maxSets"
                       type="Integer"
                       label="Max Duplicate Record Sets to Load"
@@ -29,6 +33,9 @@
             <property name="fieldSetName"
                       type="String"
                       label="Contact Field Set API Name"/>
+            <property name="fieldSetMergeName"
+                      type="String"
+                      label="Contact Merging Field Set API Name"/>
             <property name="maxSets"
                       type="Integer"
                       label="Max Duplicate Record Sets to Load"

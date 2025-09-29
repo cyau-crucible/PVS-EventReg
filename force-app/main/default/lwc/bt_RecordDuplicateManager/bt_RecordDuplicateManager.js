@@ -19,6 +19,7 @@ export default class ContactDuplicateManager extends NavigationMixin(LightningEl
 
     /** Configurable in App Builder */
     @api fieldSetName = 'Duplicate_Review';
+    @api fieldSetMergeName = 'Duplicate_Review';
     @api maxSets = 25;
 
     @track fieldDescriptors = [];
@@ -189,12 +190,12 @@ export default class ContactDuplicateManager extends NavigationMixin(LightningEl
         try {
             // Get Field Set fields (using the same fieldSetName as configured)
             const fieldSetFields = await getFieldSetFields({
-                fieldSetName: this.fieldSetName,
+                fieldSetName: this.fieldSetMergeName,
                 objectName: 'Contact'
             });
             
             if (!fieldSetFields || fieldSetFields.length === 0) {
-                throw new Error('No fields found in Field Set: ' + this.fieldSetName);
+                throw new Error('No fields found in Field Set: ' + this.fieldSetMergeName);
             }
             
             // Extract field names for query
