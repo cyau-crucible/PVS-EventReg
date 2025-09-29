@@ -83,7 +83,7 @@
 
                                                     <div class="tile__footer">
                                                         <lightning-button label="Quick Merge" title="Quick Merge"
-                                                                        onclick={handleContactMerge} 
+                                                                        onclick={handleOpenMergeModal} 
                                                                         data-contact-id={cid} 
                                                                         variant="brand" 
                                                                         class="slds-var-m-right_x-small"
@@ -126,4 +126,211 @@
             </template>
         </template>
     </lightning-card>
+
+    <!-- Merge Modal -->
+    <template if:true={isQuickMergeModalOpen}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open" aria-labelledby="modal-heading-01" aria-modal="true">
+            <div class="slds-modal__container">
+                <!-- Modal Header -->
+                <div class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" 
+                            title="Close" 
+                            onclick={handleCloseMergeModal}>
+                        <lightning-icon icon-name="utility:close" 
+                                      alternative-text="close" 
+                                      variant="inverse" 
+                                      size="small">
+                        </lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 id="modal-heading-01" class="slds-modal__title slds-hyphenate">
+                        Merge Contact Records
+                    </h2>
+                    <p class="slds-m-top_x-small">
+                        Select which field values to keep when merging these contacts
+                    </p>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="slds-modal__content slds-p-around_medium">
+                    <!-- Loading Spinner -->
+                    <template if:true={isMergeLoading}>
+                        <div class="slds-align_absolute-center slds-p-around_large">
+                            <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+                        </div>
+                    </template>
+
+                    <!-- Field Selection Table -->
+                    <template if:false={isMergeLoading}>
+                        <template if:true={hasMergeFields}>
+                            <!-- Contact Names Header -->
+                            <div class="slds-grid slds-gutters slds-m-bottom_medium">
+                                <div class="slds-col slds-size_1-of-2">
+                                    <div class="slds-box slds-theme_shade">
+                                        <p class="slds-text-heading_small">
+                                            <lightning-icon icon-name="standard:contact" size="small"></lightning-icon>
+                                            <span class="slds-m-left_x-small">
+                                                Master: <strong>{masterContactName}</strong>
+                                            </span>
+                                        </p>
+                                        <p class="slds-text-body_small slds-m-top_x-small">
+                                            This record will be kept
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2">
+                                    <div class="slds-box slds-theme_shade">
+                                        <p class="slds-text-heading_small">
+                                            <lightning-icon icon-name="standard:contact" size="small"></lightning-icon>
+                                            <span class="slds-m-left_x-small">
+                                                Target: <strong>{targetContactName}</strong>
+                                            </span>
+                                        </p>
+                                        <p class="slds-text-body_small slds-m-top_x-small">
+                                            This record will be deleted
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Fields Table -->
+                            <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                                <thead>
+                                    <tr class="slds-line-height_reset">
+                                        <th scope="col" class="slds-text-title_caps" style="width: 25%;">
+                                            <div class="slds-truncate" title="Field">Field</div>
+                                        </th>
+                                        <th scope="col" class="slds-text-title_caps" style="width: 35%;">
+                                            <div class="slds-truncate" title="Master Value">
+                                                Master Value (Keep)
+                                            </div>
+                                        </th>
+                                        <th scope="col" class="slds-text-title_caps" style="width: 35%;">
+                                            <div class="slds-truncate" title="Target Value">
+                                                Target Value (Merge)
+                                            </div>
+                                        </th>
+                                        <th scope="col" class="slds-text-title_caps" style="width: 5%;">
+                                            <div class="slds-truncate" title="Select">Select</div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={mergeFieldList} for:item="field">
+                                        <tr key={field.fieldName} class="slds-hint-parent">
+                                            <!-- Field Label -->
+                                            <td>
+                                                <div class="slds-truncate" title={field.fieldLabel}>
+                                                    <strong>{field.fieldLabel}</strong>
+                                                </div>
+                                            </td>
+                                            
+                                            <!-- Master Value -->
+                                            <td class={field.selectedClass}>
+                                                <div class="slds-truncate" title={field.masterValue}>
+                                                    {field.masterValue}
+                                                </div>
+                                            </td>
+                                            
+                                            <!-- Target Value -->
+                                            <td class={field.targetSelectedClass}>
+                                                <div class="slds-truncate" title={field.targetValue}>
+                                                    {field.targetValue}
+                                                </div>
+                                            </td>
+                                            
+                                            <!-- Radio Button Selection -->
+                                            <td>
+                                                <div class="slds-form-element">
+                                                    <div class="slds-form-element__control">
+                                                        <span class="slds-radio">
+                                                            <input type="radio" 
+                                                                   id={field.masterRadioId}
+                                                                   name={field.fieldName}
+                                                                   value="master"
+                                                                   checked={field.isMasterSelected}
+                                                                   data-fieldname={field.fieldName}
+                                                                   onchange={handleFieldSelectionChange} />
+                                                            <label class="slds-radio__label" for={field.masterRadioId}>
+                                                                <span class="slds-radio_faux"></span>
+                                                                <span class="slds-form-element__label slds-assistive-text">Master</span>
+                                                            </label>
+                                                        </span>
+                                                        <span class="slds-radio">
+                                                            <input type="radio" 
+                                                                   id={field.targetRadioId}
+                                                                   name={field.fieldName}
+                                                                   value="target"
+                                                                   checked={field.isTargetSelected}
+                                                                   data-fieldname={field.fieldName}
+                                                                   onchange={handleFieldSelectionChange} />
+                                                            <label class="slds-radio__label" for={field.targetRadioId}>
+                                                                <span class="slds-radio_faux"></span>
+                                                                <span class="slds-form-element__label slds-assistive-text">Target</span>
+                                                            </label>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+
+                            <!-- Instructions -->
+                            <div class="slds-m-top_medium">
+                                <div class="slds-scoped-notification slds-media slds-media_center slds-theme_info">
+                                    <div class="slds-media__figure">
+                                        <lightning-icon icon-name="utility:info" size="small"></lightning-icon>
+                                    </div>
+                                    <div class="slds-media__body">
+                                        <p>
+                                            <strong>Note:</strong> Fields not shown here will use standard Salesforce merge rules 
+                                            (master record values are kept unless blank).
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- No Fields Message -->
+                        <template if:false={hasMergeFields}>
+                            <div class="slds-align_absolute-center slds-p-around_large">
+                                <div class="slds-text-align_center">
+                                    <lightning-icon icon-name="utility:warning" size="large" variant="warning"></lightning-icon>
+                                    <p class="slds-text-heading_small slds-m-top_medium">No Fields to Merge</p>
+                                    <p class="slds-text-body_regular slds-m-top_small">
+                                        The field set "{fieldSetName}" is empty or not configured.
+                                    </p>
+                                </div>
+                            </div>
+                        </template>
+                    </template>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="slds-modal__footer">
+                    <button class="slds-button slds-button_neutral" 
+                            onclick={handleCloseMergeModal}
+                            disabled={isMergeLoading}>
+                        Cancel
+                    </button>
+                    <button class="slds-button slds-button_brand" 
+                            onclick={handleExecuteMerge}
+                            disabled={mergeButtonDisabled}>
+                        <template if:true={isMergeLoading}>
+                            <lightning-spinner alternative-text="Loading" size="x-small" variant="inverse"></lightning-spinner>
+                            <span class="slds-m-left_x-small">Merging...</span>
+                        </template>
+                        <template if:false={isMergeLoading}>
+                            Merge Contacts
+                        </template>
+                    </button>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Modal Backdrop -->
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
 </template>
