@@ -446,7 +446,7 @@ public with sharing class ContactDuplicateSetsController {
         @AuraEnabled public String fieldType { get; set; }
         @AuraEnabled public Boolean isUpdateable { get; set; }
         
-        public FieldInfo(String fieldName, String fieldLabel, String fieldType) {
+        public FieldInfo(String fieldName, String fieldLabel, String fieldType, Boolean isUpdateable) {
             this.fieldName = fieldName;
             this.fieldLabel = fieldLabel;
             this.fieldType = fieldType;
