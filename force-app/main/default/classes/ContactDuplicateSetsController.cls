@@ -149,10 +149,19 @@ public with sharing class ContactDuplicateSetsController {
      */
     @AuraEnabled(cacheable=true)
     public static List<FieldDescriptor> getContactFieldSet(String fieldSetName) {
-        if (String.isBlank(fieldSetName)) fieldSetName = 'Duplicate_Review';
+        // TEMPORARY: Hardcoded to FirstName, LastName, Email for Contact/Lead comparison
         List<FieldDescriptor> result = new List<FieldDescriptor>();
-
         Schema.DescribeSObjectResult describe = Contact.SObjectType.getDescribe();
+        
+        addFieldDescriptor(describe, 'FirstName', result);
+        addFieldDescriptor(describe, 'LastName', result);
+        addFieldDescriptor(describe, 'Email', result);
+        
+        return result;
+        
+        /* COMMENTED OUT: Original field set logic
+        if (String.isBlank(fieldSetName)) fieldSetName = 'Duplicate_Review';
+
         Map<String, Schema.FieldSet> fsMap = describe.fieldSets.getMap();
         Schema.FieldSet fs = fsMap.get(fieldSetName);
 
@@ -170,6 +179,7 @@ public with sharing class ContactDuplicateSetsController {
             addFieldDescriptor(describe, m.getFieldPath(), result);
         }
         return result;
+        */
     }
 
     // Helper to append a field describe safely
