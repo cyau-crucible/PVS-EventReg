@@ -19,6 +19,48 @@ public with sharing class ContactDuplicateSetsController {
         @AuraEnabled public Integer totalSets;
     }
 
+    // -------- NEW: Universal Wrappers --------
+    
+    // Wrapper for a single field's data across master and target records
+    public class UniversalFieldData {
+        @AuraEnabled public String fieldName { get; set; }
+        @AuraEnabled public String fieldLabel { get; set; }
+        @AuraEnabled public String fieldType { get; set; }
+        @AuraEnabled public Boolean isUpdateable { get; set; }
+        @AuraEnabled public String masterValue { get; set; }  // String representation
+        @AuraEnabled public String targetValue { get; set; }  // String representation
+        
+        public UniversalFieldData(String fieldName, String fieldLabel, String fieldType, 
+                                 Boolean isUpdateable, String masterValue, String targetValue) {
+            this.fieldName = fieldName;
+            this.fieldLabel = fieldLabel;
+            this.fieldType = fieldType;
+            this.isUpdateable = isUpdateable;
+            this.masterValue = masterValue != null ? masterValue : '';
+            this.targetValue = targetValue != null ? targetValue : '';
+        }
+    }
+    
+    // Wrapper for comparison data between two records
+    public class UniversalRecordComparison {
+        @AuraEnabled public Id masterId { get; set; }
+        @AuraEnabled public Id targetId { get; set; }
+        @AuraEnabled public String masterName { get; set; }
+        @AuraEnabled public String targetName { get; set; }
+        @AuraEnabled public String objectType { get; set; }  // 'Contact' or 'Lead'
+        @AuraEnabled public List<UniversalFieldData> fields { get; set; }
+        
+        public UniversalRecordComparison(Id masterId, Id targetId, String masterName, 
+                                        String targetName, String objectType) {
+            this.masterId = masterId;
+            this.targetId = targetId;
+            this.masterName = masterName;
+            this.targetName = targetName;
+            this.objectType = objectType;
+            this.fields = new List<UniversalFieldData>();
+        }
+    }
+
     // -------- Public API --------
 
     /**
@@ -145,52 +187,6 @@ public with sharing class ContactDuplicateSetsController {
         out.add(fd);
     }
 
-    /**
-     * Merge two contacts, due to native method the Master will "win" unless the duplicate has a value in the field where the master is blank
-     * Removes merged contact from any duplicate sets.
-     */
-    @AuraEnabled
-    public static Map<String, Object> mergeContacts(Id masterContactId, Id duplicateContactId) {
-        try {
-            // Validate inputs
-            if (masterContactId == null || duplicateContactId == null) {
-                throw new AuraHandledException('Both master and duplicate contact IDs are required');
-            }
-            if (masterContactId == duplicateContactId) {
-                throw new AuraHandledException('Cannot merge a contact with itself');
-            }
-            
-            // Verify both contacts exist
-            List<Contact> contacts = [
-                SELECT Id, Name 
-                FROM Contact 
-                WHERE Id IN :new Set<Id>{masterContactId, duplicateContactId}
-            ];
-            
-            if (contacts.size() != 2) {
-                throw new AuraHandledException('One or both contacts not found');
-            }
-            
-            // Merge using native method - master wins all field conflicts
-            Contact master = new Contact(Id = masterContactId);
-            Contact duplicate = new Contact(Id = duplicateContactId);
-            merge master duplicate;
-            
-            // Return success
-            return new Map<String, Object>{
-                'success' => true,
-                'masterContactId' => masterContactId,
-                'message' => 'Contacts successfully merged'
-            };
-        } catch (DmlException e) {
-            // Handle merge-specific errors
-            throw new AuraHandledException('Merge failed: ' + e.getDmlMessage(0));
-        } catch (Exception e) {
-            // Handle general errors
-            throw new AuraHandledException('Error merging contacts: ' + e.getMessage());
-        }
-    }  // end mergeContacts
-    
     @AuraEnabled
     public static Boolean approveContactFromSet(Id contactId, Id duplicateRecordSetId) {
         if (contactId == null || duplicateRecordSetId == null) {
@@ -232,7 +228,11 @@ public with sharing class ContactDuplicateSetsController {
         List<FieldInfo> fieldInfoList = new List<FieldInfo>();
         
         try {
-            Schema.SObjectType sObjectType = Schema.getGlobalDescribe().get('Contact');
+            Schema.SObjectType sObjectType = Schema.getGlobalDescribe().get(objectName);
+            if (sObjectType == null) {
+                throw new AuraHandledException('Invalid object type: ' + objectName);
+            }
+            
             Map<String, Schema.SObjectField> fieldMap = sObjectType.getDescribe().fields.getMap();
             
             // Test handling (keep as is)
@@ -274,6 +274,118 @@ public with sharing class ContactDuplicateSetsController {
         
         return fieldInfoList;
     }  // end getFieldSetFields
+
+    // NEW: Universal method to retrieve record comparison data
+    @AuraEnabled(cacheable=false)
+    public static UniversalRecordComparison getRecordComparison(
+        Id masterId, 
+        Id targetId, 
+        String fieldSetName,
+        String objectType
+    ) {
+        try {
+            // Validate inputs
+            if (masterId == null || targetId == null) {
+                throw new AuraHandledException('Both Master and Target record IDs are required');
+            }
+            if (masterId == targetId) {
+                throw new AuraHandledException('Master and Target records cannot be the same');
+            }
+            
+            // Get field set information
+            List<FieldInfo> fieldInfoList = getFieldSetFields(fieldSetName, objectType);
+            if (fieldInfoList.isEmpty()) {
+                throw new AuraHandledException('No fields found in Field Set: ' + fieldSetName);
+            }
+            
+            // Build dynamic SOQL query
+            Set<String> fieldsToQuery = new Set<String>{'Id', 'Name'};
+            for (FieldInfo fi : fieldInfoList) {
+                fieldsToQuery.add(fi.fieldName);
+            }
+            
+            String query = 'SELECT ' + String.join(new List<String>(fieldsToQuery), ', ') + 
+                          ' FROM ' + objectType + ' WHERE Id IN :recordIds';
+            
+            Set<Id> recordIds = new Set<Id>{masterId, targetId};
+            List<SObject> records = Database.query(query);
+            
+            // Organize records
+            SObject masterRecord = null;
+            SObject targetRecord = null;
+            
+            for (SObject rec : records) {
+                if (rec.Id == masterId) {
+                    masterRecord = rec;
+                } else if (rec.Id == targetId) {
+                    targetRecord = rec;
+                }
+            }
+            
+            // Verify both records were found
+            if (masterRecord == null) {
+                throw new AuraHandledException('Master record not found: ' + masterId);
+            }
+            if (targetRecord == null) {
+                throw new AuraHandledException('Target record not found: ' + targetId);
+            }
+            
+            // Build comparison wrapper
+            String masterName = (String)masterRecord.get('Name');
+            String targetName = (String)targetRecord.get('Name');
+            
+            UniversalRecordComparison comparison = new UniversalRecordComparison(
+                masterId, targetId, masterName, targetName, objectType
+            );
+            
+            // Add field data
+            for (FieldInfo fi : fieldInfoList) {
+                Object masterValue = masterRecord.get(fi.fieldName);
+                Object targetValue = targetRecord.get(fi.fieldName);
+                
+                String masterDisplay = formatFieldValue(masterValue, fi.fieldType);
+                String targetDisplay = formatFieldValue(targetValue, fi.fieldType);
+                
+                UniversalFieldData fieldData = new UniversalFieldData(
+                    fi.fieldName,
+                    fi.fieldLabel,
+                    fi.fieldType,
+                    fi.isUpdateable,
+                    masterDisplay,
+                    targetDisplay
+                );
+                
+                comparison.fields.add(fieldData);
+            }
+            
+            return comparison;
+            
+        } catch (Exception e) {
+            throw new AuraHandledException('Error retrieving record comparison: ' + e.getMessage());
+        }
+    }
+    
+    // Helper to format field values as strings for display
+    private static String formatFieldValue(Object value, String fieldType) {
+        if (value == null) {
+            return '';
+        }
+        
+        // Handle different field types
+        if (fieldType == 'BOOLEAN') {
+            return String.valueOf(value);
+        } else if (fieldType == 'DATE') {
+            Date dateValue = (Date)value;
+            return dateValue.format();
+        } else if (fieldType == 'DATETIME') {
+            Datetime dtValue = (Datetime)value;
+            return dtValue.format();
+        } else if (fieldType == 'CURRENCY' || fieldType == 'DOUBLE' || fieldType == 'PERCENT') {
+            return String.valueOf(value);
+        } else {
+            return String.valueOf(value);
+        }
+    }
 
     // Method to retrieve Contact Wrapper of both requested Contacts, with the requested Field Names queried
     @AuraEnabled(cacheable=false)

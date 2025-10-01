@@ -8,9 +8,7 @@ import LightningConfirm from 'lightning/confirm';
 import getDuplicateSets from '@salesforce/apex/ContactDuplicateSetsController.getDuplicateSets';
 import getContactFieldSet from '@salesforce/apex/ContactDuplicateSetsController.getContactFieldSet';
 import approveContactFromSet from '@salesforce/apex/ContactDuplicateSetsController.approveContactFromSet';
-// import mergeContacts from '@salesforce/apex/ContactDuplicateSetsController.mergeContacts';
-import getFieldSetFields from '@salesforce/apex/ContactDuplicateSetsController.getFieldSetFields';
-import getContactsWithFieldValues from '@salesforce/apex/ContactDuplicateSetsController.getContactsWithFieldValues';
+import getRecordComparison from '@salesforce/apex/ContactDuplicateSetsController.getRecordComparison';
 import mergeContactsWithSelections from '@salesforce/apex/ContactDuplicateSetsController.mergeContactsNew';
 
 export default class ContactDuplicateManager extends NavigationMixin(LightningElement) {
@@ -28,12 +26,12 @@ export default class ContactDuplicateManager extends NavigationMixin(LightningEl
     isLoading = true;
     isMerging = false;  // tracks if a merge is in progress
 
-    // NEW: Modal and merge field selection state
+    // NEW: Modal and merge field selection state (using universal wrappers)
     isQuickMergeModalOpen = false;
     isMergeLoading = false;
     targetContactId = null;  // Will be set when Quick Merge button is clicked
-    contactsToMerge = {};
-    mergeFieldList = [];
+    comparisonData = null;    // UniversalRecordComparison from Apex
+    mergeFieldList = [];      // Built from comparisonData.fields
     mergeFieldSelections = {};
     hasChanges = false;
 
@@ -58,11 +56,11 @@ export default class ContactDuplicateManager extends NavigationMixin(LightningEl
     }
 
     get masterContactName() {
-        return this.contactsToMerge?.master?.Name || 'Master Contact';
+        return this.comparisonData?.masterName || 'Master Contact';
     }
 
     get targetContactName() {
-        return this.contactsToMerge?.target?.Name || 'Target Contact';
+        return this.comparisonData?.targetName || 'Target Contact';
     }
 
     // Fetch DRS data
@@ -194,64 +192,46 @@ export default class ContactDuplicateManager extends NavigationMixin(LightningEl
         await this.loadMergeFieldsAndContacts();
     }
 
-    // NEW: Load field set and contact data for merge
+    // NEW: Load field set and contact data for merge using universal wrapper
     async loadMergeFieldsAndContacts() {
         this.isMergeLoading = true;
         
         try {
-            // Get Field Set fields (using the same fieldSetName as configured)
-            const fieldSetFields = await getFieldSetFields({
-                fieldSetName: this.fieldSetMergeName,
-                objectName: 'Contact'
-            });
-            
-            if (!fieldSetFields || fieldSetFields.length === 0) {
-                throw new Error('No fields found in Field Set: ' + this.fieldSetMergeName);
-            }
-            
-            // Extract field names for query
-            const fieldNames = fieldSetFields.map(field => field.fieldName);
-            
-            // Get Contact records with field values
-            const contactWrapper = await getContactsWithFieldValues({
+            // Call universal comparison method
+            const comparison = await getRecordComparison({
                 masterId: this.recordId,
                 targetId: this.targetContactId,
-                fieldNames: fieldNames
+                fieldSetName: this.fieldSetMergeName,
+                objectType: 'Contact'  // For now, hardcoded - can be made dynamic later
             });
             
-            if (!contactWrapper) {
-                throw new Error('Failed to retrieve contact data');
+            if (!comparison) {
+                throw new Error('Failed to retrieve record comparison data');
             }
             
-            // Store contacts
-            this.contactsToMerge = {
-                master: contactWrapper.masterContact,
-                target: contactWrapper.targetContact
-            };
-
-            // Build field list for display
-            this.mergeFieldList = fieldSetFields.map(field => {
-                const fieldName = field.fieldName;
-                const masterValue = this.getFieldValue(contactWrapper.masterContact, fieldName);
-                const targetValue = this.getFieldValue(contactWrapper.targetContact, fieldName);
-                const selection = 'master'; // Default to master
-                
+            console.log('Universal comparison received:', comparison);
+            
+            // Store comparison data
+            this.comparisonData = comparison;
+            
+            // Build field list for display from universal field data
+            this.mergeFieldList = (comparison.fields || []).map(field => {
                 return {
-                    fieldName: fieldName,
+                    fieldName: field.fieldName,
                     fieldLabel: field.fieldLabel,
                     fieldType: field.fieldType,
-                    isUpdateable: field.isUpdateable,  // Add this
-                    masterValue: masterValue,
-                    targetValue: targetValue,
-                    selection: selection,
+                    isUpdateable: field.isUpdateable,
+                    masterValue: field.masterValue,
+                    targetValue: field.targetValue,
+                    selection: 'master',  // Default to master
                     // Computed properties for template
-                    isMasterSelected: selection === 'master',
-                    isTargetSelected: selection === 'target',
-                    selectedClass: selection === 'master' ? 'selected-value' : '',
-                    targetSelectedClass: selection === 'target' ? 'selected-value' : '',
+                    isMasterSelected: true,
+                    isTargetSelected: false,
+                    selectedClass: 'selected-value',
+                    targetSelectedClass: '',
                     // Unique IDs for radio buttons
-                    masterRadioId: fieldName + '_master',
-                    targetRadioId: fieldName + '_target'
+                    masterRadioId: field.fieldName + '_master',
+                    targetRadioId: field.fieldName + '_target'
                 };
             });
 
@@ -392,93 +372,11 @@ export default class ContactDuplicateManager extends NavigationMixin(LightningEl
     // NEW: Reset merge state
     resetMergeState() {
         this.targetContactId = null;
-        this.contactsToMerge = {};
+        this.comparisonData = null;
         this.mergeFieldList = [];
         this.mergeFieldSelections = {};
         this.isMergeLoading = false;
         this.hasChanges = false;
-    }
-
-    // NEW: Helper to safely get field value
-    getFieldValue(contact, fieldName) {
-        if (!contact || !fieldName) {
-            return '';
-        }
-        
-        // Handle nested fields (e.g., Account.Name)
-        if (fieldName.includes('.')) {
-            const parts = fieldName.split('.');
-            let value = contact;
-            for (let part of parts) {
-                value = value?.[part];
-                if (value === undefined || value === null) {
-                    return '';
-                }
-            }
-            return value;
-        }
-        
-        // Handle regular fields
-        return contact[fieldName] || '';
-    }
-
-    // OLD handleContactMerge - keeping for reference but not used anymore
-    async handleContactMerge(event) {
-        const clickedContactId = event.currentTarget.dataset.contactId;
-        const recordPageContactId = this.recordId;
-        
-        console.log('=== Contact Merge Debug ===');
-        console.log('Record Page Contact ID (original):', recordPageContactId);
-        console.log('Clicked Contact ID (to merge):', clickedContactId);
-        
-        // Validation
-        if (!recordPageContactId || !clickedContactId) {
-            console.error('Missing contact IDs - cannot proceed with merge');
-            return;
-        }
-        if (recordPageContactId === clickedContactId) {
-            console.warn('Cannot merge a contact with itself');
-            return;
-        }
-        
-        // Set merging flag to disable all buttons and show spinner
-        this.isMerging = true;
-        
-        try {
-            // Call Apex merge method
-            const result = await mergeContacts({
-                masterContactId: recordPageContactId,
-                duplicateContactId: clickedContactId
-            });
-            
-            console.log('Merge successful:', result);
-            
-            // Show success toast
-            this.dispatchEvent(new ShowToastEvent({
-                title: 'Success',
-                message: 'Contact merged successfully. Refreshing page...',
-                variant: 'success'
-            }));
-            
-            // Refresh the page after a short delay
-            setTimeout(() => {
-                window.location.reload();
-            }, 2000);
-            
-        } catch (error) {
-            console.error('Merge failed:', error);
-            
-            // Clear the merging flag on error so buttons are re-enabled
-            this.isMerging = false;
-            
-            // Show error toast
-            this.dispatchEvent(new ShowToastEvent({
-                title: 'Merge Failed',
-                message: error.body?.message || 'An error occurred while merging contacts',
-                variant: 'error',
-                mode: 'sticky'
-            }));
-        }
     }
 
     handleViewSet(event) {
