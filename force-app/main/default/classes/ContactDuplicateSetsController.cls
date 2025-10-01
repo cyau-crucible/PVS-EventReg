@@ -12,7 +12,7 @@ public with sharing class ContactDuplicateSetsController {
         @AuraEnabled public String ruleDeveloperName;
         @AuraEnabled public Datetime createdDate;
         @AuraEnabled public Integer totalItems;          // includes the anchor Contact
-        @AuraEnabled public List<Id> duplicateContactIds; // excludes the anchor Contact
+        @AuraEnabled public List<Id> duplicateContactIds; // NOW includes the anchor Contact FIRST
     }
     public class DuplicateSetsResponse {
         @AuraEnabled public List<DuplicateSetDTO> sets;
@@ -57,10 +57,12 @@ public with sharing class ContactDuplicateSetsController {
             dto.ruleDeveloperName = (dri.DuplicateRecordSet != null && dri.DuplicateRecordSet.DuplicateRule != null)
                 ? dri.DuplicateRecordSet.DuplicateRule.DeveloperName : null;
             dto.duplicateContactIds = new List<Id>();
+            // Add the current record (master) as the FIRST element
+            dto.duplicateContactIds.add(contactId);
             setIdToDto.put(dto.setId, dto);
         }
 
-        // 2) For each DRS, find the *other* items (the duplicates)
+        // 2) For each DRS, find the *other* items (the duplicates) - they come AFTER the master
         for (DuplicateRecordItem item : [
             SELECT Id, RecordId, DuplicateRecordSetId
             FROM DuplicateRecordItem
@@ -74,7 +76,7 @@ public with sharing class ContactDuplicateSetsController {
 
         // Finalize counts and order (newest first)
         List<DuplicateSetDTO> ordered = new List<DuplicateSetDTO>(setIdToDto.values());
-        for (DuplicateSetDTO d : ordered) d.totalItems = 1 + (d.duplicateContactIds == null ? 0 : d.duplicateContactIds.size());
+        for (DuplicateSetDTO d : ordered) d.totalItems = d.duplicateContactIds == null ? 0 : d.duplicateContactIds.size();
         ordered.sort(new ComparatorDTO());
 
         resp.sets = ordered;
@@ -204,7 +206,7 @@ public with sharing class ContactDuplicateSetsController {
         ];
         if (items.isEmpty()) return true; // nothing to do
 
-        // Find this contact’s linkage
+        // Find this contact's linkage
         Id linkId = null;
         for (DuplicateRecordItem i : items) {
             if (i.RecordId == contactId) { linkId = i.Id; break; }

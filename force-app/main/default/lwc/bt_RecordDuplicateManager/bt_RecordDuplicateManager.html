@@ -32,7 +32,7 @@
             <template if:false={isLoading}>
                 <template if:false={isMerging}>
                     <div class="slds-p-horizontal_medium slds-p-bottom_medium">
-                        <template for:each={sets} for:item="set">
+                        <template for:each={setsWithMeta} for:item="set">
                             <article key={set.setId} class="set-card slds-m-bottom_large">
                                 <header class="set-card__header slds-grid slds-grid_vertical-align-center">
                                     <div class="slds-truncate">
@@ -44,7 +44,7 @@
                                             <template if:true={set.ruleDeveloperName}>
                                                 <span class="rule">Rule: <strong>{set.ruleDeveloperName}</strong></span>
                                             </template>
-                                            <span class="sep">•</span>
+                                            <span class="sep">â€¢</span>
                                             <span>{set.totalItems} records in set</span>
                                         </div>
                                     </div>
@@ -62,13 +62,16 @@
                                     </div>
                                 </header>
 
-                                <template if:true={set.duplicateContactIds.length}>
+                                <template if:true={set.duplicateContactsWithMeta.length}>
                                     <div class="tiles">
-                                        <template for:each={set.duplicateContactIds} for:item="cid">
-                                            <section key={cid} class="tile">
-                                                <lightning-record-view-form record-id={cid} object-api-name="Contact">
+                                        <template for:each={set.duplicateContactsWithMeta} for:item="contact">
+                                            <section key={contact.contactId} class="tile">
+                                                <lightning-record-view-form record-id={contact.contactId} object-api-name="Contact">
                                                     <div class="tile__header slds-p-bottom_x-small">
                                                         <lightning-output-field field-name="Name"></lightning-output-field>
+                                                        <template if:true={contact.isCurrentRecord}>
+                                                            <lightning-badge label="Current Record" class="slds-m-left_x-small"></lightning-badge>
+                                                        </template>
                                                     </div>
 
                                                     <div class="tile__body">
@@ -82,18 +85,25 @@
                                                     </div>
 
                                                     <div class="tile__footer">
-                                                        <lightning-button label="Quick Merge" title="Quick Merge"
-                                                                        onclick={handleOpenMergeModal} 
-                                                                        data-contact-id={cid} 
-                                                                        variant="brand" 
-                                                                        class="slds-var-m-right_x-small"
-                                                                        disabled={isMerging}></lightning-button>
-                                                        <lightning-button-icon icon-name="utility:new_window"
-                                                                               onclick={handleOpenContact}
-                                                                               data-contact-id={cid}
-                                                                               alternative-text="Open Contact"
-                                                                               title="Open Contact"
-                                                                               disabled={isMerging}></lightning-button-icon>
+                                                        <template if:false={contact.isCurrentRecord}>
+                                                            <lightning-button label="Quick Merge" title="Quick Merge"
+                                                                            onclick={handleOpenMergeModal} 
+                                                                            data-contact-id={contact.contactId} 
+                                                                            variant="brand" 
+                                                                            class="slds-var-m-right_x-small"
+                                                                            disabled={isMerging}></lightning-button>
+                                                            <lightning-button-icon icon-name="utility:new_window"
+                                                                                   onclick={handleOpenContact}
+                                                                                   data-contact-id={contact.contactId}
+                                                                                   alternative-text="Open Contact"
+                                                                                   title="Open Contact"
+                                                                                   disabled={isMerging}></lightning-button-icon>
+                                                        </template>
+                                                        <template if:true={contact.isCurrentRecord}>
+                                                            <div class="slds-text-body_small slds-text-color_weak">
+                                                                This is the current record being viewed
+                                                            </div>
+                                                        </template>
                                                     </div>
                                                 </lightning-record-view-form>
                                             </section>
@@ -101,7 +111,7 @@
                                     </div>
                                 </template>
 
-                                <template if:false={set.duplicateContactIds.length}>
+                                <template if:false={set.duplicateContactsWithMeta.length}>
                                     <div class="slds-p-around_medium slds-text-color_weak">
                                         No other records in this set (nothing to review).
                                     </div>

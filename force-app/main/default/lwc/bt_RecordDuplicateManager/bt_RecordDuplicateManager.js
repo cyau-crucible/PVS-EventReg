@@ -24,6 +24,7 @@ export default class ContactDuplicateManager extends NavigationMixin(LightningEl
 
     @track fieldDescriptors = [];
     @track sets = [];
+    @track setsWithMeta = [];  // Enhanced sets with metadata for template
     isLoading = true;
     isMerging = false;  // tracks if a merge is in progress
 
@@ -77,6 +78,16 @@ export default class ContactDuplicateManager extends NavigationMixin(LightningEl
                 totalItems: s.totalItems,
                 duplicateContactIds: s.duplicateContactIds || []
             }));
+            
+            // Create enhanced version with metadata for template
+            this.setsWithMeta = this.sets.map(s => ({
+                ...s,
+                duplicateContactsWithMeta: (s.duplicateContactIds || []).map(contactId => ({
+                    contactId: contactId,
+                    isCurrentRecord: contactId === this.recordId
+                }))
+            }));
+            
             this.isLoading = false;
         } else if (error) {
             this.isLoading = false;
