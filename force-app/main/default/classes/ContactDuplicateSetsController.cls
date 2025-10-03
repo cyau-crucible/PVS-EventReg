@@ -7,13 +7,36 @@ public with sharing class ContactDuplicateSetsController {
         @AuraEnabled public Boolean updateable;
         @AuraEnabled public Boolean createable;
     }
+    
+    // NEW: Enhanced to include object type
+    public class DuplicateRecordDTO {
+        @AuraEnabled public Id recordId;
+        @AuraEnabled public String objectType;  // 'Contact' or 'Lead'
+        @AuraEnabled public String recordName;  // Populated for display
+        @AuraEnabled public String firstName;
+        @AuraEnabled public String lastName;
+        @AuraEnabled public String email;
+        
+        public DuplicateRecordDTO(Id recordId, String objectType, String recordName, 
+                                 String firstName, String lastName, String email) {
+            this.recordId = recordId;
+            this.objectType = objectType;
+            this.recordName = recordName;
+            this.firstName = firstName;
+            this.lastName = lastName;
+            this.email = email;
+        }
+    }
+    
     public class DuplicateSetDTO {
         @AuraEnabled public Id setId;
         @AuraEnabled public String ruleDeveloperName;
         @AuraEnabled public Datetime createdDate;
-        @AuraEnabled public Integer totalItems;          // includes the anchor Contact
-        @AuraEnabled public List<Id> duplicateContactIds; // NOW includes the anchor Contact FIRST
+        @AuraEnabled public Integer totalItems;
+        @AuraEnabled public List<Id> duplicateContactIds; // DEPRECATED - keeping for backward compatibility
+        @AuraEnabled public List<DuplicateRecordDTO> duplicateRecords; // NEW - includes Contacts and Leads
     }
+    
     public class DuplicateSetsResponse {
         @AuraEnabled public List<DuplicateSetDTO> sets;
         @AuraEnabled public Integer totalSets;
@@ -47,16 +70,18 @@ public with sharing class ContactDuplicateSetsController {
         @AuraEnabled public Id targetId { get; set; }
         @AuraEnabled public String masterName { get; set; }
         @AuraEnabled public String targetName { get; set; }
-        @AuraEnabled public String objectType { get; set; }  // 'Contact' or 'Lead'
+        @AuraEnabled public String masterObjectType { get; set; }  // 'Contact' or 'Lead'
+        @AuraEnabled public String targetObjectType { get; set; }  // 'Contact' or 'Lead'
         @AuraEnabled public List<UniversalFieldData> fields { get; set; }
         
         public UniversalRecordComparison(Id masterId, Id targetId, String masterName, 
-                                        String targetName, String objectType) {
+                                        String targetName, String masterObjectType, String targetObjectType) {
             this.masterId = masterId;
             this.targetId = targetId;
             this.masterName = masterName;
             this.targetName = targetName;
-            this.objectType = objectType;
+            this.masterObjectType = masterObjectType;
+            this.targetObjectType = targetObjectType;
             this.fields = new List<UniversalFieldData>();
         }
     }
@@ -64,25 +89,26 @@ public with sharing class ContactDuplicateSetsController {
     // -------- Public API --------
 
     /**
-     * Returns Duplicate Record Sets that include the given Contact.
+     * Returns Duplicate Record Sets that include the given Contact OR Lead.
+     * Now supports both Contacts and Leads in the same duplicate set.
      * Uses only IDs and metadata; LWC uses LDS to render records.
      */
     @AuraEnabled(cacheable=true)
-    public static DuplicateSetsResponse getDuplicateSets(Id contactId, Integer maxSets) {
+    public static DuplicateSetsResponse getDuplicateSets(Id recordId, Integer maxSets) {
         DuplicateSetsResponse resp = new DuplicateSetsResponse();
         resp.sets = new List<DuplicateSetDTO>();
         resp.totalSets = 0;
 
-        if (contactId == null) return resp;
+        if (recordId == null) return resp;
         if (maxSets == null || maxSets <= 0) maxSets = 50;
 
-        // 1) Find the DRS rows for the anchor record
+        // 1) Find the DRS rows for the anchor record (Contact or Lead)
         List<DuplicateRecordItem> anchorItems = [
             SELECT Id, DuplicateRecordSetId,
                    DuplicateRecordSet.CreatedDate,
                    DuplicateRecordSet.DuplicateRule.DeveloperName
             FROM DuplicateRecordItem
-            WHERE RecordId = :contactId
+            WHERE RecordId = :recordId
             ORDER BY DuplicateRecordSet.CreatedDate DESC
             LIMIT :maxSets
         ];
@@ -98,32 +124,124 @@ public with sharing class ContactDuplicateSetsController {
             dto.createdDate = (dri.DuplicateRecordSet != null) ? dri.DuplicateRecordSet.CreatedDate : null;
             dto.ruleDeveloperName = (dri.DuplicateRecordSet != null && dri.DuplicateRecordSet.DuplicateRule != null)
                 ? dri.DuplicateRecordSet.DuplicateRule.DeveloperName : null;
-            dto.duplicateContactIds = new List<Id>();
-            // Add the current record (master) as the FIRST element
-            dto.duplicateContactIds.add(contactId);
+            dto.duplicateContactIds = new List<Id>(); // Deprecated but keeping for compatibility
+            dto.duplicateRecords = new List<DuplicateRecordDTO>();
             setIdToDto.put(dto.setId, dto);
         }
 
-        // 2) For each DRS, find the *other* items (the duplicates) - they come AFTER the master
-        for (DuplicateRecordItem item : [
+        // 2) For each DRS, find ALL items (Contacts and Leads)
+        List<DuplicateRecordItem> allItems = [
             SELECT Id, RecordId, DuplicateRecordSetId
             FROM DuplicateRecordItem
             WHERE DuplicateRecordSetId IN :setIds
-              AND RecordId != :contactId
             ORDER BY DuplicateRecordSetId
-        ]) {
-            DuplicateSetDTO dto = setIdToDto.get(item.DuplicateRecordSetId);
-            if (dto != null) dto.duplicateContactIds.add(item.RecordId);
+        ];
+        
+        // 3) Separate Contact IDs from Lead IDs
+        Set<Id> contactIds = new Set<Id>();
+        Set<Id> leadIds = new Set<Id>();
+        Map<Id, Id> recordIdToSetId = new Map<Id, Id>(); // Track which set each record belongs to
+        
+        for (DuplicateRecordItem item : allItems) {
+            String keyPrefix = String.valueOf(item.RecordId).substring(0, 3);
+            recordIdToSetId.put(item.RecordId, item.DuplicateRecordSetId);
+            
+            if (keyPrefix == '003') {
+                contactIds.add(item.RecordId);
+            } else if (keyPrefix == '00Q') {
+                leadIds.add(item.RecordId);
+            }
+        }
+        
+        // 4) Query Contact data
+        Map<Id, Contact> contactMap = new Map<Id, Contact>();
+        if (!contactIds.isEmpty()) {
+            for (Contact c : [
+                SELECT Id, Name, FirstName, LastName, Email
+                FROM Contact
+                WHERE Id IN :contactIds
+            ]) {
+                contactMap.put(c.Id, c);
+            }
+        }
+        
+        // 5) Query Lead data
+        Map<Id, Lead> leadMap = new Map<Id, Lead>();
+        if (!leadIds.isEmpty()) {
+            for (Lead l : [
+                SELECT Id, Name, FirstName, LastName, Email
+                FROM Lead
+                WHERE Id IN :leadIds
+                AND IsConverted = false  // Only include non-converted Leads
+            ]) {
+                leadMap.put(l.Id, l);
+            }
+        }
+        
+        // 6) Build DuplicateRecordDTO objects and add to appropriate sets
+        // First add the anchor record
+        for (DuplicateRecordItem item : allItems) {
+            if (item.RecordId == recordId) {
+                DuplicateSetDTO dto = setIdToDto.get(item.DuplicateRecordSetId);
+                DuplicateRecordDTO recordDTO = buildRecordDTO(item.RecordId, contactMap, leadMap);
+                if (recordDTO != null) {
+                    dto.duplicateRecords.add(recordDTO);
+                    dto.duplicateContactIds.add(item.RecordId); // Deprecated list
+                }
+            }
+        }
+        
+        // Then add all other records
+        for (DuplicateRecordItem item : allItems) {
+            if (item.RecordId != recordId) {
+                DuplicateSetDTO dto = setIdToDto.get(item.DuplicateRecordSetId);
+                DuplicateRecordDTO recordDTO = buildRecordDTO(item.RecordId, contactMap, leadMap);
+                if (recordDTO != null) {
+                    dto.duplicateRecords.add(recordDTO);
+                    dto.duplicateContactIds.add(item.RecordId); // Deprecated list
+                }
+            }
         }
 
         // Finalize counts and order (newest first)
         List<DuplicateSetDTO> ordered = new List<DuplicateSetDTO>(setIdToDto.values());
-        for (DuplicateSetDTO d : ordered) d.totalItems = d.duplicateContactIds == null ? 0 : d.duplicateContactIds.size();
+        for (DuplicateSetDTO d : ordered) {
+            d.totalItems = d.duplicateRecords != null ? d.duplicateRecords.size() : 0;
+        }
         ordered.sort(new ComparatorDTO());
 
         resp.sets = ordered;
         resp.totalSets = ordered.size();
         return resp;
+    }
+    
+    // Helper to build DuplicateRecordDTO from either Contact or Lead
+    private static DuplicateRecordDTO buildRecordDTO(Id recordId, Map<Id, Contact> contactMap, Map<Id, Lead> leadMap) {
+        String keyPrefix = String.valueOf(recordId).substring(0, 3);
+        
+        if (keyPrefix == '003' && contactMap.containsKey(recordId)) {
+            Contact c = contactMap.get(recordId);
+            return new DuplicateRecordDTO(
+                c.Id,
+                'Contact',
+                c.Name,
+                c.FirstName,
+                c.LastName,
+                c.Email
+            );
+        } else if (keyPrefix == '00Q' && leadMap.containsKey(recordId)) {
+            Lead l = leadMap.get(recordId);
+            return new DuplicateRecordDTO(
+                l.Id,
+                'Lead',
+                l.Name,
+                l.FirstName,
+                l.LastName,
+                l.Email
+            );
+        }
+        
+        return null; // Record not found or is converted Lead
     }
 
     private class ComparatorDTO implements System.Comparator<DuplicateSetDTO> {
@@ -285,7 +403,7 @@ public with sharing class ContactDuplicateSetsController {
         return fieldInfoList;
     }  // end getFieldSetFields
 
-    // NEW: Universal method to retrieve record comparison data
+    // NEW: Universal method to retrieve record comparison data (supports Contact and Lead)
     @AuraEnabled(cacheable=false)
     public static UniversalRecordComparison getRecordComparison(
         Id masterId, 
@@ -302,53 +420,41 @@ public with sharing class ContactDuplicateSetsController {
                 throw new AuraHandledException('Master and Target records cannot be the same');
             }
             
-            // Get field set information
-            List<FieldInfo> fieldInfoList = getFieldSetFields(fieldSetName, objectType);
+            // Determine object types from record IDs
+            String masterKeyPrefix = String.valueOf(masterId).substring(0, 3);
+            String targetKeyPrefix = String.valueOf(targetId).substring(0, 3);
+            
+            String masterObjectType = (masterKeyPrefix == '003') ? 'Contact' : 'Lead';
+            String targetObjectType = (targetKeyPrefix == '003') ? 'Contact' : 'Lead';
+            
+            // Get field set information - use Contact fields as baseline since FirstName, LastName, Email exist on both
+            List<FieldInfo> fieldInfoList = getFieldSetFields(fieldSetName, 'Contact');
             if (fieldInfoList.isEmpty()) {
                 throw new AuraHandledException('No fields found in Field Set: ' + fieldSetName);
             }
             
-            // Build dynamic SOQL query
-            Set<String> fieldsToQuery = new Set<String>{'Id', 'Name'};
-            for (FieldInfo fi : fieldInfoList) {
-                fieldsToQuery.add(fi.fieldName);
-            }
+            // Build dynamic SOQL queries for each object type
+            Set<String> fieldsToQuery = new Set<String>{'Id', 'Name', 'FirstName', 'LastName', 'Email'};
             
-            String query = 'SELECT ' + String.join(new List<String>(fieldsToQuery), ', ') + 
-                          ' FROM ' + objectType + ' WHERE Id IN :recordIds';
+            // Query master record
+            String masterQuery = 'SELECT ' + String.join(new List<String>(fieldsToQuery), ', ') + 
+                                ' FROM ' + masterObjectType + ' WHERE Id = :masterId LIMIT 1';
+            SObject masterRecord = Database.query(masterQuery)[0];
             
-            Set<Id> recordIds = new Set<Id>{masterId, targetId};
-            List<SObject> records = Database.query(query);
-            
-            // Organize records
-            SObject masterRecord = null;
-            SObject targetRecord = null;
-            
-            for (SObject rec : records) {
-                if (rec.Id == masterId) {
-                    masterRecord = rec;
-                } else if (rec.Id == targetId) {
-                    targetRecord = rec;
-                }
-            }
-            
-            // Verify both records were found
-            if (masterRecord == null) {
-                throw new AuraHandledException('Master record not found: ' + masterId);
-            }
-            if (targetRecord == null) {
-                throw new AuraHandledException('Target record not found: ' + targetId);
-            }
+            // Query target record
+            String targetQuery = 'SELECT ' + String.join(new List<String>(fieldsToQuery), ', ') + 
+                                ' FROM ' + targetObjectType + ' WHERE Id = :targetId LIMIT 1';
+            SObject targetRecord = Database.query(targetQuery)[0];
             
             // Build comparison wrapper
             String masterName = (String)masterRecord.get('Name');
             String targetName = (String)targetRecord.get('Name');
             
             UniversalRecordComparison comparison = new UniversalRecordComparison(
-                masterId, targetId, masterName, targetName, objectType
+                masterId, targetId, masterName, targetName, masterObjectType, targetObjectType
             );
             
-            // Add field data
+            // Add field data for common fields (FirstName, LastName, Email)
             for (FieldInfo fi : fieldInfoList) {
                 Object masterValue = masterRecord.get(fi.fieldName);
                 Object targetValue = targetRecord.get(fi.fieldName);
